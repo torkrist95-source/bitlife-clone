@@ -36,7 +36,6 @@ function rollWealthTier(wealthTiers) {
 function createCharacter({ country, gender, wealthTiers }) {
   const name = `${randChoice(FIRST_NAMES)} ${randChoice(LAST_NAMES)}`;
   const tier = rollWealthTier(wealthTiers);
-  const money = randInt(tier.startingMoney[0], tier.startingMoney[1]);
 
   return {
     name,
@@ -44,7 +43,7 @@ function createCharacter({ country, gender, wealthTiers }) {
     country: country.id,
     countryName: country.name,
     age: 0,
-    money,
+    money: 0,
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,

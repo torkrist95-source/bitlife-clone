@@ -100,10 +100,12 @@ Right now a new life starts as a full random roll. Adding a few deliberate choic
 - **Gender** — feeds the avatar variant chosen in the Aging & Appearance System below
 - Everything else — name, starting stats, personality traits, Looks, family — stays randomized, keeping the "roll a life and see what you get" spirit rather than turning this into a full builder
 
-**Family wealth tier** — rolled, not chosen, at birth: Poor / Working-Class / Middle-Class / Wealthy. This sets:
+**Family wealth tier** — rolled, not chosen, at birth: Poor / Working-Class / Middle-Class / Wealthy. This describes the *family's* circumstances, not the character's own wallet, and sets:
 - The starting home the character's family lives in
-- Parents' starting jobs and rough income (affects how much financial help, if any, they can offer later — college costs, a car at 16, an eventual inheritance)
-- A small starting-money nudge for the player character themselves
+- Parents' starting jobs and rough income
+- The household's overall financial situation — what the parents can and can't afford, and how much financial help, if any, they can offer later (an allowance, college costs, a car at 16, an eventual inheritance)
+
+**Family wealth ≠ character money.** A character's personal `money` always starts at **$0**, regardless of family wealth tier — a newborn into a Wealthy family is not personally holding cash, their parents are. The character accumulates their own money the way people actually do: allowance, birthday gifts, an age-appropriate job, a sideline, selling something, or other legitimate income, all through the normal event/activity/career systems elsewhere in this plan. Family wealth instead shapes *opportunity* — a Wealthy family's kid gets offered a bigger allowance event, an easier "ask parents to pay for college" roll, or a nicer inherited car — not a lump of starting cash.
 
 ### Birth Details
 
@@ -1269,7 +1271,7 @@ This document describes the intended *full* game. The actual `src/` implementati
 
 **Built so far:**
 - Skeleton age-up loop (character portrait, stat bars, money, event feed, Age Up button)
-- Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier, starting money nudge — the *basic* version from the Character Creation section above, not yet the expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content added in this revision
+- Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier (family circumstances only — the character's personal `money` starts at $0 regardless of tier) — the *basic* version from the Character Creation section above, not yet the expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content added in this revision
 - 15 hand-written age-up events across the childhood/teen/adult age brackets, using the real event schema (`conditions`, `choices[]`, `effects`, `next_event`) and a working bottom-sheet choice modal
 - One working `next_event` chain (proving the follow-up-event mechanism works)
 - Settings menu with a light/dark theme toggle, persisted via `localStorage`
