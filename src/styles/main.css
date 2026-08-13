@@ -42,7 +42,8 @@ body {
   position: relative;
   width: 100%;
   max-width: 420px;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--color-bg);
   color: var(--color-text);
   display: flex;
@@ -54,6 +55,7 @@ body {
 .portrait-wrap {
   text-align: center;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 #portrait {
@@ -86,6 +88,7 @@ body {
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .stat-row {
@@ -138,6 +141,7 @@ body {
   font-weight: 700;
   font-size: 16px;
   margin: 4px 0 12px;
+  flex-shrink: 0;
 }
 
 #event-feed {
@@ -146,7 +150,7 @@ body {
   border-radius: var(--radius);
   padding: 12px 14px;
   overflow-y: auto;
-  min-height: 160px;
+  min-height: 0;
   margin-bottom: 14px;
 }
 
@@ -162,6 +166,7 @@ body {
 
 #age-up-btn {
   align-self: center;
+  flex-shrink: 0;
   background: var(--color-accent);
   color: #fff;
   border: none;
@@ -185,6 +190,7 @@ body {
   background: var(--color-card);
   border-radius: var(--radius);
   padding: 8px;
+  flex-shrink: 0;
 }
 
 .nav-btn {
@@ -213,6 +219,13 @@ body {
 
 .screen.hidden {
   display: none;
+}
+
+#game-screen:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .creation-title {
