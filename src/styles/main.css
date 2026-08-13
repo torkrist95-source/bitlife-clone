@@ -1,16 +1,16 @@
 :root {
-  --color-page-bg: #eac8a6;
-  --color-bg: #fbf5de;
+  --color-page-bg: #e1e5ea;
+  --color-bg: #faf3f3;
   --color-card: #ffffff;
-  --color-text: #22334a;
-  --color-text-muted: #74839a;
+  --color-text: #2e3a44;
+  --color-text-muted: #7c93a3;
   --color-health: #ff6b81;
   --color-happiness: #ffd93d;
   --color-smarts: #4d96ff;
   --color-looks: #c77dff;
-  --color-accent: #dc3c22;
-  --color-border: #eac8a6;
-  --color-shadow: rgba(61, 116, 182, 0.18);
+  --color-accent: #da7f8f;
+  --color-border: #e1e5ea;
+  --color-shadow: rgba(167, 187, 199, 0.3);
   --radius: 16px;
 }
 
@@ -23,6 +23,17 @@
   --color-border: #3e5872;
   --color-accent: #f05454;
   --color-shadow: rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="retro"] {
+  --color-page-bg: #c00707;
+  --color-bg: #ffb33f;
+  --color-card: #fff6e6;
+  --color-text: #0d2b4d;
+  --color-text-muted: #4a6b8a;
+  --color-border: #e8a030;
+  --color-accent: #ff4400;
+  --color-shadow: rgba(19, 78, 142, 0.35);
 }
 
 * {
@@ -342,56 +353,35 @@ body {
   display: block;
 }
 
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
+.settings-label {
+  display: block;
+  font-size: 12px;
   font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
 }
 
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 22px;
-  flex-shrink: 0;
+.theme-options {
+  display: flex;
+  gap: 8px;
 }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch .slider {
-  position: absolute;
-  inset: 0;
-  background: var(--color-border);
-  border-radius: 999px;
+.theme-btn {
+  flex: 1;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 6px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.switch .slider::before {
-  content: "";
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  left: 3px;
-  top: 3px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-}
-
-.switch input:checked + .slider {
+.theme-btn.selected {
   background: var(--color-accent);
-}
-
-.switch input:checked + .slider::before {
-  transform: translateX(18px);
+  border-color: var(--color-accent);
+  color: #fff;
 }
 
 .modal-overlay {

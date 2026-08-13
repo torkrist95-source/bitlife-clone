@@ -154,18 +154,18 @@ game.navBtns.forEach((btn) => {
 const settings = {
   btn: document.getElementById("settings-btn"),
   panel: document.getElementById("settings-panel"),
-  darkModeToggle: document.getElementById("dark-mode-toggle"),
+  themeBtns: document.querySelectorAll(".theme-btn"),
 };
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem("theme", theme);
+  settings.themeBtns.forEach((btn) => btn.classList.toggle("selected", btn.dataset.theme === theme));
 }
 
 function initSettings() {
   const savedTheme = localStorage.getItem("theme") ?? "light";
   applyTheme(savedTheme);
-  settings.darkModeToggle.checked = savedTheme === "dark";
 
   settings.btn.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -178,8 +178,8 @@ function initSettings() {
     }
   });
 
-  settings.darkModeToggle.addEventListener("change", () => {
-    applyTheme(settings.darkModeToggle.checked ? "dark" : "light");
+  settings.themeBtns.forEach((btn) => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
 }
 

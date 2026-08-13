@@ -12,7 +12,7 @@ A personal clone of BitLife, built as a web app and hosted online so it runs on 
 ## Hosting & Deployment
 
 **GitHub Pages** is the simplest free option and pairs naturally with the git repo you're already going to init on day one — no separate account or service to set up beyond GitHub itself:
-- Push the repo to GitHub, then flip on Pages in the repo's Settings → Pages (deploy from the `main` branch). The site goes live at `https://yourusername.github.io/repo-name/`
+- Push the repo to GitHub, then flip on Pages in the repo's Settings → Pages (deploy from the `main` branch, or via GitHub Actions if the site lives under a subfolder). The site goes live at `https://yourusername.github.io/repo-name/`
 - HTTPS is automatic, which PWA install-to-Home-Screen requires anyway
 - Every future `git push` updates the live site — Claude Code can push a change and it's playable on your phone within a minute or two
 
@@ -33,20 +33,63 @@ A personal clone of BitLife, built as a web app and hosted online so it runs on 
 1. Player clicks "Age Up"
 2. Age +1, apply small passive stat drift (health/happiness decay slowly with age, etc.)
 3. Check life-stage transitions (e.g. age 5 → school starts, age 18 → can work/drink/vote; each life-stage boundary also swaps the avatar — see Aging & Appearance System below)
-4. Roll for random events eligible at this age/stat/flag combination
+4. Roll for random events eligible at this age/stat/flag combination — many years roll nothing at all, which is expected (see Design Philosophy below)
 5. Display results, update history log
 
 **Event system** — this is the heart of the game, keep it data-driven. Events have two trigger types, both running through the same engine and JSON schema:
-- **Age-up events** — rolled once per year on the Age button, from the age-bracket pools (`childhood.json`, `teen.json`, `adult.json`)
+- **Age-up events** — rolled once per year on the Age button, from the age-bracket pools (`infant.json`, `childhood.json`, `teen.json`, `adult.json`)
 - **Activity events** — rolled when the player picks an activity from the menu (vacation, gym, date night, etc.), from that activity's own pool. An activity click first applies its small guaranteed base effect (e.g. vacation always costs some money and gives a happiness bump), then rolls a chance for a special sub-event on top — that's where "your flight gets cancelled" or "you meet someone at the resort" comes from, complete with its own choices
 - Events live in JSON files, not hardcoded in JS, regardless of trigger type
 - Each event: `id`, `trigger` (`age_up`, `activity:<id>`, or `relationship:<id>`), `conditions` (age range, required flags/stat thresholds, and optionally `requires_memory_tag` to gate on an NPC's past history — see Relationships & Memories below), `text`, `choices[]`
+- `conditions` can grow to check whatever a given system needs — family structure, adoption/foster/guardian status, an NPC's relationship type or sexual orientation, education status (including GED/leave/dropout/return), major, GPA, sexual orientation, attraction, dating status, aspiration state, location/country, or any other flag — all through this same schema. A new feature should extend this condition schema, not invent a second one.
 - Each choice: `label`, `effects` (stat deltas *and* personality trait deltas — see Personality System below — plus flags to set), optional `memory` (records a new entry in the relevant NPC's memory log), optional `next_event` for chains — this is how a vacation event can branch into a follow-up (e.g. accept the stranger's invite → a second event next year referencing it)
 - Weighted random selection so rare/dramatic events show up less often, independently tuned per activity (vacation might have a 30% chance of a sub-event, a doctor visit maybe 10%)
 
 **Activities menu** — things the player can trigger anytime at the current life stage (job search, dating, doctor visit, crime, shopping/assets, vacation). Each activity is a base effect plus a chance at its own random event, per the trigger system above.
 
 **NPCs** — not just static labels. Each NPC quietly lives their own life in the background and surfaces updates to the player. Full design below.
+
+## Design Philosophy
+
+Before diving into individual systems, a few cross-cutting principles govern how all of them should behave together. Every section below should be read through this lens, and every new system going forward should be checked against it before it's added.
+
+**The world exists beyond the player.** Parents, siblings, classmates, friends, coworkers, partners, and exes are not static labels — they age, change jobs, move, marry, have their own children, get rich, go broke, and die on their own timelines, mostly off-screen (see NPC Life Events). The player doesn't control any of it; they only see the moments that surface as events.
+
+**Not every year is a headline.** Most age-ups should be quiet. The event engine already supports "no eligible event fires" — lean into that instead of fighting it. A reasonable rough distribution across a full life:
+- Many uneventful years (`"You turned 12."` with no event modal at all)
+- Frequent minor events (1–2 sentences, low-stakes)
+- Occasional normal events (2–4 sentences, a real choice)
+- Rare major events (4–7 sentences, meaningful consequences)
+- Very rare life-changing events (an adoption discovery, a biological parent's death, a windfall)
+
+Tune event weights so the mix trends toward the quiet end. A character whose parents divorce, gets into a car crash, and discovers a secret sibling all in the same year reads as a soap opera, not a life sim. Exact numbers can be tuned through playtesting once there's enough content to feel the pacing.
+
+**Random events create circumstances; the player decides the response.** The engine's job is to generate situations ("your parents are getting divorced," "you met someone while on vacation," "your biological mother has contacted you"). The `choices[]` array is the player's job. Never resolve a meaningful moment with a single guaranteed outcome when a real choice would work instead.
+
+**Meeting someone attractive never auto-creates a relationship.** This applies everywhere a character could meet a potential partner — the Dating App, random encounters, vacations, school, college, work, parties, and social media (see Relationships & Memories). Every one of those produces an *opportunity* NPC, not an instant partner. The player has to actually pursue it.
+
+**Prefer extending an existing system over building a new one.** This is still a solo project; every system below should default to "existing system + small extension" rather than a bespoke engine. In practice:
+- Classmates, dating candidates, and biological relatives are all just NPCs — use the existing NPC object and background simulation, don't invent a second character type.
+- Infant events, world news, and dating-app encounters all run through the existing event engine and JSON schema — don't build a second event pipeline.
+- Student loans are Bank Loans (Finance System) with a different label, not a new debt type.
+- GED and returning to college extend the existing education/college system, not a parallel one.
+- Biological-family reunions and reconnecting with an old classmate both use the existing relationship + memory system.
+- Childhood trait development (a bullied kid trending introverted) is just the existing Personality System's `trait_effects`, seeded earlier in life — not a separate "child psychology" system.
+
+**Event writing length** scales with weight:
+- *Minor* — 1–2 sentences
+- *Normal* — 2–4 sentences
+- *Major* — 4–7 sentences
+- Chains can run longer across their steps, but no single event should read like a short story.
+
+**Emergent storytelling, not scripted storylines.** The systems below are building blocks, not plot outlines. A few examples of what should be *possible*, not guaranteed:
+- *Adoption reunion:* Age 8, adoptive parents share the adoption story. Age 16, curiosity about biological family surfaces. Age 25, a biological parent makes contact. Age 30, a biological half-sibling turns up. None of this is scripted — each step is its own probabilistic event, gated on the last.
+- *Education, the long way:* Dropped out at 16 → GED at 19 → enrolled in college at 20 → dropped out again at 22 → returned at 28 → graduated at 31. The education history log (see School System → Education History) makes the whole path visible without erasing any of it.
+- *Friend-to-partner:* Met at a coffee shop at 23, stayed friends for a year, mutual attraction surfaced at 24, the player asked them out, they started dating.
+- *Vacation romance:* Met someone at 27 while traveling, exchanged contact info, kept it going long-distance, they visited a few months later, and it grew into something real.
+- *Old friend, years later:* A childhood best friend moved away at 10, resurfaced on social media at 15, and the two ran into each other by chance at 22.
+
+None of these are hardcoded — they're what falls out of the systems below interacting over a lifetime.
 
 ## Character Creation
 
@@ -62,9 +105,127 @@ Right now a new life starts as a full random roll. Adding a few deliberate choic
 - Parents' starting jobs and rough income (affects how much financial help, if any, they can offer later — college costs, a car at 16, an eventual inheritance)
 - A small starting-money nudge for the player character themselves
 
+### Birth Details
+
+A new life should read like the start of a story, not a stat dump. Generate and be able to surface:
+- **Full name** (already randomized)
+- **Exact birth date** — a random date within the appropriate range for the character's current age, giving `character.birthDate`
+- **Zodiac sign** — derived automatically from the birth date (see Zodiac Sign below)
+- **Country of birth** (player-picked, existing) and, where supported, a specific **city/location** within it
+- **Gender** (player-picked, existing)
+- **Family wealth/class** (rolled, existing)
+- **Parents** — see Parents & Household below
+- **Siblings**, if any
+- **Pets**, if any
+- **Basic household/living situation**
+
+**Birth announcement** — the opening history-log line should read like the beginning of a life, not a database dump:
+
+> "You were born on March 17, 2004, in Chicago, Illinois. You were born into a middle-class family. Your mother, Sarah Carter, is 27 and works as a nurse. Your father, Michael Carter, is 31 and works as an accountant."
+
+Exact wording can vary — this is a template pattern, not a single hardcoded sentence.
+
+### Zodiac Sign
+
+Derived automatically from `birthDate` — no player input, no separate astrology system. It's identity flavor first: shown on the character's Bio/Identity screen (see UI Design) alongside name and birthday. If it ever gets gameplay effects later, keep them minor and optional (a small flavor-text bias on an event, never a personality replacement) — don't build a horoscope system unless there's a clear gameplay reason to.
+
+### Birth & Conception Circumstances
+
+Most births are ordinary. A smaller, weighted pool of circumstances adds variety:
+- Planned pregnancy
+- Unplanned pregnancy
+- One-night stand
+- Affair
+- Long-term relationship
+- Single-parent birth
+- Other plausible circumstances
+
+These are rolled probabilistically, weighted heavily toward "ordinary" — an affair or one-night-stand origin should be rare, not a coin flip. Where relevant, the circumstance can shape:
+- Whether both biological parents are present in the household
+- The parents' relationship/status
+- Household structure
+- Starting family finances
+- Starting closeness with each parent
+- Whether a biological parent is absent from the start
+- Whether the character ends up raised by someone other than their biological parents (see Birth & Family Circumstances below)
+
+An unusual circumstance is not automatically a *bad* one — a single-parent household or a child of a one-night stand can still start with a perfectly warm, stable home.
+
+### Birth & Family Circumstances
+
+The starting household structure the character is actually raised in:
+- Two biological parents
+- Single biological parent
+- Biological parent + stepparent
+- Adopted at birth
+- Adopted shortly after birth
+- Raised by relatives (see Guardianship)
+- Raised by a legal guardian
+- Other plausible household structures
+
+This rolls alongside — and is informed by — the conception circumstances above, and it feeds directly into the existing NPC and family systems below. It is not a separate family-simulation engine; it just determines which NPCs get generated as the character's household at birth and how they're tagged (`relation`, and a new `relationshipType` — see Data Model Reference).
+
+### Adoption at Birth
+
+If the roll produces an adopted character:
+- **Adoptive parents** become the primary household and are generated exactly like normal parents — names, ages, occupations, wealth tier, personalities, relationships.
+- **Biological parents** remain distinguishable from adoptive parents in the data model (`biologicalParentReferences` vs `parentReferences`) and may exist as separate, dormant NPC records that only become active if the character later searches for or is contacted by them (see Biological Family below).
+- The character may have **biological siblings** (children of the biological parents, not necessarily raised alongside the character), **adoptive siblings** (other children of the adoptive parents, biological or also adopted), or **step-siblings**.
+
+Adoption is not automatically a sad origin. An adopted character can have a completely ordinary, happy childhood — the roll only determines the household shape, not its quality.
+
+### Knowledge of Adoption
+
+An adopted character does not necessarily know from the start. How and when they find out is itself probabilistic:
+- Adoptive parents tell the child during early childhood
+- Parents tell the child during adolescence
+- Parents tell the character during adulthood
+- The character discovers it independently (finds records, notices inconsistencies)
+- A relative reveals it
+- Another NPC accidentally reveals it
+- The character never discovers it at all
+
+If discovery happens through the character's own doing rather than a parent's disclosure, it can run as a normal event chain using the existing event/choice/memory pattern:
+
+> "You found an old document that suggests your parents may not be your biological parents."
+
+Choices: *Ask your parents about it* / *Investigate on your own* / *Ignore it*
+
+Possible consequences (via normal `effects` plus a written `memory`): parent closeness, happiness, a `curious_about_biological_family` flag that gates later biological-family events, and a relationship shift with adoptive parents. No dramatic discovery is guaranteed — plenty of adopted characters simply grow up knowing, or never find out at all.
+
+### Biological Family
+
+Where biological parents are known and represented (adoption, foster care, single-parent-with-absent-parent circumstances), they should keep living their own lives through the existing NPC background simulation (see NPC Life Events): marrying, remarrying, having more children, changing careers, moving, gaining or losing money, getting sick, retiring, dying. This is what makes biological half-siblings and extended biological family possible later. The character should never automatically meet them — contact has to be initiated by an event (see Biological Family Contact below).
+
+### Biological Family Contact / Reunion
+
+An adopted (or otherwise separated) character may eventually:
+- Search for biological relatives
+- Be contacted by a biological parent
+- Be contacted by a biological sibling
+- Discover a biological half-sibling
+- Discover biological relatives through records
+- Find relatives through social media (see Social Media System)
+- Meet a biological relative
+- Have contact refused — by the character or the relative
+- Discover the biological parent is deceased
+
+These are possible event chains gated on flags like `curious_about_biological_family` and the character's age, not a guaranteed storyline. The first time a biological relative becomes actually relevant (contact is made, not just referenced), promote them from a dormant reference into a full persistent NPC record with the existing relationship and memory systems — don't treat them as disposable event text.
+
+### Foster Care
+
+A lightweight pathway, not a child-welfare simulator. A child can enter foster care from circumstances such as parent death, abandonment, incarceration, severe neglect, or inability to care for the child. Possible outcomes: returned to a biological parent, placed with a relative, placed with a guardian, adopted, or remains in foster care until adulthood. The point is believable life circumstances and transitions — not a systems-heavy government simulation.
+
+### Guardianship
+
+Distinct from adoption. A child can instead be raised by a grandparent, aunt/uncle, older sibling, family friend, or other appropriate guardian, who becomes the primary caregiver/household relationship while biological parents can remain separately represented. Guardianship can affect household, caregiver relationship, finances, education support, family events, inheritance, and living situation — using the existing Family/NPC/Finance systems, not a duplicate one.
+
 **Content additions:**
-- `/data/world/countries.json` — a shared list used by Character Creation, Vacation, and relationship-relocation events (see the note in Vacation System about consolidating from the earlier vacation-only file)
-- `/data/character_creation/wealth_tiers.json` — the four tiers and what each grants
+- `/data/world/countries.json` — existing, shared list used by Character Creation, Vacation, and relationship-relocation events
+- `/data/character_creation/wealth_tiers.json` — existing, the four tiers and what each grants
+- `/data/character_creation/birth_circumstances.json` *(new)* — the conception-circumstance pool and weights
+- `/data/character_creation/family_structures.json` *(new)* — the household-structure pool (two bio parents / single parent / adopted / foster / guardian / etc.) and weights
+- Reuses the existing shared `names.json` for parents and siblings
 
 ## Aging & Appearance System
 
@@ -111,6 +272,7 @@ Family and friends shouldn't just sit there — they should age, change jobs, ge
   "id": "...",
   "name": "...",
   "relation": "mother | father | sibling | child | friend | coworker | ...",
+  "relationshipType": "biological | adoptive | step | foster | guardian | half | null",
   "closeness": 0-100,
   "age": 0,
   "alive": true,
@@ -132,8 +294,38 @@ Family and friends shouldn't just sit there — they should age, change jobs, ge
 
 **Cap per year** — with several NPCs in a character's life, more than one could be eligible for an event in the same year. Cap it (e.g. max 2 surfaced per age-up) so the feed doesn't get spammed, and let the rest wait in the pool for next year rather than dropping them.
 
+### Family Household Changes
+
+The starting household from Character Creation shouldn't stay frozen. The existing background simulation above should be able to flip additional flags/events on parent and guardian NPCs:
+- Parent promoted / loses a job / changes careers / starts a business / retires
+- Parents divorce / remarry
+- Family moves / buys a different home / downsizes
+- Family becomes wealthier / hits financial hardship
+- New sibling is born (see Parents Having Additional Children below)
+- A grandparent or other relative moves in
+- Parent dies — a guardian or the other parent takes over care
+- Custody/guardianship changes as a result of any of the above
+
+These surface to the player the same way any other NPC event does — most stay invisible, a subset become a real notification event, capped per year same as above. Custody or household changes triggered by a player's own divorce (see Marriage, Divorce & Kids) feed into this exact same mechanism rather than a separate resolution path.
+
+### Parents Having Additional Children
+
+Parents (biological or adoptive) can independently have more children through the same background simulation, gated on reasonable conditions: parent age, relationship status, household, existing number of children, and family circumstances. Not guaranteed — just a small yearly chance when conditions are met. The resulting sibling gets tagged with the correct relationship type (see Sibling Types below) based on which parents are involved — e.g. a child born to the biological mother after the character was adopted out is a biological half-sibling, not a full sibling.
+
+### Sibling Types
+
+Sibling relationships should distinguish:
+- Biological sibling
+- Half-sibling
+- Adoptive sibling
+- Step-sibling
+- Foster sibling
+
+All of them are persistent NPCs using the existing architecture (just the `relationshipType` field alongside `relation: "sibling"`), and all of them can go on to have their own education, careers, relationships, marriages, children, finances, life events, and deaths — same as any other NPC.
+
 **Content additions:**
 - `/data/events/npc_life.json` — or split into `parents.json`, `siblings.json`, `friends.json`, `extended_family.json` if the list grows large
+- `/data/events/family_changes.json` *(new)* — the household-change event pool described above, same schema as `npc_life.json`
 - Reuses `names.json` for any newly-generated NPCs (spouse's family, a sibling's kid, etc.)
 
 ## Personality System
@@ -152,7 +344,7 @@ Not just stat bars — every character also has a personality made of independen
 }
 ```
 
-**Where traits are shown:** the visible BitLife-style stat bars stay exactly as designed (Health/Happiness/Smarts/Looks/Money) — traits live on a separate Personality/Bio screen instead, summarized as the character's top 3–4 dominant traits (e.g. "Ambitious, Kind, Loyal") rather than fourteen raw numbers, matching how BitLife keeps its main screen simple. The full 0–100 values still drive behavior under the hood.
+**Where traits are shown:** the visible BitLife-style stat bars stay exactly as designed (Health/Happiness/Smarts/Looks/Money) — traits live on a separate Personality/Identity/Bio screen instead (alongside Zodiac Sign and Sexuality — see those sections), summarized as the character's top 3–4 dominant traits (e.g. "Ambitious, Kind, Loyal") rather than fourteen raw numbers, matching how BitLife keeps its main screen simple. The full 0–100 values still drive behavior under the hood.
 
 **How traits affect gameplay:**
 - **Event eligibility & weighting** — an event's `conditions` can require a trait threshold (`reckless_min: 60` gates extreme-sports-accident events) or use a trait as a weight multiplier on how often it's picked
@@ -166,7 +358,53 @@ Not just stat bars — every character also has a personality made of independen
 - Big one-off moments can shift traits sharply — surviving a serious accident drops `reckless`; a run of major success (fame, a big promotion) can raise `materialistic` and lower `kind`, modeling someone getting a little full of themselves
 - Trait deltas clamp to 0–100 like any other stat; decay-over-time isn't needed at first, it's a nice-to-have if traits feel too static once it's playable
 
+**Early personality development** — this doesn't need a separate infant/child personality system. Choices in the Infancy and Childhood event pools (see Infancy & Early Childhood Events and School System below) carry the exact same `trait_effects` as any other event: a tantrum choice nudges `shortTempered` up, sharing nudges `kind`/`generous` up, repeated bullying nudges `introverted` up and `extroverted` down. One event should never define a character — it's the same compounding drift described above, just starting earlier in life.
+
 **Content/code impact:** no new data files needed — this extends the existing event schema (`choices[].effects.traits`) and adds a `personality` block to the character object. The only new code is a `personality.js` module with helpers like `getDominantTraits(character)` for the UI and `getTraitModifier(character, trait)` for event weighting.
+
+## Aspirations & Goals
+
+A lightweight aspirations layer sitting on top of Personality, Education, and Career rather than a new simulation.
+
+**Aspirations** are what the character wants to become or achieve, starting in childhood and evolving with age:
+
+> Age 8: *"I want to become a famous singer."*
+> Age 15: *"You dream of becoming a professional musician."*
+> Age 25: *"You've decided you no longer want to pursue music."*
+
+Childhood examples: become a doctor, actor, musician, athlete; become famous; become wealthy; help people; become an artist; have a large family; travel the world.
+
+**What influences them:** personality, talents, school activities/clubs, family, life events, success and failure, relationships, and career — the same signals that already drive club/talent mapping (School System) and Special Career eligibility.
+
+**Goals, dreams, and life wishes** can share one unified state model rather than three separate systems:
+- *Aspiration:* "Become a famous actor."
+- *Goal:* "Buy a house before age 30."
+- *Dream:* "Travel to Japan."
+- *Life wish:* "Have three children."
+
+Each has a state: `active`, `completed`, `abandoned`, `replaced`, or `failed`/expired where that makes sense. Keep the implementation simple — one `aspirations[]` array on the character with `{ id, text, category, state, createdAge, resolvedAge }`, checked the same way Achievements are (see Achievements & Challenges).
+
+The player should eventually be able to pursue, change, or abandon an aspiration — none of this needs to be enforced or scored; it's mostly flavor and event-gating (an aspiration can raise the weight of related events, the same way a personality trait does).
+
+**Content additions:**
+- `/data/aspirations/aspirations.json` — the aspiration pool by life stage/category, plus which stat/talent/personality signals it reads from
+
+## Infancy & Early Childhood Events (Ages 0–4)
+
+The Infant life stage (0–4, see Aging & Appearance System) currently has no dedicated event pool — age-up events start at Child (5+). This adds one.
+
+**Infant event pool** (`/data/events/age_up/infant.json`), using the exact same event schema as every other age-up pool: vaccinations, doctor visits, getting sick, teething, first smile, first word, first steps, first haircut, learning to eat, sleep problems, a favorite toy, being scared, visiting relatives, starting preschool/daycare, making a young friend, harmless trouble, breaking something, getting attached to a toy, getting praised, an early interest emerging, a parent changing jobs, moving homes, a new sibling arriving, parents separating, and other ordinary early-life moments.
+
+**Infant choices** should match the character's actual age — no adult-level reasoning for a toddler:
+
+> "You are getting your vaccinations today. You don't like the idea of getting a shot."
+
+Choices: *Cry* / *Stay brave* / *Try to run away* / *Throw a tantrum*
+
+**Personality seeding** — these choices feed the exact same `trait_effects` mechanism as every other event (see Personality System → Early personality development). No separate infant-personality system.
+
+**Content additions:**
+- `/data/events/age_up/infant.json` — the infant/toddler event pool described above
 
 ## School System
 
@@ -176,7 +414,12 @@ Not just stat bars — every character also has a personality made of independen
 - High school: roughly ages 14–18
 - Each transition is a life-stage check in the existing game loop, not a player choice — school just starts automatically at the right age
 
-**Random school events** aren't a separate system — they're age-up events in the existing `childhood.json`/`teen.json` pools, gated by an `in_school` flag and the specific stage in `conditions`. Bullying, making a best friend, a crush, getting in trouble, acing or bombing a test — all standard age-up events, just conditioned on being enrolled.
+**School content by stage** — random school events aren't a separate system, they're age-up events in the existing `childhood.json`/`teen.json` pools, gated by an `in_school` flag and the specific stage in `conditions`:
+- **Elementary school:** friends, bullying, teachers, tests, recess, birthday parties, school projects, field trips, getting in trouble, academic success/failure
+- **Middle school:** stronger friendships, cliques, bullying, changing interests, early crushes, clubs, academic pressure, social conflicts
+- **High school:** dating/crushes, friend groups, parties, academic pressure, sports, clubs, teen jobs, college prep, graduation, driving-related events
+
+**Childhood milestones** round out the major random events with ordinary ones, so childhood feels lived-in rather than disaster-driven: first birthday, losing a first tooth, learning to ride a bike, first sleepover, first day of school, a school award, a favorite teacher, a best friend, an age-appropriate first crush, a first pet, a new hobby, a family vacation, a strong childhood interest. These coexist with the bigger events — see Design Philosophy for the intended ratio of ordinary to extraordinary years.
 
 **Clubs & after-school activities** unlock at high school:
 - Activities-menu entries: Drama Club, Sports Team, Debate Team, Band/Music, Art Club, Coding Club, etc.
@@ -184,23 +427,130 @@ Not just stat bars — every character also has a personality made of independen
 - This is the natural on-ramp into several Special Careers — Drama Club feeds Actor, Sports Team feeds Pro Athlete, Band feeds Musician — so a club's stat gains should map directly onto whatever talent stat that Special Career checks for eligibility later
 - A club can also have its own small event pool (a talent show, a big game, a rivalry) using the same activity-event trigger pattern as Vacation below
 
+### Persistent but Changing Classmates
+
+Classmates are persistent NPCs, but the class roster isn't permanently fixed. The player should have a recognizable school social circle that naturally changes over time rather than either staying frozen or reshuffling completely.
+
+**At each school-year transition, the game can change the roster**, weighted so most classmates stay put and only a smaller slice changes:
+- A classmate stays in the player's class (the common case)
+- A classmate moves to another class at the same school
+- A classmate transfers to another school
+- A classmate's family moves to another city/country
+- A classmate leaves school entirely
+- A new student joins the school, and possibly the player's specific class
+- A classmate repeats a grade, where appropriate
+- A classmate graduates and leaves (high school only)
+- Rarely, a classmate dies
+
+Example: at age 10 the player has 15 classmates; at age 11, 11 of them remain, 2 transfer schools, 1 moves away, and 1 new student joins. Most of the roster carries over year to year — this isn't a reshuffle.
+
+**Classmates who remain** keep their name, personality, relationship with the player, memories, academic history, and other life events — nothing resets on a school-year transition.
+
+**Classmates who leave the class don't disappear from the simulation.** They keep existing as persistent NPCs elsewhere, and can still message the player, remain a friend, visit, show up on social media, reconnect years later, or become a romantic interest later in life if age-appropriate (see Relationships & Memories → Meeting People).
+
+**New classmates** are generated through the existing NPC system with a name, age, gender, personality, family circumstances, relevant interests, and relationship status — not disposable event text.
+
+**Classmate interactions** — the player can ask to be friends, talk, play, compliment, tease, mess with them, ignore, give a gift, invite them over, or (age-appropriately) develop a crush. NPCs can also initiate:
+
+> "Emma asked if you'd like to be friends." · "Jake keeps bothering you during lunch." · "Sarah invited you to her birthday party."
+
+The player's response affects closeness, same as any other relationship event. Not every classmate becomes meaningful — most stay background NPCs; a few become friends, best friends, rivals, bullies, crushes, future coworkers, or lasting acquaintances.
+
 **Content additions:**
 - `/data/school/clubs.json` — club list, the stat/talent it feeds, and which Special Career (if any) it's a prerequisite boost for
+- `/data/events/school/roster_changes.json` *(new)* — the weighted roster-change pool described above
 - School-specific age-up events stay inside the existing `childhood.json`/`teen.json` files rather than a new file, just tagged with `in_school`/stage conditions
 
 ### Higher Education
 
-**College & University** — after high school, a character with strong enough Smarts (and ideally some club/extracurricular history) can apply. Colleges are tiered (`colleges.json`): community college (easy admission, cheap), state school (moderate), prestigious/Ivy-tier (hard admission, expensive, better career payoff later) — admission odds scale with Smarts and the club participation from above.
+Education is a **branching path**, not a single staircase:
 
-**Choosing a major** does more than add flavor: each major (`majors.json`) maps to which regular jobs and Special Careers become eligible after graduation — Pre-Med → the Doctor ladder, Business → CEO/Business System eligibility, Theater → Actor, Computer Science → tech jobs — replacing the vague "Bachelor's degree" gate used earlier in the Career System with something the player actually chooses.
+```
+Normal:          High School → College → Graduation → Career
+Dropout:         High School → Dropout → GED → College or Workforce
+Workforce:       High School → Workforce → Career
+College dropout: High School → College → Leave → Dropout → Workforce
+Return:          High School → College → Dropout → Workforce → Return to College → Graduation
+Alternative:     High School → Trade/technical education → Career
+```
+
+**College & University** — after high school, a character with strong enough Smarts (and ideally some club/extracurricular history) can apply. Colleges are tiered (`colleges.json`): community college (easy admission, cheap), state school (moderate), prestigious/Ivy-tier (hard admission, expensive, better career payoff later) — admission odds scale with Smarts, club participation, and (where relevant) GED status instead of a normal diploma.
+
+**Choosing a major** does more than add flavor: each major (`majors.json`) maps to which regular jobs and Special Careers become eligible after graduation — Pre-Med → the Doctor ladder, Business → CEO/Business System eligibility, Theater → Actor, Computer Science → tech jobs — replacing a vague "Bachelor's degree" gate with something the player actually chooses.
 
 **GPA** is tracked through college years, moved by a yearly study-vs-socialize choice (an explicit Happiness/relationships-vs-GPA tradeoff). Higher GPA improves post-grad job quality and is a prerequisite for grad school admission.
 
 **Greek life** is an optional college activity: joining a fraternity/sorority builds closeness with new friend NPCs fast, at the cost of occasional hazing-risk flavor events and a reputation swing either direction.
 
-**Dropping out & grad school** — dropping out early is always an option (forfeits the degree; any student loan already taken stays on the books regardless). Grad school (med school, law school, MBA, PhD) is its own multi-year, higher-cost stage on top of a bachelor's, and is what actually unlocks the top of the Doctor and Lawyer/Judge Special Career ladders, rather than those just being gated by a generic "professional school" flag.
+**High school dropout** — available starting around age 16–17. Not a yearly popup — it lives behind a menu path that requires confirmation: **Occupation → Education → Drop Out of High School.** Consequences: education history records leaving without a diploma, no normal high school diploma, some jobs become unavailable or harder to get, college admission may become unavailable or harder depending on the institution, and education status becomes `"High School Dropout"` (or equivalent). Not a permanent lockout — see GED below.
 
-**Content additions:** `/data/school/colleges.json`, `/data/school/majors.json`
+**GED / high-school equivalency** — a dropout can pursue this later via **Education → Take GED / High School Equivalency**, available at an appropriate age after dropping out. It has eligibility requirements, can require preparation/study, can be passed or failed, and permanently records the result in education history. Passing restores eligibility for some jobs and can reopen college admission at institutions that accept the credential — it doesn't erase the fact that the character originally dropped out. Use country-appropriate terminology where relevant.
+
+**High school graduation** — when the character graduates normally, this gets its own dedicated event ("Congratulations! You graduated from high school.") that offers: attend college, enter the workforce, take a gap year, or decline college outright.
+
+**College funding** — after acceptance, the player chooses how to pay: ask parents to pay, apply for a scholarship, apply for a student loan, or pay personally. None of these are guaranteed approval.
+- **Parent funding** depends on relationship/closeness, parent income and savings, family wealth, parent personality, existing financial obligations, and the tuition cost itself — not a simple coin flip. Example outcomes: *"Your mother agreed to pay your tuition."* / *"Your father refused to pay for your college education."* / *"Your parents can afford to contribute $8,000 per year."*
+- **Scholarships** consider GPA, Smarts, extracurriculars, sports/artistic talent, achievements, and family financial need for need-based awards. They reduce tuition — they don't generate free cash.
+- **Student loans** go through the existing Finance System (Bank Loans) rather than a separate architecture: principal, interest, real debt that survives graduation *or* dropping out, requires repayment, and feeds the same `creditScore`/debt mechanics as any other loan.
+
+**College leave of absence** — a temporary pause, distinct from dropping out, via **Education → Take Leave of Absence.** Preserves enrollment/academic history and completed credits where appropriate, may create financial or academic consequences depending on circumstances, and the character can return later. Not treated as a dropout.
+
+**College dropout / withdrawal** — leaving college before graduating, via **Education → Drop Out of College** (requires confirmation). Education history records the attendance and completed credits/years where appropriate; the character doesn't receive the degree; any student loans remain; careers requiring the degree stay unavailable; and the character may return later.
+
+**Returning to college** — a character who previously dropped out can return if they meet the relevant requirements: return to the same college or apply elsewhere, resume the previous major or change it, and transfer eligible credits where supported. Dropping out never erases the character's entire education history.
+
+**Education history** — a persistent, append-only record capable of holding elementary/middle/high school, dropout, GED/equivalency, college enrollment, leave, dropout, major changes, transfers, degrees, and (once supported) grad school. Example:
+
+```
+Age 16: High School — Dropped Out
+Age 19: GED — Passed
+Age 20: College — Business Administration
+Age 22: College — Dropped Out
+Age 28: Returned to College — Computer Science
+Age 31: Bachelor's Degree — Computer Science
+```
+
+**College life** — college shouldn't reduce to *choose major → pay tuition → age up*. Give it its own flavor-event pool around acceptance/rejection, choosing a school, moving away vs. living with parents, dorm life and roommates, making friends, clubs, dating, academic pressure, changing majors, leave of absence, dropping out, returning, graduation, and student debt — same event schema, own pool.
+
+**Dropping out & grad school** — grad school (med school, law school, MBA, PhD) is its own multi-year, higher-cost stage on top of a completed bachelor's, and is what actually unlocks the top of the Doctor and Lawyer/Judge Special Career ladders, rather than those being gated by a generic "professional school" flag.
+
+**Content additions:**
+- `/data/school/colleges.json`, `/data/school/majors.json` — existing
+- `/data/school/ged.json` *(new)* — GED eligibility, prep requirements, and pass/fail odds
+- `/data/events/school/college_life.json` *(new)* — the richer college flavor-event pool described above
+
+## Sexuality
+
+A persistent character (and NPC) attribute, chosen by the player rather than assigned.
+
+**Player selection** — once the character reaches an age where romantic/sexual identity is appropriate (generally during the teenage years, per the existing life-stage system), an event offers the choice:
+
+> "You're starting to understand who you're attracted to."
+
+Choices: *Men* / *Women* / *Men and women* / *People regardless of gender* / *I'm not interested in sexual relationships* / *I'm not sure yet*
+
+This sets a persistent `sexualOrientation` value: `straight`, `gay`, `lesbian`, `bisexual`, `pansexual`, `asexual`, or `questioning`. The player explicitly chooses — it's never rolled for them.
+
+**Questioning is a valid, stable state**, not a placeholder that must resolve. A character who picks Questioning can revisit the selection later; if the design allows revisiting it, changing orientation never erases existing relationships or memories — existing relationships are just re-evaluated for compatibility going forward, never retroactively invalidated.
+
+**Kept separate from other systems:**
+- `sexualOrientation` ≠ gender / gender identity
+- `sexualOrientation` ≠ the `romantic` personality trait (Personality System) — `romantic` is *how romantic* a character tends to be; `sexualOrientation` is *who* they're attracted to. Don't conflate them.
+
+**NPCs get the same field**, generated probabilistically when the NPC is created (not uniform — vary it across the population). NPC orientation governs who they can date, who they're attracted to, whether they accept a romantic advance, marriage/partner possibilities, and breakup/relationship-compatibility events.
+
+**Dating pool filtering** — sexual orientation directly filters the dating pool (Dating App and natural encounters both — see Relationships & Memories), alongside gender, NPC orientation, age/life stage, relationship status, and location. A lesbian character's pool skews toward women; a bisexual or pansexual character's pool spans a wider compatible set; an asexual character can still pursue romantic relationships, just without sexual attraction as the basis for them. Compatibility never guarantees chemistry — it only determines who's eligible to appear.
+
+**UI** — surfaced on the character's Bio/Identity screen (see UI Design) alongside Personality and Zodiac Sign, not on the main BitLife-style stat screen:
+
+```
+Identity
+Gender: Female
+Sexuality: Bisexual
+```
+
+**Content additions:**
+- `/data/sexuality/orientations.json` *(new)* — the small, centrally-defined orientation list (id + label) referenced everywhere instead of hardcoding string literals throughout the game
 
 ## Relationships & Memories
 
@@ -221,7 +571,81 @@ Romantic relationships get a deeper layer than the general NPC Life Events above
 - "Move in together?" — accept (updates living situation, writes a positive memory) or decline (may hurt closeness or end the relationship, depending on how it's framed)
 - "I got a job offer in {city/state/country}, come with me?" — choices: **Agree & go** (relocates the player, updates a `location` flag, writes a memory), **Stay** (partner may go alone — sets up a breakup or long-distance flag), **Break up now**, or **"I need to think about it"** (defers via `next_event`, queues a follow-up next year rather than forcing an immediate answer)
 
-**Content additions:** no new top-level data files — memories live on the NPC objects in save data, and the events that read/write them live in the existing relationship/dating event pools with the schema extension above.
+### Relationship States
+
+Extend the existing relationship model (it's still one NPC object with a `relation`/`relationshipType` and closeness — not a second system) to distinguish: Stranger, Acquaintance, Friend, Close Friend, Best Friend, Crush, Romantic Interest, Dating, Partner, Engaged, Married, Ex, Casual Connection, Long-Distance Partner. Progression through these is optional at every step — a character can plateau at "Friend" forever, or skip straight from meeting someone to dating if the player chooses.
+
+### Meeting People
+
+Dating never requires a single dedicated feature — it should fall naturally out of the character's life. Potential romantic interests can originate from school (age-appropriate), college, work, parties, friends and friends-of-friends, family/social gatherings, restaurants, bars/nightlife (age-appropriate), hobbies, sports, gyms, vacations, social media, random encounters, and the Dating App below. All of it runs through the existing event system — a random encounter is just an event like any other:
+
+> "You were waiting for your coffee when you struck up a conversation with someone named Alex. You immediately felt attracted to them."
+
+Choices: *Ask for their number* / *Ask them out* / *Keep talking* / *Become friends* / *Say goodbye*
+
+When a character is met through a random event, school, work, or vacation, they should usually start as a friend or acquaintance rather than an instant partner (see Attraction & Dating Progression below) — the player decides whether to pursue it further.
+
+**Vacation romance** — vacations (see Vacation System) can generate their own unique social/romantic encounters:
+
+> "You met someone named Maya while visiting Barcelona. The two of you spent the afternoon talking and you felt an immediate attraction."
+
+Choices: *Exchange contact information* / *Ask them out* / *Spend more time together* / *Become friends* / *Move on*
+
+Possible outcomes range from a brief vacation fling to a lasting friendship, a one-time encounter, a long-distance relationship, or a serious relationship that continues after returning home. The NPC persists if the player exchanges contact info or otherwise makes a real connection — and once home, they can continue messaging, visit, start a long-distance relationship, or gradually lose touch. Distance should matter. Not every vacation produces a romance — see Random Encounter Weighting below.
+
+**Dating App** — an Activities/Relationships feature that unlocks once the character reaches an appropriate age. It generates a rotating pool of compatible NPC profiles (name, age, gender, occupation, location, personality highlights, interests, relationship status, a compatibility indicator, and a short description — never every hidden NPC stat). The player can like, pass, message, match, start a conversation, ask them on a date, or stop messaging. **A match never automatically creates a relationship** — it just opens the door to messaging, flirting, and (eventually, if the player pursues it) a date. Dating App candidates are generated through the existing NPC system and become persistent the moment the interaction becomes meaningful, exactly like any other romantic NPC.
+
+### Attraction & Dating Progression
+
+Attraction, a crush, friendship, and an actual relationship are all separate states, not synonyms:
+
+```
+Met NPC → Friend → Attraction develops → Romantic interest → Date → Dating → Partner → Engagement → Marriage
+```
+
+The player can stop at any stage. NPCs can also initiate:
+
+> "Alex has been flirting with you lately." · "Jordan asked if you'd like to go on a date." · "Taylor told you they have feelings for you."
+
+— with the player free to accept, decline, ask to stay friends, or ignore it. NPC personality, orientation, attraction, and the existing relationship all weight these.
+
+**Dates** are their own distinct interaction, not an instant relationship — coffee, dinner, a movie, a park, a concert, a museum, the beach, or a shared hobby, each resolving to great chemistry, a good date, an awkward date, no chemistry, or "let's just be friends" (with the NPC having their own independent reaction, not always matching the player's).
+
+**Casual encounters** — adult characters can optionally choose a casual one-night encounter when the moment presents itself (e.g. while traveling). This is always a player choice, never automatic, and resolves through the existing event/relationship system without graphic content:
+
+> "You've been talking with someone you met while traveling, and there's a strong mutual attraction."
+
+Choices: *Spend the evening together* / *Ask them on a proper date* / *Exchange contact information* / *Remain friends* / *Say goodbye*
+
+Consequences can include the encounter simply ending there, a friendship, continued dating, developing feelings, the NPC reaching out later, or pregnancy where biologically applicable — a casual encounter never automatically becomes a relationship.
+
+**Romance is never automatic.** Meeting someone attractive should never resolve to "Congratulations! You are now dating" on its own — not from the Dating App, a random encounter, vacation, school/college, work, a party, a friend, or a social-media connection. The event always creates an opportunity; the player always decides what happens with it.
+
+### Breakups & Exes
+
+Relationships aren't permanent. A partner can break up with the player, be broken up with, drift apart, lose interest, separate over distance, or reconcile later. After a breakup, the NPC stays in the character's history and can remain a friend, become an enemy, stay a distant acquaintance, or reconnect — sometimes romantically — years later.
+
+**Exes keep living their own lives** through the existing NPC simulation: they can marry, have kids, change careers, get rich, move away, become famous, get back in touch years later, become a friend again, become a rival, or potentially rekindle things. None of this is scripted; it emerges the same way any other NPC's background life does.
+
+### Romantic History
+
+The character maintains a relationship history compatible with the existing Memories system: first crush, first date, first relationship, ex-partners, long-term relationships, engagements, marriages, divorces, and other significant romantic moments — the same memory-log mechanism already described above, just read back as a timeline.
+
+### Random Encounter Weighting
+
+Romantic opportunities stay genuinely random. Not every vacation produces a love interest, not every friend becomes a romantic interest, and not every Dating App match goes anywhere. Weight the odds by age, life stage, relationship status, sexual orientation, location, personality, social activity, and existing relationships — and let some years pass with no romantic opportunity at all. That's expected, not a bug (see Design Philosophy).
+
+### Cross-System Notes
+
+- **Dating + career** — coworkers can become romantic interests; the player can stay professional, become friends, date, or decline an advance.
+- **Dating + social media** — a follow, a message, a post getting attention, or an online community can occasionally create a romantic opportunity, same weighting caveats as everywhere else (see Social Media System).
+- **Dating + family** — introducing a serious partner to the family can trigger approval/disapproval events, using the existing Family and Relationship systems rather than a new one.
+- **Dating + marriage** — dating naturally feeds into the existing Marriage system below, but progression is always optional: a character can date casually across multiple relationships, stay single for life, remain friends with old romantic interests, or have long-term relationships without ever marrying.
+
+**Content additions:** no new top-level data files for the core mechanics — memories and relationship state live on the NPC objects, same as before. New content pools:
+- `/data/events/romance/random_encounters.json` *(new)* — the "met someone" event pool referenced above (coffee shop, party, social gathering, etc.)
+- `/data/events/romance/dating_app.json` *(new)* — Dating App message/date flavor events
+- `/data/events/romance/casual_encounters.json` *(new)* — the adult-only casual-encounter pool
 
 ## Marriage, Divorce & Kids
 
@@ -236,10 +660,12 @@ Builds directly on the closeness/memory system above — this is what a serious 
 - **Pregnancy** — a "Try for a baby" activity where applicable, a pregnancy event chain over roughly a year, ending in a birth event that creates a new NPC with `relation: "child"`. A small complication-risk roll here is exactly what Health Insurance from the Finance System is for.
 - **Adoption** — an alternate path: browse an adoption agency (cost, a waiting-period event or two), ending the same way with a new child NPC.
 
+**Same-sex couples** follow the same proposal/wedding/divorce mechanics as any other couple. Family-building uses the existing Adoption path above rather than the Pregnancy path (which stays reserved for couples where it's biologically applicable); a same-sex couple can also foster or gain guardianship of a child through the pathways described in Character Creation. The family/NPC model supports two-mother, two-father, and other parental structures without special-casing — a child's parent references just point at whichever NPCs are actually the parents.
+
 **Divorce:**
 - Triggered either by player choice (an "Ask for a divorce" activity) or by relationship breakdown — closeness collapsing after repeated negative events or an unresolved betrayal memory
 - Resolves three things: an asset split (touches `finances` — checking/savings/property divided), custody of any kids (joint, or one parent primary — affecting future closeness growth and visitation-style events with the non-primary parent), and alimony (a recurring payment either direction, sized by income disparity)
-- The NPC's `relation` flips to `"ex-spouse"`; the whole thing writes a heavy memory — exactly the kind of thing the "still hasn't forgiven you" callback pattern from above can reference for years afterward
+- The NPC's `relation` flips to `"ex-spouse"`; the whole thing writes a heavy memory — exactly the kind of thing the "still hasn't forgiven you" callback pattern from above can reference for years afterward. Custody/household changes from this feed into the Family Household Changes mechanism (NPC Life Events) rather than a separate resolution path.
 
 **Content additions:**
 - `/data/events/relationships/marriage.json` — proposal and wedding events
@@ -258,6 +684,8 @@ Expanding the vacation activity into a real trip builder instead of one flat "go
 **Cost formula:** `total cost = country base cost × flight multiplier × accommodation multiplier`, deducted from money on booking.
 
 **Event resolution:** after booking, roll the vacation event pool (`vacation.json`), weighted/filtered by the trip's tier — budget trips lean toward grittier or funnier mishaps (lost luggage, bad street food, a sketchy hostel night), luxury trips lean toward glamorous ones (rubbing shoulders with someone famous, a resort romance). The destination's flavor tag further biases which specific events are eligible.
+
+**Vacation romance** is one of the possible sub-events this pool can roll — see Relationships & Memories → Meeting People for the full mechanic (meeting an NPC, exchanging contact info, and what can follow). The Vacation System just supplies the setting and the destination's flavor tag as an eligibility bias; the romance mechanics themselves live in Relationships & Memories so there's only one dating/relationship engine.
 
 **Content additions:**
 - `/data/world/countries.json` — shared country list with cost multiplier + flavor tag (see Character Creation — this replaced an earlier vacation-only file once Character Creation and Relationships also needed a country list)
@@ -303,6 +731,8 @@ Streamer and ESports Pro are fully separate careers — separate ladder files (`
 - A Special Career can be held as either the main job or the sideline, but not both roles at once — e.g. Streamer works well as a sideline for a character with a boring main job, which is a natural on-ramp into that career later if it takes off
 - Occupation menu gets a second tab/section for the sideline, separate "Find Sideline" / "Quit Sideline" actions from the main job's "Find Job" / "Quit Job"
 
+**Education feeds eligibility, not just a diploma flag** — see School System → Higher Education for the full branching education path (dropout, GED, leave of absence, dropout/return). Career/job eligibility should check the character's actual education history rather than a single "has degree: true/false" flag, so a GED-holder or a returning dropout isn't permanently locked out.
+
 **Content addition:** `/data/careers/sideline_jobs.json` — the gig/part-time job pool, plus a small flavor-event pool for sideline-specific moments (bad customer, good tips, schedule conflict with the main job).
 
 ## Crime & Prison System
@@ -326,6 +756,8 @@ Crime has been a placeholder activity since the very first draft of this plan �
 
 **Organized Crime tie-in:** the Special Career from above runs on this same crime-resolution engine underneath, just with a career-progression wrapper (street hustler → made member → boss) layered on top rather than a separate system — committing crimes for the mob uses the exact same success/arrest rolls as any other character's crime activity.
 
+**System compatibility** — crime should stay wired into the rest of the simulation rather than existing in its own bubble: finances (fines, lost income while incarcerated), career (blocked entry to certain careers), education (harder to complete a degree while inside), relationships (closeness strain, breakups), family (a household change per NPC Life Events), reputation/Fame, housing, credit score, and travel (a criminal record can block entry to some vacation destinations, already noted above). A criminal history should have real long-term weight without permanently foreclosing every future option.
+
 **Content additions:**
 - `/data/crime/crime_types.json` — the tiered crime list: base success odds, payout range, sentence range
 - `/data/events/crime/prison_life.json` — the prison-specific event pool
@@ -348,13 +780,46 @@ Money has grown well past a single number. Here's the full picture — banking, 
 }
 ```
 
+### Everyday Income & Expenses
+
+Money shouldn't only move when the player manually buys something — it should function as the character's actual life economy, all still flowing through the same `character.finances` object above.
+
+**Income** can come from salary, sideline jobs, businesses, investment income, rental income, inheritance, or gifts — all processed through the existing Finance System, not a separate income pipeline.
+
+**Recurring expenses** resolve automatically on every age-up: housing, food, transportation, utilities, healthcare, insurance premiums, education, child expenses, pet expenses, debt payments, and entertainment.
+
+**One-time expenses** happen when the player takes the relevant action, through whichever system already owns it — buying a car (Assets), buying a house or property (Investments → Real Estate), college tuition (School System), medical bills (uninsured health events), vacations (Vacation System), weddings (Marriage), moving, major repairs, or gifts. No separate spending engine — everything already routes through `finances`.
+
+**Financial age-up summary** — once enough income/expense sources exist, surface a yearly breakdown so the player can actually see where money moved:
+
+```
+AGE 28 FINANCIAL SUMMARY
+Salary:                +$72,000
+Investment income:      +$3,200
+Rent:                  -$18,000
+Food/living expenses:   -$9,600
+Insurance:              -$4,200
+Student loan payments:  -$6,000
+Net change:            +$37,400
+```
+
+Exact UI TBD — this can be a simple end-of-year modal or a line on the Bank screen.
+
+### Family & Household Finances
+
+Starting family wealth (Character Creation) is a *starting condition*, not a lifetime guarantee. Parents and guardians have their own ongoing finances through the same NPC + Finance systems, which can influence housing quality, school opportunities, family vacations, gift-giving, college tuition support, emergency financial help, and inheritance. A wealthy family generally has more resources, but individual family members can still lose a job, take on debt, go through a business failure or divorce, face medical expenses, go bankrupt, or land a windfall or inheritance — all via the Family Household Changes mechanism in NPC Life Events, not a separate family-finance model.
+
+### Cash vs. Net Worth
+
+Keep checking balance, savings, investments, property, other assets, debt, and net worth clearly distinct in the UI (see Assets → Net worth). A character can have a $500,000 net worth while carrying only $4,000 in checking, or a high salary while sitting on negative net worth because of debt. Never treat checking balance alone as a proxy for "is this character rich."
+
 ### Banking
 
 - **Checking** — opens automatically once a character starts earning (a basic teen checking account can open earlier). Salary/job income deposits here each year; everyday activity costs deduct from here. Minimal or no interest. Spending past zero triggers a small overdraft-fee event rather than silently blocking the purchase.
 - **Savings** — a "Transfer to Savings" activity moves money from checking; earns a modest interest rate calculated once per age-up (`balance × rate`). Withdrawal limits/penalties and tiered accounts unlocked by balance thresholds are reasonable depth to add later, not required for a first pass.
 - **High-Yield Savings** — same shape as Savings but a higher rate and a minimum-balance requirement to open/maintain — the natural place to park a large emergency fund.
 - **Certificates of Deposit (CDs)** — lock an amount for a term (1/3/5 years) at a fixed rate higher than savings; cashing out early costs a penalty; at maturity (checked on age-up), principal + interest returns automatically unless the player rolls it into a new CD.
-- **Bank Loans** — Personal, Auto, Mortgage, Student, and Business loan types, each with its own typical rate/term range. Approval is gated by `creditScore` plus income and existing debt; missed payments hurt `creditScore` and can trigger repossession/foreclosure events, paying one off in full helps it.
+- **Bank Loans** — Personal, Auto, Mortgage, Student, and Business loan types, each with its own typical rate/term range. Approval is gated by `creditScore` plus income and existing debt; missed payments hurt `creditScore` and can trigger repossession/foreclosure events, paying one off in full helps it. This is also exactly what backs Student Loans in the Higher Education system above — there's no separate student-loan architecture.
 - **Credit cards** — random financial events (`financial_events.json`) periodically offer a card with a given limit and APR — **Accept** (adds it to `creditCards[]`, usable for purchases elsewhere) or **Decline**. Carried balances accrue interest yearly; missed payments or a maxed-out card hurt `creditScore`, paying one down helps it. `creditScore` ends up being the one number that quietly gates loan approval and credit limits everywhere else — worth building early since so much else reads from it.
 
 ### Investments
@@ -482,6 +947,7 @@ Four platforms, each with a distinct posting type and monetization path. (These 
 - **Affiliations & sponsorships** — at follower milestones, sponsors offer brand deals (accept for a payout + possible follower bump, or decline to protect authenticity/reputation); deals can be pulled if a scandal follows
 - **Scandals / viral controversies** — random negative events (leaked drama, a bad take, a cancel-culture pile-on) that spike or crater followers; player picks a response (apologize, ignore, double down), each with different follower/reputation outcomes
 - **Verified status** — cosmetic milestone at a high follower count, small trust/credibility bonus for sponsorship offers
+- **Romantic opportunities** — same as any other social platform (see Relationships & Memories → Cross-System Notes), a follow, message, or viral post can occasionally surface a potential romantic connection. Rare, and never automatic.
 
 **Content additions this needs:**
 - `/data/social_media/facebook.json`, `tiktok.json`, `youtube.json`, `twitch.json` — post flavor text pools and scandal event pools per platform
@@ -508,6 +974,25 @@ Personality feeds into the odds here too: a Kind/Extroverted character gets bett
 - `/data/events/fame_recognition.json` — the recognition event pool
 - Add a `public: true/false` flag to activity definitions so the engine knows which ones are eligible to roll a recognition check
 
+## World & Country Events
+
+The character's country of birth (and any country they later live in or visit) shouldn't just set a cost multiplier — it should shape what's happening around them.
+
+**Country-specific content**, driven by extensions to the existing `/data/world/countries.json`: holidays, festivals, cultural events, national celebrations, school holidays, elections, major sporting events, weather, natural disasters, economic events, and other locally-relevant happenings. Keep this data-driven — never hardcode a specific country's events directly in JavaScript.
+
+**World events & news** — a layer that exists independently of the player, distinguishing three tiers:
+1. **Purely informational news** — flavor only, no mechanical effect (an election result, a scientific discovery)
+2. **News that creates a chance of a personal event** — a recession *can* trigger a parent's job loss or an investment dip, it doesn't automatically
+3. **News that directly affects the player** — rare, reserved for major/life-changing-tier events
+
+Possible categories: elections and political developments, economic recessions, wars/conflicts, pandemics, scientific/technological breakthroughs, natural disasters, major sporting events, and cultural events. Possible personal consequences when tier 2/3 news actually lands on the player: parent or player job loss, reduced income, investment losses, business problems, housing problems, or education-funding problems. Most news should stay tier 1 — see Design Philosophy for why the world shouldn't dominate every year.
+
+**News feed** — the event feed (see UI Design) should be able to show world news alongside personal events while clearly distinguishing personal, family/NPC, school, local, and world-news entries (a different icon/style per category, matching the existing icon-by-type pattern). Weight and frequency-limit world news so it never crowds out the character's own life.
+
+**Content additions:**
+- `/data/world/holidays.json` *(new)* — per-country holiday/festival/cultural-event list, referenced by id from `countries.json`
+- `/data/events/world/news.json` *(new)* — the world-news pool, tagged with its tier (informational / chance-of-personal-event / direct) and, where relevant, which personal-consequence event it can trigger
+
 ## Death & Legacy
 
 When a character dies (old age or an event), the game doesn't just end — it offers to continue.
@@ -516,6 +1001,8 @@ When a character dies (old age or an event), the game doesn't just end — it of
 1. Check the player's living children (`relation: "child"`, `alive: true`)
 2. If there are none, the life simply ends with the usual life-summary screen
 3. If there are one or more, offer a choice: **Continue as [child's name]** (pick one if there's more than one) or **End this life and start a new one**
+
+**Family-type compatibility** — every relationship type introduced above (adoptive parent, biological parent, guardian, biological/adoptive/step/foster sibling, partner, spouse) remains historically meaningful when that NPC dies: the relationship and its memories stay intact in the character's history regardless of which family-structure path produced it. Inheritance and Life Insurance payouts (Finance System) resolve exactly the same way regardless of family structure.
 
 **Inheritance, if continuing:**
 - Split from the player's assets at death — house, car, savings — weighted by closeness to each child rather than an even split, with some randomness so it's not fully predictable
@@ -536,6 +1023,8 @@ A payoff screen for all the multi-generational play the Continue-as-Child flow e
 ```
 Each time a life ends and the player continues as a child, the old character's summary gets appended to this log before the new one takes over. The viewer itself can be as simple as a scrollable list or a basic branching tree diagram — tapping an ancestor shows their life summary. No new event pool needed, just a small `meta_save.js` module reading/writing this log (shared with Achievements below, since both live in the same cross-life storage).
 
+The underlying record should be capable of representing biological, adoptive, step, guardian, half-, and foster relationships without a future redesign — the MVP viewer doesn't need to render every relationship type, but the data shape shouldn't block adding that later.
+
 ## Achievements & Challenges
 
 A lightweight, separate layer on top of everything else — a checklist of goals, most spanning a single life, a few spanning the family tree across lives.
@@ -545,6 +1034,8 @@ A lightweight, separate layer on top of everything else — a checklist of goals
 { "id": "billionaire", "name": "Billionaire", "description": "Reach a net worth of $1B", "condition": { "netWorth_min": 1000000000 } }
 ```
 Checked using the same `conditions` pattern already used for events — evaluated on age-up (or right after specific triggers like a birth, a career promotion, a death) rather than every frame. Examples that fall out naturally from the systems already built: "Become a billionaire," "Have 3 kids with 3 different partners," "Retire before 40," "Get elected President," "Own 5 properties."
+
+A few more fall out naturally from this revision's systems: "Adopted at birth," "Reunited with biological family," "Raised by a guardian," "Graduated college without student debt," "Passed a GED after dropping out," "Returned to college after dropping out," "Achieved a childhood aspiration," "Maintained a friendship for decades," "Met a spouse through the Dating App," "Married a same-sex partner," "Remained single for an entire life," "Reconnected with an ex years later."
 
 **On completion:** a small notification, and the achievement gets added to a persistent list in the same cross-life `meta_save.js` storage as the Family Tree above — a few achievements ("unlock every Special Career across all your lives") are meant to span more than one life.
 
@@ -557,10 +1048,10 @@ Checked using the same `conditions` pattern already used for events — evaluate
 BitLife's whole visual identity is built around a single phone-shaped screen, so even though this is a desktop app, the window itself should stay narrow and portrait — don't build a wide desktop layout and shrink BitLife's UI into a corner of it.
 
 **Layout, top to bottom:**
-- **Character portrait** — a flat-vector cartoon avatar that swaps at each life stage (see Aging & Appearance System), with hair gradually graying with age and cosmetic procedures able to offset the decline. Name and age shown right above or below it.
+- **Character portrait** — a flat-vector cartoon avatar that swaps at each life stage (see Aging & Appearance System), with hair gradually graying with age and cosmetic procedures able to offset the decline. Name and age shown right above or below it; tapping the portrait/name is the natural entry point into the Personality/Identity/Bio screen (dominant traits, Zodiac Sign, Sexuality — see those sections).
 - **Stat bars** — four horizontal bars directly under the portrait, each a fixed color: Health (red/pink), Happiness (yellow), Smarts (blue), Looks (purple/magenta). A fifth bar appears contextually — gold for Fame once a character is famous, a different color for political Approval.
 - **Money** — shown as a plain text line/label, not a bar; reflects the checking account balance specifically. The fuller financial picture (savings, investments, property, insurance) lives in the new Bank screen — see Finance System.
-- **Event feed** — a scrolling, chat-log-style list filling the middle of the screen. Each year's events appear as separate text lines, each with a small icon for the event type (job, birth, death, crime, etc.), newest entry at the bottom, auto-scrolls down as new lines are added.
+- **Event feed** — a scrolling, chat-log-style list filling the middle of the screen. Each year's events appear as separate text lines, each with a small icon for the event type (job, birth, death, crime, world news, etc.), newest entry at the bottom, auto-scrolls down as new lines are added.
 - **Age button** — a circular or pill-shaped button, high-contrast green, usually bottom-right, advances one year per tap.
 - **Bottom menu icons** — Occupation (briefcase), Relationships (heart), Activities (star/lightning bolt), Assets (house), Bank (piggy bank/dollar sign — see Finance System). Tapping one opens a full-screen or modal submenu list rather than an inline panel.
 - **Choice prompts** — when an event needs a decision, a bottom-sheet-style modal slides up with a list of tappable options (sometimes a simple Yes/No, sometimes a longer list, each option occasionally paired with a small icon).
@@ -578,6 +1069,45 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
 - Build "menu icon → full-screen submenu" as one reusable component, since Occupation/Relationships/Activities/Assets all use the same pattern
 - Build a reusable `StatBar` component (label, value 0–100, color) rather than four hand-coded bars
 - Build the event feed as one reusable scrolling-list component with auto-scroll-to-bottom on new entries, and a small icon-by-type lookup table
+
+## Data Model Reference
+
+A consolidated summary of the fields this revision adds across the character, NPC, education, and relationship objects — the authoritative shape for each still lives in its own section above; this is just a single place to check for consistency before adding a new field elsewhere.
+
+**Character — new top-level fields:**
+```
+birthDate                          // exact random birth date
+birthCountry, birthLocation        // country (existing) + optional city
+zodiacSign                         // derived from birthDate
+birthCircumstances                 // conception-circumstance id (Character Creation)
+familyStructure                    // household-structure id at birth (Character Creation)
+parentReferences[]                 // active/raising parent(s) or guardian(s)
+biologicalParentReferences[]       // present only when different from parentReferences (adoption/foster)
+guardianReferences[]               // present only for guardianship households
+siblingReferences[]                // sibling NPC ids, each tagged with relationshipType
+aspirations[]                      // { id, text, category, state, createdAge, resolvedAge }
+educationHistory[]                 // append-only log, see School System
+sexualOrientation                  // see Sexuality
+```
+
+**NPC — new/extended fields** (extends the existing NPC object from NPC Life Events):
+```
+relationshipType     // biological | adoptive | step | foster | guardian | half | null
+sexualOrientation    // same enum as the character
+attraction           // present only where relevant (romantic-interest NPCs)
+```
+
+**Education history entry:**
+```
+{ institution, type, startAge, endAge, status, major, credits, degree, gpa }
+```
+
+**Relationship fields** (on a romantic-interest NPC, alongside the existing `closeness`/`memories`):
+```
+{ relationshipType, closeness, attraction, romanticInterest, status, startedAt, endedAt, memories[] }
+```
+
+Only add a field when a section above actually reads or writes it — this list should never grow ahead of the systems that use it.
 
 ## Suggested Folder Structure
 
@@ -605,6 +1135,7 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
   /data
     /events
       /age_up              # yearly age-up event pools, by age bracket
+        infant.json         # infancy/toddler events (ages 0-4)
         childhood.json
         teen.json
         adult.json
@@ -618,11 +1149,21 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
         marriage.json
         family.json
         divorce.json
+      /romance                # dating/romance flavor pools, see Relationships & Memories
+        random_encounters.json
+        dating_app.json
+        casual_encounters.json
+      /school
+        roster_changes.json   # classmate roster churn pool
+        college_life.json      # college flavor-event pool
       /crime
         prison_life.json      # prison-specific event pool
       /pets
         pet_events.json
+      /world
+        news.json             # world-news pool, tagged by tier
       npc_life.json         # family/friend background-life events
+      family_changes.json   # household-change event pool (job changes, moves, divorce, etc.)
       fame_recognition.json  # public recognition events, gated by Fame
       financial_events.json   # credit card offers, rate changes, scam attempts, etc.
     /careers
@@ -658,10 +1199,18 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
       clubs.json            # club list, stat/talent feed, career prerequisites
       colleges.json          # college tiers, admission difficulty, cost
       majors.json             # major list + career-unlock mapping
+      ged.json                 # GED eligibility, prep requirements, pass/fail odds
     /world
       countries.json        # shared destination/birth/relocation pool, cost multiplier, flavor tag
+      holidays.json          # per-country holidays/festivals/cultural events
     /character_creation
       wealth_tiers.json     # the four starting-family wealth tiers and what each grants
+      birth_circumstances.json  # conception-circumstance pool and weights
+      family_structures.json     # starting household-structure pool and weights
+    /aspirations
+      aspirations.json      # aspiration pool by life stage/category
+    /sexuality
+      orientations.json     # centrally-defined sexual-orientation list
     /appearance
       /avatars              # life-stage avatar image set (SVG), per gender
     /achievements
@@ -669,42 +1218,113 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
     names.json
 ```
 
+## System Dependencies
+
+A quick reference for what has to exist before what — useful when deciding build order (below) or when a new system's events start referencing another system's data.
+
+```
+Birth (Character Creation)
+  → NPC generation, Family, Wealth, Personality, World/country
+
+Infancy events
+  → Event engine, Personality, Family, NPCs
+
+School
+  → NPCs, Personality, Relationships, Education
+
+Persistent classmates
+  → NPCs, School, Relationships, Memories, World/location
+
+Higher Education
+  → Education, Finance, Family, Scholarships, Student loans
+
+Aspirations
+  → Personality, Talents, Education, Careers, Relationships, Life events
+
+Adoption / foster / guardianship
+  → NPCs, Family, Relationships, Memories, Family Tree
+
+GED
+  → Education, Career eligibility, College admission
+
+College dropout / return
+  → Education history, Finance (student debt), Career eligibility, Future education
+
+Sexuality
+  → Dating pool, Dating App, Attraction, Relationships, Marriage, Family
+
+Dating
+  → NPCs, Sexuality, Personality, Relationships, Memories, Marriage, Family
+
+Vacation romance
+  → Vacation System, NPCs, Relationships, Dating, Location
+
+Everyday money
+  → Careers, Finance, Education, Housing, Family, Crime, Relationships, Assets, Death & Legacy
+```
+
+## Current Implementation Status
+
+This document describes the intended *full* game. The actual `src/` implementation is still early — treat everything above as planned design unless it's listed here.
+
+**Built so far:**
+- Skeleton age-up loop (character portrait, stat bars, money, event feed, Age Up button)
+- Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier, starting money nudge — the *basic* version from the Character Creation section above, not yet the expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content added in this revision
+- 15 hand-written age-up events across the childhood/teen/adult age brackets, using the real event schema (`conditions`, `choices[]`, `effects`, `next_event`) and a working bottom-sheet choice modal
+- One working `next_event` chain (proving the follow-up-event mechanism works)
+- Settings menu with a light/dark theme toggle, persisted via `localStorage`
+- GitHub Pages deployment via GitHub Actions, auto-deploying on every push to `main`
+
+**Not yet built:** every other system described in this document — Personality, Aspirations, Infancy events, School/classmates, Higher Education, Sexuality, Dating, Marriage/Divorce/Kids, NPC background simulation, Finance, Crime, Assets, Pets, Business, Social Media, Fame, World/Country events, Death & Legacy, Family Tree, and Achievements are all still design-stage only.
+
+Don't assume a system exists in `src/` just because it's documented above — check the Build Order below for what's actually next.
+
 ## Build Order (MVP → full game)
 
-1. **Skeleton loop** — character creation, an "Age Up" button, stat display, no events yet. Build the shell to already match the BitLife layout (portrait-locked page, stat bars, bottom menu icons, cream palette) rather than a generic layout you reskin later.
-2. **Deploy immediately** — push the skeleton to GitHub Pages and add it to your iPhone Home Screen. Every step after this is a `git push` away from being testable on your actual phone.
-3. **Character creation options** — country of birth, gender, and the rolled family-wealth tier, wired into the skeleton from step 1 before anything else builds on top of it.
-4. **First age-up events** — hand-write 10–15 events across 2–3 age brackets to prove out the event → choice → effect → history-log pipeline, using the real bottom-sheet choice modal.
-5. **Personality foundation** — add the `personality` block to the character object and a couple of `trait_effects` on existing events. Prove trait drift works now, before other systems start depending on it.
-6. **Activity events** — reuse the event engine for one activity (gym is a simple first one) to confirm the activity-trigger pattern generalizes beyond age-up.
-7. **Save/load** — `localStorage`/`IndexedDB`, tested specifically on your iPhone before building much more on top (mobile Safari's storage behaves a little differently than desktop).
-8. **Aging & appearance system** — the refined life stages, the avatar swap at each transition (start with the simplest static-image approach), hair graying, and the Looks decline curve. Foundational and mostly self-contained, so worth doing before diving into content-heavy systems.
-9. **School system** — age-gated stages, a handful of school age-up events, then clubs once the base loop feels right.
-10. **Higher education** — college admission, majors, GPA, Greek life, once the club pattern from School feels solid.
-11. **NPC life events** — background yearly aging for NPCs, plus the npc_life event pool.
-12. **Relationships & memories** — closeness, the memory log, and one full escalation event (e.g. move-in-together) working end to end before adding more.
-13. **Marriage, divorce & kids** — proposing, the wedding, pregnancy/adoption, and divorce/custody/alimony, all extending the relationship system from the previous step.
-14. **Pets** — lightweight and mostly self-contained; a good change of pace before the bigger career and finance systems ahead.
-15. **Basic career** — job search, a handful of regular jobs, promotion checks. One career type fully working before Special Careers or the sideline system.
-16. **Banking basics** — checking auto-opens once income exists, salary deposits, savings + interest on age-up. Get this working before Investing or Insurance, since both extend the same `finances` object.
-17. **Teen jobs** — the 13–15 / 16–17 tiered pool, transitioning into the adult job system at 18.
-18. **Sideline system** — second job slot, sideline job pool, the overwork drain and burnout event.
-19. **Special Careers** — the ladder-based careers (Actor, Musician, Politician, etc.), then Streamer and ESports Pro as their own separate ladders.
-20. **Crime & Prison** — the general Crime activity and arrest/trial/prison flow, then wiring the Organized Crime Special Career's progression on top of the same engine.
-21. **Business system** — start-from-scratch and buy-existing flows, yearly management decisions, the business event pool. Builds on the Business/CEO Special Career from step 19.
-22. **Investing system** — start with Stocks plus one Index Fund to prove the yearly-portfolio-resolution pattern, then add Bonds, Mutual Funds, Real Estate, and Crypto once that's solid.
-23. **Assets** — cars and valuables, plus the net-worth rollup across everything financial built so far.
-24. **Social media system** — account creation, posting, engagement rolls, follower growth/decay. Start with Twitch, since Streamer depends on it.
-25. **Monetization & scandals** — sponsorships, ad revenue, viral controversy events.
-26. **Fame & recognition events** — the public-recognition roll and its posted-outcome branch, reusing the scandal-response system from the previous step. Only makes sense once Fame is actually being generated by careers/social media, so it comes after both.
-27. **Cosmetic procedures** — botox, facelift, hair dye/transplant, and the botched-procedure risk, including the tie-in to Scandal for famous characters. Comes after Fame/Scandal since that's what gives a botched procedure its bite.
-28. **Vacation trip builder** — country/flight-class/accommodation picker, tiered event pool.
-29. **Insurance system** — start with Health Insurance since it hooks straight into the aging/health-issue events already built, then Auto/Home/Disability, then Life last since its payout needs Death & Legacy (next step) to actually resolve.
-30. **Death & legacy** — continue-as-child flow and inheritance, now also resolving any active life insurance payout to the named beneficiary.
-31. **Family tree viewer** — the cross-life log and viewer screen, once Death & Legacy is actually producing past lives to log.
-32. **Achievements & challenges** — checked against everything built above, so it comes last among gameplay systems rather than earlier.
-33. **Content pass** — bulk out every event/career/social/vacation/school/business/finance/crime/pet JSON library. Great to batch-generate with Claude Code once every schema above is locked.
-34. **Polish** — animations, transitions, sound, icon set refinement.
+Steps 1–4 are already implemented (see Current Implementation Status above) and are marked ✅. Everything after that is planned, ordered by actual dependency rather than by section order in this document — review this list before starting a new step, since a step's position may have shifted as systems were added in this revision.
+
+1. ✅ **Skeleton loop** — character creation, an "Age Up" button, stat display, no events yet. Shell already matches the BitLife layout (portrait-locked page, stat bars, bottom menu icons, cream palette).
+2. ✅ **Deploy immediately** — pushed to GitHub Pages via GitHub Actions; every `git push` to `main` redeploys automatically.
+3. ✅ **Character creation (basic)** — country of birth, gender, and the rolled family-wealth tier. *The expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content from this revision is still planned — see step 5.*
+4. ✅ **First age-up events** — 15 hand-written events across childhood/teen/adult, the event → choice → effect → history-log pipeline, the real bottom-sheet choice modal, and one working `next_event` chain.
+5. **Birth & family generation** — expand Character Creation into the full birth announcement: exact birth date, zodiac sign, conception/family circumstances, parents (names/ages/occupations), siblings, pets, and household. Foundational for almost everything below, so it comes right after the basics.
+6. **Personality foundation** — the `personality` block plus a couple of `trait_effects` on existing events. Needs to exist before Infancy/Aspirations/School start reading from it.
+7. **Infancy event pool (ages 0–4)** — `infant.json`, age-appropriate choices, proving personality drift starts this early.
+8. **Aspirations foundation** — the `aspirations[]` field and a handful of childhood aspiration events, now that Personality exists to feed them.
+9. **Activity events** — reuse the event engine for one activity (gym is a simple first one) to confirm the activity-trigger pattern generalizes beyond age-up.
+10. **Save/load** — `localStorage`/`IndexedDB`, tested specifically on your iPhone before building much more on top.
+11. **Aging & appearance system** — refined life stages, avatar swap per transition, hair graying, Looks decline curve.
+12. **School system** — age-gated stages, stage-specific content, clubs, and the persistent-but-changing classmate roster.
+13. **Higher education** — admission, majors, GPA, Greek life, high school dropout, GED, funding (parents/scholarships/loans), leave of absence, college dropout/return, and the education history log.
+14. **NPC life events** — background yearly aging, the `npc_life` pool, family household changes, and parents having additional children.
+15. **Relationships & memories** — closeness, the memory log, relationship states, and one full escalation event (e.g. move-in-together) working end to end.
+16. **Sexuality & dating pool** — player-selected orientation, NPC orientation generation, and dating-pool filtering.
+17. **Dating** — natural encounters, attraction/dating progression, the Dating App, casual encounters, breakups and exes.
+18. **Marriage, divorce & kids** — proposing, the wedding, pregnancy/adoption (including same-sex family-building paths), divorce/custody/alimony.
+19. **Adoption, foster care & guardianship depth** — the knowledge-of-adoption event chain and biological-family reunion chains, now that Relationships/Memories/NPCs are in place to support them.
+20. **Pets** — lightweight and mostly self-contained; a good change of pace before the bigger financial systems ahead.
+21. **Basic career** — job search, a handful of regular jobs, promotion checks.
+22. **Banking basics** — checking auto-opens once income exists, salary deposits, savings + interest on age-up.
+23. **Teen jobs** — the 13–15 / 16–17 tiered pool, transitioning into the adult job system at 18.
+24. **Sideline system** — second job slot, sideline pool, overwork drain and burnout event.
+25. **Special careers** — the ladder-based careers, then Streamer and ESports Pro as their own ladders.
+26. **Crime & prison** — the general Crime activity and arrest/trial/prison flow, then the Organized Crime career on the same engine.
+27. **Business system** — start-from-scratch and buy-existing flows, yearly management, the business event pool.
+28. **Investing system** — Stocks + one Index Fund first, then Bonds, Mutual Funds, Real Estate, and Crypto.
+29. **Assets** — cars and valuables, plus the net-worth rollup.
+30. **Everyday income & expenses** — automatic recurring-expense resolution and the financial age-up summary, now that most income/expense sources actually exist.
+31. **Social media system** — account creation, posting, engagement rolls, follower growth/decay. Start with Twitch, since Streamer depends on it.
+32. **Monetization & scandals** — sponsorships, ad revenue, viral controversy events.
+33. **Fame & recognition events** — the public-recognition roll and its posted-outcome branch.
+34. **Cosmetic procedures** — botox, facelift, hair dye/transplant, and the botched-procedure/Scandal tie-in.
+35. **Vacation trip builder** — country/flight-class/accommodation picker, tiered event pool, vacation romance hook into the Dating system.
+36. **World & country events** — country-specific holidays/cultural events and the world-news layer, now that there's a real event feed and enough systems for news to meaningfully affect.
+37. **Insurance system** — Health first (hooks into aging/health events already built), then Auto/Home/Disability, then Life last since its payout needs Death & Legacy.
+38. **Death & legacy** — continue-as-child flow, inheritance, and life insurance payout, now covering every family-structure type from this revision.
+39. **Family tree viewer** — the cross-life log and viewer screen.
+40. **Achievements & challenges** — checked against everything built above.
+41. **Content pass** — bulk out every event/career/social/vacation/school/business/finance/crime/pet/romance/world JSON library.
+42. **Polish** — animations, transitions, sound, icon set refinement.
 
 ## Tips for Working with Claude Code on This
 
@@ -715,3 +1335,4 @@ BitLife's whole visual identity is built around a single phone-shaped screen, so
 - Test on your actual iPhone early and often, not just desktop Chrome — layout quirks (safe-area insets around the notch/home indicator, tap-target sizing, `localStorage` limits) only show up on the real device.
 - This document is now the single source of truth for every schema (event fields, personality traits, NPC memory format, job data shapes). Keep it updated as the schemas evolve in code, and paste the relevant section back into a fresh Claude Code session rather than assuming it remembers earlier ones — with this many interlocking systems, a stale shared understanding of a schema is the most likely source of bugs.
 - Build and test each new system (personality, memories, teen jobs, vacation) against a couple of hand-written fake events before generating a full content library for it — much cheaper to catch a schema mistake in 3 events than in 100.
+- After a plan revision like this one, re-read the whole document before generating new content — cross-references between sections (e.g. Sexuality → Dating Pool, Character Creation → NPC Life Events) are easy to miss if you only skim the section you're about to implement.

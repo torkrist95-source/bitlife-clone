@@ -10,12 +10,11 @@
   <div id="app">
     <button id="settings-btn" class="settings-btn" aria-label="Settings" type="button">⚙️</button>
     <div id="settings-panel" class="settings-panel">
-      <div class="settings-row">
-        <span>Dark Mode</span>
-        <label class="switch">
-          <input type="checkbox" id="dark-mode-toggle" />
-          <span class="slider"></span>
-        </label>
+      <span class="settings-label">Theme</span>
+      <div class="theme-options">
+        <button type="button" class="theme-btn" data-theme="light">Light</button>
+        <button type="button" class="theme-btn" data-theme="dark">Dark</button>
+        <button type="button" class="theme-btn" data-theme="retro">Retro</button>
       </div>
     </div>
 
