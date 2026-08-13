@@ -9,7 +9,7 @@
 <body>
   <div id="app">
     <header class="app-header">
-      <div class="header-spacer" aria-hidden="true"></div>
+      <button id="save-btn" class="save-btn" aria-label="Save game" type="button">💾</button>
       <span class="app-title">One More Year</span>
       <div class="header-settings">
         <button id="settings-btn" class="settings-btn" aria-label="Settings" type="button">⚙️</button>
@@ -19,6 +19,12 @@
             <button type="button" class="theme-btn" data-theme="light">Light</button>
             <button type="button" class="theme-btn" data-theme="dark">Dark</button>
             <button type="button" class="theme-btn" data-theme="retro">Retro</button>
+          </div>
+
+          <div id="settings-game-actions" class="settings-game-actions hidden">
+            <span class="settings-label">Game</span>
+            <button type="button" id="new-life-btn" class="settings-action-btn">New Life</button>
+            <button type="button" id="delete-save-btn" class="settings-action-btn danger">Delete Save</button>
           </div>
         </div>
       </div>
@@ -99,6 +105,19 @@
         <div id="event-modal-choices" class="event-modal-choices"></div>
       </div>
     </div>
+
+    <div id="confirm-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal">
+        <p id="confirm-modal-title" class="confirm-modal-title"></p>
+        <p id="confirm-modal-message" class="confirm-modal-message"></p>
+        <div class="event-modal-choices">
+          <button type="button" id="confirm-modal-cancel" class="event-choice-btn">Cancel</button>
+          <button type="button" id="confirm-modal-confirm" class="event-choice-btn danger"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
 
   <script type="module" src="game/app.js"></script>

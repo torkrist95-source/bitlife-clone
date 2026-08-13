@@ -1274,10 +1274,13 @@ This document describes the intended *full* game. The actual `src/` implementati
 - Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier (family circumstances only — the character's personal `money` starts at $0 regardless of tier) — the *basic* version from the Character Creation section above, not yet the expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content added in this revision
 - 15 hand-written age-up events across the childhood/teen/adult age brackets, using the real event schema (`conditions`, `choices[]`, `effects`, `next_event`) and a working bottom-sheet choice modal
 - One working `next_event` chain (proving the follow-up-event mechanism works)
-- Settings menu with a light/dark theme toggle, persisted via `localStorage`
+- Six primary stat bars (Health/Happiness/Smarts/Looks/Fame/Reputation) — Fame and Reputation are UI/data foundation only (both start at 0, no gameplay system moves them yet)
+- Header/navigation pass: "One More Year" branding, a tappable avatar/name area as a future Character Profile entry point (currently a placeholder), and bottom nav consolidated to Occupation / Relationships / Activities / Social / Finance
+- Settings menu with a Light/Dark/Retro theme picker, persisted via `localStorage`
+- **Save/load**: the full `character` object autosaves to `localStorage` after character creation, every Age Up, and every event choice, plus a manual Save button with a toast confirmation; loading on startup resumes the saved life instead of showing character creation; New Life and Delete Save both require confirmation before replacing/clearing the save; saves carry a version number and missing fields are defaulted on load rather than crashing; corrupted save data is quarantined (not destroyed) and the player falls back to a fresh life
 - GitHub Pages deployment via GitHub Actions, auto-deploying on every push to `main`
 
-**Not yet built:** every other system described in this document — Personality, Aspirations, Infancy events, School/classmates, Higher Education, Sexuality, Dating, Marriage/Divorce/Kids, NPC background simulation, Finance, Crime, Assets, Pets, Business, Social Media, Fame, World/Country events, Death & Legacy, Family Tree, and Achievements are all still design-stage only.
+**Not yet built:** Personality, Aspirations, Infancy events, School/classmates, Higher Education, Sexuality, Dating, Marriage/Divorce/Kids, NPC background simulation, Finance, Crime, Assets, Pets, Business, Social Media, Fame/Reputation *gameplay* effects, World/Country events, Death & Legacy, Family Tree, Achievements, and the actual Character Profile screen are all still design-stage only.
 
 Don't assume a system exists in `src/` just because it's documented above — check the Build Order below for what's actually next.
 
@@ -1294,7 +1297,7 @@ Steps 1–4 are already implemented (see Current Implementation Status above) an
 7. **Infancy event pool (ages 0–4)** — `infant.json`, age-appropriate choices, proving personality drift starts this early.
 8. **Aspirations foundation** — the `aspirations[]` field and a handful of childhood aspiration events, now that Personality exists to feed them.
 9. **Activity events** — reuse the event engine for one activity (gym is a simple first one) to confirm the activity-trigger pattern generalizes beyond age-up.
-10. **Save/load** — `localStorage`/`IndexedDB`, tested specifically on your iPhone before building much more on top.
+10. ✅ **Save/load** — implemented ahead of steps 5–9 (needed to actually test the deployed build without losing progress on every reload). Full `character` object saved to `localStorage` (sufficient for the current data size — no need for IndexedDB yet), autosaving after character creation, Age Up, and event choices, plus a manual save button, New Life / Delete Save with confirmation, save versioning with default-filling migration, and corrupted-save recovery. Still to verify: real iPhone Safari testing (only checked in the local dev preview and deployed desktop browser so far).
 11. **Aging & appearance system** — refined life stages, avatar swap per transition, hair graying, Looks decline curve.
 12. **School system** — age-gated stages, stage-specific content, clubs, and the persistent-but-changing classmate roster.
 13. **Higher education** — admission, majors, GPA, Greek life, high school dropout, GED, funding (parents/scholarships/loans), leave of absence, college dropout/return, and the education history log.
