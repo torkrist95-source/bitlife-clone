@@ -1,27 +1,28 @@
 :root {
-  --color-page-bg: #ded1b8;
-  --color-bg: #fbf3e3;
+  --color-page-bg: #eac8a6;
+  --color-bg: #fbf5de;
   --color-card: #ffffff;
-  --color-text: #3a2f28;
-  --color-text-muted: #8a7d6f;
+  --color-text: #22334a;
+  --color-text-muted: #74839a;
   --color-health: #ff6b81;
   --color-happiness: #ffd93d;
   --color-smarts: #4d96ff;
   --color-looks: #c77dff;
-  --color-age-btn: #4cd97b;
-  --color-border: #f0e2c8;
-  --color-shadow: rgba(0, 0, 0, 0.15);
+  --color-accent: #dc3c22;
+  --color-border: #eac8a6;
+  --color-shadow: rgba(61, 116, 182, 0.18);
   --radius: 16px;
 }
 
 :root[data-theme="dark"] {
-  --color-page-bg: #14110d;
-  --color-bg: #221d17;
-  --color-card: #2e2820;
-  --color-text: #f2e9dc;
-  --color-text-muted: #a8998a;
-  --color-border: #40372c;
-  --color-shadow: rgba(0, 0, 0, 0.4);
+  --color-page-bg: #171b21;
+  --color-bg: #222831;
+  --color-card: #30475e;
+  --color-text: #dddddd;
+  --color-text-muted: #93a1ae;
+  --color-border: #3e5872;
+  --color-accent: #f05454;
+  --color-shadow: rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -161,7 +162,7 @@ body {
 
 #age-up-btn {
   align-self: center;
-  background: var(--color-age-btn);
+  background: var(--color-accent);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -270,14 +271,14 @@ body {
 }
 
 .gender-btn.selected {
-  background: var(--color-age-btn);
-  border-color: var(--color-age-btn);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
 #start-life-btn {
   width: 100%;
-  background: var(--color-age-btn);
+  background: var(--color-accent);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -373,7 +374,7 @@ body {
 }
 
 .switch input:checked + .slider {
-  background: var(--color-age-btn);
+  background: var(--color-accent);
 }
 
 .switch input:checked + .slider::before {
