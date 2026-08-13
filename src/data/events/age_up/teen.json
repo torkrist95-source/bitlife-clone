@@ -1,0 +1,98 @@
+[
+  {
+    "id": "first_crush",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 16 },
+    "weight": 9,
+    "text": "You develop a crush on someone in your class.",
+    "choices": [
+      {
+        "label": "Ask them to hang out",
+        "effects": { "happiness": 8, "looks": 1 },
+        "resultText": "They said yes! You hung out after school and had a great time."
+      },
+      {
+        "label": "Keep your feelings to yourself",
+        "effects": { "happiness": -2 },
+        "resultText": "You kept quiet about it. Maybe next time."
+      }
+    ]
+  },
+  {
+    "id": "part_time_job_offer",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 8,
+    "text": "A local shop offers you an after-school job.",
+    "choices": [
+      {
+        "label": "Take the job",
+        "effects": { "money": 150, "happiness": -3 },
+        "resultText": "You took the job. It's tiring, but the paycheck helps."
+      },
+      {
+        "label": "Focus on school instead",
+        "effects": { "smarts": 3 },
+        "resultText": "You turned it down to focus on your studies."
+      }
+    ]
+  },
+  {
+    "id": "house_party",
+    "trigger": "age_up",
+    "conditions": { "minAge": 15, "maxAge": 17 },
+    "weight": 7,
+    "text": "You're invited to a house party while your friend's parents are out of town.",
+    "choices": [
+      {
+        "label": "Go and have fun",
+        "effects": { "happiness": 10, "health": -3 },
+        "resultText": "You had a blast, but stayed up way too late."
+      },
+      {
+        "label": "Stay home and skip it",
+        "effects": { "smarts": 2 },
+        "resultText": "You stayed in and got some rest instead."
+      }
+    ]
+  },
+  {
+    "id": "drivers_license",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 17 },
+    "weight": 10,
+    "text": "You're old enough to take your driver's test.",
+    "choices": [
+      {
+        "label": "Take the test",
+        "effects": { "happiness": 6 },
+        "flags": { "hasLicense": true },
+        "resultText": "You passed and got your driver's license!"
+      },
+      {
+        "label": "Put it off for now",
+        "effects": {},
+        "resultText": "You decided to wait a while longer."
+      }
+    ]
+  },
+  {
+    "id": "peer_pressure",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 6,
+    "text": "Some older kids at school dare you to skip class with them.",
+    "choices": [
+      {
+        "label": "Skip class with them",
+        "effects": { "happiness": 4, "smarts": -3 },
+        "resultText": "You skipped class. It was fun, but you fell behind."
+      },
+      {
+        "label": "Refuse and go to class",
+        "effects": { "smarts": 2 },
+        "resultText": "You went to class like normal."
+      }
+    ]
+  }
+]

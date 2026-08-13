@@ -58,6 +58,8 @@ function createCharacter({ country, gender, wealthTiers }) {
       smarts: randInt(30, 70),
       looks: randInt(30, 70),
     },
+    flags: {},
+    pendingEventId: null,
     history: [`${name} was born in ${country.name} to a ${tier.name.toLowerCase()} family.`],
   };
 }

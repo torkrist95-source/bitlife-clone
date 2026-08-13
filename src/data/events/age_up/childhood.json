@@ -1,0 +1,103 @@
+[
+  {
+    "id": "birthday_party",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 10 },
+    "weight": 10,
+    "text": "Your parents ask if you want a birthday party this year.",
+    "choices": [
+      {
+        "label": "Invite the whole class",
+        "effects": { "happiness": 8, "money": -50 },
+        "resultText": "You had a huge birthday party and invited your whole class. So much fun!"
+      },
+      {
+        "label": "Keep it small with family",
+        "effects": { "happiness": 3 },
+        "resultText": "You had a small birthday celebration with just your family."
+      }
+    ]
+  },
+  {
+    "id": "tree_climbing",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 11 },
+    "weight": 6,
+    "text": "Some kids at the park dare you to climb the tallest tree.",
+    "choices": [
+      {
+        "label": "Climb all the way to the top",
+        "effects": { "happiness": 6, "health": -10 },
+        "resultText": "You climbed to the very top and fell out near the end, breaking your arm. Worth it for the bragging rights."
+      },
+      {
+        "label": "Stay on the low branches",
+        "effects": { "happiness": 1 },
+        "resultText": "You stuck to the low branches and stayed safe."
+      }
+    ]
+  },
+  {
+    "id": "school_bully",
+    "trigger": "age_up",
+    "conditions": { "minAge": 7, "maxAge": 12 },
+    "weight": 8,
+    "text": "A classmate starts picking on you at recess.",
+    "choices": [
+      {
+        "label": "Stand up to them",
+        "effects": { "happiness": 4, "health": -5 },
+        "resultText": "You stood up to the bully. It turned into a scuffle, but they left you alone after that."
+      },
+      {
+        "label": "Tell a teacher",
+        "effects": { "happiness": 2 },
+        "resultText": "You told a teacher, who stepped in and handled it."
+      },
+      {
+        "label": "Ignore it and walk away",
+        "effects": { "happiness": -3 },
+        "resultText": "You ignored it, but it kept bothering you."
+      }
+    ]
+  },
+  {
+    "id": "science_fair",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 12 },
+    "weight": 8,
+    "text": "Your class is having a science fair. What do you build?",
+    "choices": [
+      {
+        "label": "An ambitious baking-soda volcano",
+        "effects": { "smarts": 3 },
+        "resultText": "You spent weeks building a baking-soda volcano for the science fair.",
+        "next_event": "science_fair_volcano_result"
+      },
+      {
+        "label": "A simple poster board",
+        "effects": { "smarts": 1 },
+        "resultText": "You threw together a simple poster board the night before. It was fine."
+      }
+    ]
+  },
+  {
+    "id": "science_fair_volcano_result",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 13 },
+    "weight": 0,
+    "text": "It's time to present the volcano you built for the science fair.",
+    "choices": [
+      {
+        "label": "Present it yourself",
+        "effects": { "happiness": 8, "smarts": 2 },
+        "resultText": "You presented confidently and took first place at the science fair!"
+      },
+      {
+        "label": "Let a friend help present it",
+        "effects": { "happiness": 3 },
+        "resultText": "Your friend helped present it. You placed third, but it was still fun."
+      }
+    ]
+  }
+]

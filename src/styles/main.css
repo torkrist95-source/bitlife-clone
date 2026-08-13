@@ -380,3 +380,71 @@ body {
 .switch input:checked + .slider::before {
   transform: translateX(18px);
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 30;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.event-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-card);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px var(--color-shadow);
+  animation: sheet-up 0.2s ease-out;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#event-modal-text {
+  margin: 0 0 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.event-modal-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-choice-btn {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.event-choice-btn:active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}

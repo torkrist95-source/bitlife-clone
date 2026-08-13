@@ -1,0 +1,98 @@
+[
+  {
+    "id": "apartment_hunt",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 25 },
+    "weight": 9,
+    "text": "You're ready to move out of your parents' place.",
+    "choices": [
+      {
+        "label": "Get a small apartment downtown",
+        "effects": { "money": -800, "happiness": 8 },
+        "resultText": "You signed a lease on a cozy downtown apartment."
+      },
+      {
+        "label": "Stay with your parents a bit longer",
+        "effects": { "happiness": -2 },
+        "resultText": "You decided to stay home a while longer and save money."
+      }
+    ]
+  },
+  {
+    "id": "gym_membership",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 60 },
+    "weight": 8,
+    "text": "A new gym opens up near you.",
+    "choices": [
+      {
+        "label": "Sign up",
+        "effects": { "money": -40, "health": 5, "looks": 2 },
+        "resultText": "You signed up and started working out regularly."
+      },
+      {
+        "label": "Skip it",
+        "effects": {},
+        "resultText": "You skipped it for now."
+      }
+    ]
+  },
+  {
+    "id": "car_trouble",
+    "trigger": "age_up",
+    "conditions": { "minAge": 20, "maxAge": 55 },
+    "weight": 7,
+    "text": "Your car breaks down unexpectedly.",
+    "choices": [
+      {
+        "label": "Pay for a proper repair",
+        "effects": { "money": -600 },
+        "resultText": "You paid for a proper repair. Ouch, but it's fixed."
+      },
+      {
+        "label": "Patch it up yourself",
+        "effects": { "money": -100, "health": -2 },
+        "resultText": "You patched it together yourself. It mostly works."
+      }
+    ]
+  },
+  {
+    "id": "lottery_ticket",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "weight": 5,
+    "text": "You see a lottery jackpot advertised at the gas station.",
+    "choices": [
+      {
+        "label": "Buy a ticket",
+        "effects": { "money": -20 },
+        "resultText": "You bought a ticket on a whim.",
+        "next_event": "lottery_result"
+      },
+      {
+        "label": "Save your money",
+        "effects": {},
+        "resultText": "You saved your money instead."
+      }
+    ]
+  },
+  {
+    "id": "lottery_result",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 91 },
+    "weight": 0,
+    "text": "The lottery numbers are drawn.",
+    "choices": [
+      {
+        "label": "Check your numbers",
+        "effects": { "money": 50, "happiness": 3 },
+        "resultText": "You matched two numbers and won $50! Not bad."
+      },
+      {
+        "label": "Don't bother checking",
+        "effects": {},
+        "resultText": "You never checked. Some things are better left unknown."
+      }
+    ]
+  }
+]

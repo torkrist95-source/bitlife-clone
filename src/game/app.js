@@ -1,10 +1,12 @@
 import { createCharacter, getLifeStage } from "./character.js";
 import { ageUp } from "./engine.js";
-import { loadCountries, loadWealthTiers } from "./data.js";
+import { pickEvent, applyChoice } from "./events.js";
+import { loadCountries, loadWealthTiers, loadAgeUpEvents } from "./data.js";
 
 let character = null;
 let countries = [];
 let wealthTiers = [];
+let ageUpEvents = [];
 let selectedGender = null;
 
 const creation = {
@@ -32,6 +34,12 @@ const game = {
   navBtns: document.querySelectorAll(".nav-btn"),
 };
 
+const eventModal = {
+  overlay: document.getElementById("event-modal-overlay"),
+  text: document.getElementById("event-modal-text"),
+  choices: document.getElementById("event-modal-choices"),
+};
+
 function updateCountryFlavor() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
   creation.countryFlavor.textContent = country ? country.flavorText : "";
@@ -42,7 +50,11 @@ function updateStartButton() {
 }
 
 async function initCreationScreen() {
-  [countries, wealthTiers] = await Promise.all([loadCountries(), loadWealthTiers()]);
+  [countries, wealthTiers, ageUpEvents] = await Promise.all([
+    loadCountries(),
+    loadWealthTiers(),
+    loadAgeUpEvents(),
+  ]);
 
   creation.countrySelect.innerHTML = "";
   for (const country of countries) {
@@ -97,9 +109,40 @@ function renderGame() {
   game.feed.scrollTop = game.feed.scrollHeight;
 }
 
+function showEventModal(event) {
+  eventModal.text.textContent = event.text;
+  eventModal.choices.innerHTML = "";
+
+  for (const choice of event.choices) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "event-choice-btn";
+    btn.textContent = choice.label;
+    btn.addEventListener("click", () => {
+      applyChoice(character, choice);
+      hideEventModal();
+      renderGame();
+      game.ageBtn.disabled = false;
+    });
+    eventModal.choices.appendChild(btn);
+  }
+
+  eventModal.overlay.classList.remove("hidden");
+}
+
+function hideEventModal() {
+  eventModal.overlay.classList.add("hidden");
+}
+
 game.ageBtn.addEventListener("click", () => {
   ageUp(character);
   renderGame();
+
+  const event = pickEvent(character, ageUpEvents);
+  if (event) {
+    game.ageBtn.disabled = true;
+    showEventModal(event);
+  }
 });
 
 game.navBtns.forEach((btn) => {
