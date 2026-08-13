@@ -160,7 +160,7 @@ body {
   background: var(--color-card);
   border-radius: var(--radius);
   padding: 12px 14px;
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
   margin-bottom: 14px;
 }

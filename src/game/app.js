@@ -3,6 +3,8 @@ import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
 import { loadCountries, loadWealthTiers, loadAgeUpEvents } from "./data.js";
 
+const MAX_FEED_ENTRIES = 6;
+
 let character = null;
 let countries = [];
 let wealthTiers = [];
@@ -100,13 +102,13 @@ function renderGame() {
   }
 
   game.feed.innerHTML = "";
-  for (const line of character.history) {
+  const recentHistory = character.history.slice(-MAX_FEED_ENTRIES);
+  for (const line of recentHistory) {
     const entry = document.createElement("div");
     entry.className = "feed-entry";
     entry.textContent = line;
     game.feed.appendChild(entry);
   }
-  game.feed.scrollTop = game.feed.scrollHeight;
 }
 
 function showEventModal(event) {
