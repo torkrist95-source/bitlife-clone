@@ -4,8 +4,8 @@
     "name": "Poor",
     "weight": 25,
     "home": "Small rented apartment",
-    "motherJob": "Unemployed or part-time work",
-    "fatherJob": "Unemployed or part-time work",
+    "motherJob": "an unemployed or part-time worker",
+    "fatherJob": "an unemployed or part-time worker",
     "description": "Your family struggles to make ends meet."
   },
   {
@@ -13,8 +13,8 @@
     "name": "Working-Class",
     "weight": 35,
     "home": "Modest rented house",
-    "motherJob": "Retail or service worker",
-    "fatherJob": "Factory or trade worker",
+    "motherJob": "a retail or service worker",
+    "fatherJob": "a factory or trade worker",
     "description": "Your family gets by, paycheck to paycheck."
   },
   {
@@ -22,8 +22,8 @@
     "name": "Middle-Class",
     "weight": 30,
     "home": "Owned suburban house",
-    "motherJob": "Office worker or teacher",
-    "fatherJob": "Manager or skilled tradesperson",
+    "motherJob": "an office worker or teacher",
+    "fatherJob": "a manager or skilled tradesperson",
     "description": "Your family is comfortable, with some savings."
   },
   {
@@ -31,8 +31,8 @@
     "name": "Wealthy",
     "weight": 10,
     "home": "Large owned home",
-    "motherJob": "Executive or business owner",
-    "fatherJob": "Executive or business owner",
+    "motherJob": "an executive or business owner",
+    "fatherJob": "an executive or business owner",
     "description": "Your family is well-off, wanting for nothing."
   }
 ]

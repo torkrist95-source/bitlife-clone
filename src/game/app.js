@@ -1,7 +1,7 @@
 import { createCharacter, getLifeStage } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
-import { loadCountries, loadWealthTiers, loadAgeUpEvents } from "./data.js";
+import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
 const MAX_FEED_ENTRIES = 6;
@@ -10,6 +10,8 @@ let character = null;
 let activeLifeId = null;
 let countries = [];
 let wealthTiers = [];
+let birthCircumstances = [];
+let familyStructures = [];
 let ageUpEvents = [];
 let selectedGender = null;
 
@@ -271,7 +273,7 @@ function resetCreationForm() {
 
 function startLife() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
-  character = createCharacter({ country, gender: selectedGender, wealthTiers });
+  character = createCharacter({ country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures });
   activeLifeId = createLife(character);
 
   showScreen("game");
@@ -348,7 +350,8 @@ game.navBtns.forEach((btn) => {
 });
 
 function openProfile() {
-  alert("Character Profile is coming soon.");
+  const zodiacLine = character?.zodiacSign ? `\n\nZodiac: ${character.zodiacSign}` : "";
+  alert(`Character Profile is coming soon.${zodiacLine}`);
 }
 
 game.profileEntry.addEventListener("click", openProfile);
@@ -399,9 +402,11 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, ageUpEvents] = await Promise.all([
+  [countries, wealthTiers, birthCircumstances, familyStructures, ageUpEvents] = await Promise.all([
     loadCountries(),
     loadWealthTiers(),
+    loadBirthCircumstances(),
+    loadFamilyStructures(),
     loadAgeUpEvents(),
   ]);
 

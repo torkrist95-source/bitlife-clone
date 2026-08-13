@@ -1,0 +1,8 @@
+[
+  { "id": "planned_pregnancy", "label": "a planned pregnancy", "weight": 45 },
+  { "id": "long_term_relationship", "label": "a long-term relationship", "weight": 25 },
+  { "id": "unplanned_pregnancy", "label": "an unplanned pregnancy", "weight": 15 },
+  { "id": "single_parent_birth", "label": "a single-parent birth", "weight": 8, "forcesSingleParent": true },
+  { "id": "affair", "label": "an affair", "weight": 4 },
+  { "id": "one_night_stand", "label": "a one-night stand", "weight": 3 }
+]

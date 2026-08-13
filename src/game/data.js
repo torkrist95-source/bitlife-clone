@@ -12,6 +12,14 @@ function loadWealthTiers() {
   return loadJSON("data/character_creation/wealth_tiers.json");
 }
 
+function loadBirthCircumstances() {
+  return loadJSON("data/character_creation/birth_circumstances.json");
+}
+
+function loadFamilyStructures() {
+  return loadJSON("data/character_creation/family_structures.json");
+}
+
 async function loadAgeUpEvents() {
   const pools = await Promise.all([
     loadJSON("data/events/age_up/childhood.json"),
@@ -21,4 +29,4 @@ async function loadAgeUpEvents() {
   return pools.flat();
 }
 
-export { loadCountries, loadWealthTiers, loadAgeUpEvents };
+export { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents };

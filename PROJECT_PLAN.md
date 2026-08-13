@@ -1080,11 +1080,11 @@ A consolidated summary of the fields this revision adds across the character, NP
 
 **Character — new top-level fields:**
 ```
-birthDate                          // exact random birth date
+birthDate                          // exact random birth date -- implemented
 birthCountry, birthLocation        // country (existing) + optional city
-zodiacSign                         // derived from birthDate
-birthCircumstances                 // conception-circumstance id (Character Creation)
-familyStructure                    // household-structure id at birth (Character Creation)
+zodiacSign                         // derived from birthDate -- implemented
+birthCircumstances                 // conception-circumstance id (Character Creation) -- implemented
+familyStructure                    // household-structure id at birth (Character Creation) -- implemented
 parentReferences[]                 // active/raising parent(s) or guardian(s)
 biologicalParentReferences[]       // present only when different from parentReferences (adoption/foster)
 guardianReferences[]               // present only for guardianship households
@@ -1093,6 +1093,15 @@ aspirations[]                      // { id, text, category, state, createdAge, r
 educationHistory[]                 // append-only log, see School System
 sexualOrientation                  // see Sexuality
 ```
+
+**Implementation note:** the `*References[]` fields above assume the NPC system (step 14) already exists to reference. It doesn't yet, so the current implementation embeds parent/guardian and sibling data directly instead, on `character.family`:
+```
+family.parents[]   // [{ role, relationshipType, name, age, job }, ...] -- "guardian"/"foster_care"
+                    //   structures produce one entry with role: "guardian" and a guardianRelation
+family.siblings[]  // [{ name, age, relationshipType }, ...]
+family.pet         // { name, type } | null
+```
+When step 14 lands, migrate these into real NPC records (`npc.js`) and repoint `parentReferences[]`/`siblingReferences[]` at their ids — the `relationshipType` tagging is already in place to make that migration mechanical rather than a redesign.
 
 **NPC — new/extended fields** (extends the existing NPC object from NPC Life Events):
 ```
@@ -1273,7 +1282,8 @@ This document describes the intended *full* game. The actual `src/` implementati
 
 **Built so far:**
 - Skeleton age-up loop (character portrait, stat bars, money, event feed, Age Up button)
-- Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier (family circumstances only — the character's personal `money` starts at $0 regardless of tier) — the *basic* version from the Character Creation section above, not yet the expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content added in this revision
+- Character creation: player-picked country of birth and gender, randomly-rolled family wealth tier (family circumstances only — the character's personal `money` starts at $0 regardless of tier); full birth generation on top of that — an exact birth date, zodiac sign, a rolled conception circumstance and family structure (two biological parents / single parent / biological + step / adopted / guardian / foster care), generated parents or a guardian with names/ages/jobs, 0–3 existing siblings, an occasional family pet, and a multi-line birth announcement in the event feed. Knowledge-of-adoption and biological-family-reunion event chains are not built yet (need step 19's Relationships/Memories/NPC systems)
+- Zodiac sign is computed but has nowhere dedicated to live yet — currently only surfaced as a one-line preview in the Character Profile placeholder alert until the real Identity/Bio screen exists
 - 15 hand-written age-up events across the childhood/teen/adult age brackets, using the real event schema (`conditions`, `choices[]`, `effects`, `next_event`) and a working bottom-sheet choice modal
 - One working `next_event` chain (proving the follow-up-event mechanism works)
 - Six primary stat bars (Health/Happiness/Smarts/Looks/Fame/Reputation) — Fame and Reputation are UI/data foundation only (both start at 0, no gameplay system moves them yet)
@@ -1294,7 +1304,7 @@ Steps 1–4 are already implemented (see Current Implementation Status above) an
 2. ✅ **Deploy immediately** — pushed to GitHub Pages via GitHub Actions; every `git push` to `main` redeploys automatically.
 3. ✅ **Character creation (basic)** — country of birth, gender, and the rolled family-wealth tier. *The expanded Birth Details/Family Circumstances/Adoption/Foster/Guardianship content from this revision is still planned — see step 5.*
 4. ✅ **First age-up events** — 15 hand-written events across childhood/teen/adult, the event → choice → effect → history-log pipeline, the real bottom-sheet choice modal, and one working `next_event` chain.
-5. **Birth & family generation** — expand Character Creation into the full birth announcement: exact birth date, zodiac sign, conception/family circumstances, parents (names/ages/occupations), siblings, pets, and household. Foundational for almost everything below, so it comes right after the basics.
+5. ✅ **Birth & family generation** — exact birth date, zodiac sign, conception/family circumstances, generated parents (names/ages/occupations) or a guardian/foster caregiver depending on family structure, siblings, an optional family pet, and a multi-line birth announcement. Parent/guardian data is embedded directly on `character.family` rather than as NPC references, since the NPC system (step 14) doesn't exist yet — expect this to migrate to proper NPC records once it does. Knowledge-of-adoption and biological-family-reunion event chains are intentionally deferred to step 19, which needs Relationships/Memories/NPCs first.
 6. **Personality foundation** — the `personality` block plus a couple of `trait_effects` on existing events. Needs to exist before Infancy/Aspirations/School start reading from it.
 7. **Infancy event pool (ages 0–4)** — `infant.json`, age-appropriate choices, proving personality drift starts this early.
 8. **Aspirations foundation** — the `aspirations[]` field and a handful of childhood aspiration events, now that Personality exists to feed them.

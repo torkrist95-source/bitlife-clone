@@ -1,0 +1,8 @@
+[
+  { "id": "two_biological_parents", "label": "Two biological parents", "weight": 68 },
+  { "id": "single_biological_parent", "label": "Single biological parent", "weight": 12 },
+  { "id": "biological_plus_step", "label": "Biological parent + stepparent", "weight": 6 },
+  { "id": "adopted", "label": "Adopted", "weight": 5 },
+  { "id": "guardian", "label": "Raised by a guardian", "weight": 6 },
+  { "id": "foster_care", "label": "Foster care", "weight": 3 }
+]
