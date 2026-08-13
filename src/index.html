@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Life Sim</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="portrait-wrap">
+      <div id="portrait"></div>
+      <h1 id="char-name"></h1>
+      <p id="char-age"></p>
+    </div>
+
+    <div class="stat-bars">
+      <div class="stat-row">
+        <span class="stat-label">Health</span>
+        <div class="stat-track"><div class="stat-fill" id="bar-health"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Happiness</span>
+        <div class="stat-track"><div class="stat-fill" id="bar-happiness"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Smarts</span>
+        <div class="stat-track"><div class="stat-fill" id="bar-smarts"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Looks</span>
+        <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
+      </div>
+    </div>
+
+    <p id="char-money"></p>
+
+    <div id="event-feed"></div>
+
+    <button id="age-up-btn">Age Up</button>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn" data-label="Occupation"><span class="nav-icon">💼</span>Occupation</button>
+      <button class="nav-btn" data-label="Relationships"><span class="nav-icon">❤️</span>Relationships</button>
+      <button class="nav-btn" data-label="Activities"><span class="nav-icon">⚡</span>Activities</button>
+      <button class="nav-btn" data-label="Assets"><span class="nav-icon">🏠</span>Assets</button>
+      <button class="nav-btn" data-label="Bank"><span class="nav-icon">🏦</span>Bank</button>
+    </nav>
+  </div>
+
+  <script type="module" src="game/app.js"></script>
+</body>
+</html>
