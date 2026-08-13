@@ -108,4 +108,37 @@ game.navBtns.forEach((btn) => {
   });
 });
 
+const settings = {
+  btn: document.getElementById("settings-btn"),
+  panel: document.getElementById("settings-panel"),
+  darkModeToggle: document.getElementById("dark-mode-toggle"),
+};
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+}
+
+function initSettings() {
+  const savedTheme = localStorage.getItem("theme") ?? "light";
+  applyTheme(savedTheme);
+  settings.darkModeToggle.checked = savedTheme === "dark";
+
+  settings.btn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    settings.panel.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!settings.panel.contains(event.target) && event.target !== settings.btn) {
+      settings.panel.classList.remove("open");
+    }
+  });
+
+  settings.darkModeToggle.addEventListener("change", () => {
+    applyTheme(settings.darkModeToggle.checked ? "dark" : "light");
+  });
+}
+
+initSettings();
 initCreationScreen();
