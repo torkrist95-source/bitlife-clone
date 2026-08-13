@@ -1,9 +1,22 @@
 import { createCharacter, getLifeStage } from "./character.js";
 import { ageUp } from "./engine.js";
+import { loadCountries, loadWealthTiers } from "./data.js";
 
-const character = createCharacter();
+let character = null;
+let countries = [];
+let wealthTiers = [];
+let selectedGender = null;
 
-const el = {
+const creation = {
+  screen: document.getElementById("creation-screen"),
+  countrySelect: document.getElementById("country-select"),
+  countryFlavor: document.getElementById("country-flavor"),
+  genderBtns: document.querySelectorAll(".gender-btn"),
+  startBtn: document.getElementById("start-life-btn"),
+};
+
+const game = {
+  screen: document.getElementById("game-screen"),
   portrait: document.getElementById("portrait"),
   name: document.getElementById("char-name"),
   age: document.getElementById("char-age"),
@@ -19,37 +32,80 @@ const el = {
   navBtns: document.querySelectorAll(".nav-btn"),
 };
 
-function render() {
+function updateCountryFlavor() {
+  const country = countries.find((c) => c.id === creation.countrySelect.value);
+  creation.countryFlavor.textContent = country ? country.flavorText : "";
+}
+
+function updateStartButton() {
+  creation.startBtn.disabled = !selectedGender;
+}
+
+async function initCreationScreen() {
+  [countries, wealthTiers] = await Promise.all([loadCountries(), loadWealthTiers()]);
+
+  creation.countrySelect.innerHTML = "";
+  for (const country of countries) {
+    const option = document.createElement("option");
+    option.value = country.id;
+    option.textContent = country.name;
+    creation.countrySelect.appendChild(option);
+  }
+  updateCountryFlavor();
+
+  creation.countrySelect.addEventListener("change", updateCountryFlavor);
+
+  creation.genderBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedGender = btn.dataset.gender;
+      creation.genderBtns.forEach((b) => b.classList.toggle("selected", b === btn));
+      updateStartButton();
+    });
+  });
+
+  creation.startBtn.addEventListener("click", startLife);
+}
+
+function startLife() {
+  const country = countries.find((c) => c.id === creation.countrySelect.value);
+  character = createCharacter({ country, gender: selectedGender, wealthTiers });
+
+  creation.screen.classList.add("hidden");
+  game.screen.classList.remove("hidden");
+  renderGame();
+}
+
+function renderGame() {
   const stage = getLifeStage(character.age);
-  el.portrait.textContent = stage.emoji;
-  el.name.textContent = character.name;
-  el.age.textContent = `Age ${character.age} · ${stage.label}`;
-  el.money.textContent = `$${character.money.toLocaleString()}`;
+  game.portrait.textContent = stage.emoji;
+  game.name.textContent = character.name;
+  game.age.textContent = `Age ${character.age} · ${stage.label}`;
+  game.money.textContent = `$${character.money.toLocaleString()}`;
 
   for (const [stat, value] of Object.entries(character.stats)) {
-    const bar = el.bars[stat];
+    const bar = game.bars[stat];
     if (bar) bar.style.width = `${value}%`;
   }
 
-  el.feed.innerHTML = "";
+  game.feed.innerHTML = "";
   for (const line of character.history) {
     const entry = document.createElement("div");
     entry.className = "feed-entry";
     entry.textContent = line;
-    el.feed.appendChild(entry);
+    game.feed.appendChild(entry);
   }
-  el.feed.scrollTop = el.feed.scrollHeight;
+  game.feed.scrollTop = game.feed.scrollHeight;
 }
 
-el.ageBtn.addEventListener("click", () => {
+game.ageBtn.addEventListener("click", () => {
   ageUp(character);
-  render();
+  renderGame();
 });
 
-el.navBtns.forEach((btn) => {
+game.navBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
     alert(`${btn.dataset.label} is coming soon.`);
   });
 });
 
-render();
+initCreationScreen();

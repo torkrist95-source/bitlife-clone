@@ -23,19 +23,42 @@ function getLifeStage(age) {
   return LIFE_STAGES.find((stage) => age >= stage.minAge && age <= stage.maxAge) ?? LIFE_STAGES[LIFE_STAGES.length - 1];
 }
 
-function createCharacter() {
+function rollWealthTier(wealthTiers) {
+  const totalWeight = wealthTiers.reduce((sum, tier) => sum + tier.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const tier of wealthTiers) {
+    if (roll < tier.weight) return tier;
+    roll -= tier.weight;
+  }
+  return wealthTiers[wealthTiers.length - 1];
+}
+
+function createCharacter({ country, gender, wealthTiers }) {
   const name = `${randChoice(FIRST_NAMES)} ${randChoice(LAST_NAMES)}`;
+  const tier = rollWealthTier(wealthTiers);
+  const money = randInt(tier.startingMoney[0], tier.startingMoney[1]);
+
   return {
     name,
+    gender,
+    country: country.id,
+    countryName: country.name,
     age: 0,
-    money: 0,
+    money,
+    family: {
+      wealthTier: tier.id,
+      wealthTierLabel: tier.name,
+      home: tier.home,
+      motherJob: tier.motherJob,
+      fatherJob: tier.fatherJob,
+    },
     stats: {
       health: randInt(70, 100),
       happiness: randInt(60, 100),
       smarts: randInt(30, 70),
       looks: randInt(30, 70),
     },
-    history: [`${name} was born.`],
+    history: [`${name} was born in ${country.name} to a ${tier.name.toLowerCase()} family.`],
   };
 }
 

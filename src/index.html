@@ -8,44 +8,66 @@
 </head>
 <body>
   <div id="app">
-    <div class="portrait-wrap">
-      <div id="portrait"></div>
-      <h1 id="char-name"></h1>
-      <p id="char-age"></p>
+    <div id="creation-screen" class="screen">
+      <h1 class="creation-title">Start a New Life</h1>
+
+      <div class="creation-field">
+        <label for="country-select">Country of Birth</label>
+        <select id="country-select"></select>
+        <p id="country-flavor" class="flavor-text"></p>
+      </div>
+
+      <div class="creation-field">
+        <label>Gender</label>
+        <div class="gender-toggle">
+          <button type="button" class="gender-btn" data-gender="male">Male</button>
+          <button type="button" class="gender-btn" data-gender="female">Female</button>
+        </div>
+      </div>
+
+      <button id="start-life-btn" disabled>Start Life</button>
     </div>
 
-    <div class="stat-bars">
-      <div class="stat-row">
-        <span class="stat-label">Health</span>
-        <div class="stat-track"><div class="stat-fill" id="bar-health"></div></div>
+    <div id="game-screen" class="screen hidden">
+      <div class="portrait-wrap">
+        <div id="portrait"></div>
+        <h1 id="char-name"></h1>
+        <p id="char-age"></p>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">Happiness</span>
-        <div class="stat-track"><div class="stat-fill" id="bar-happiness"></div></div>
+
+      <div class="stat-bars">
+        <div class="stat-row">
+          <span class="stat-label">Health</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-health"></div></div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Happiness</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-happiness"></div></div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Smarts</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-smarts"></div></div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Looks</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
+        </div>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">Smarts</span>
-        <div class="stat-track"><div class="stat-fill" id="bar-smarts"></div></div>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Looks</span>
-        <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
-      </div>
+
+      <p id="char-money"></p>
+
+      <div id="event-feed"></div>
+
+      <button id="age-up-btn">Age Up</button>
+
+      <nav class="bottom-nav">
+        <button class="nav-btn" data-label="Occupation"><span class="nav-icon">💼</span>Occupation</button>
+        <button class="nav-btn" data-label="Relationships"><span class="nav-icon">❤️</span>Relationships</button>
+        <button class="nav-btn" data-label="Activities"><span class="nav-icon">⚡</span>Activities</button>
+        <button class="nav-btn" data-label="Assets"><span class="nav-icon">🏠</span>Assets</button>
+        <button class="nav-btn" data-label="Bank"><span class="nav-icon">🏦</span>Bank</button>
+      </nav>
     </div>
-
-    <p id="char-money"></p>
-
-    <div id="event-feed"></div>
-
-    <button id="age-up-btn">Age Up</button>
-
-    <nav class="bottom-nav">
-      <button class="nav-btn" data-label="Occupation"><span class="nav-icon">💼</span>Occupation</button>
-      <button class="nav-btn" data-label="Relationships"><span class="nav-icon">❤️</span>Relationships</button>
-      <button class="nav-btn" data-label="Activities"><span class="nav-icon">⚡</span>Activities</button>
-      <button class="nav-btn" data-label="Assets"><span class="nav-icon">🏠</span>Assets</button>
-      <button class="nav-btn" data-label="Bank"><span class="nav-icon">🏦</span>Bank</button>
-    </nav>
   </div>
 
   <script type="module" src="game/app.js"></script>

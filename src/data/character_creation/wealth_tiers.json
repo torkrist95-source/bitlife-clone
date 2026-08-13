@@ -1,0 +1,42 @@
+[
+  {
+    "id": "poor",
+    "name": "Poor",
+    "weight": 25,
+    "startingMoney": [0, 500],
+    "home": "Small rented apartment",
+    "motherJob": "Unemployed or part-time work",
+    "fatherJob": "Unemployed or part-time work",
+    "description": "Your family struggles to make ends meet."
+  },
+  {
+    "id": "working_class",
+    "name": "Working-Class",
+    "weight": 35,
+    "startingMoney": [500, 3000],
+    "home": "Modest rented house",
+    "motherJob": "Retail or service worker",
+    "fatherJob": "Factory or trade worker",
+    "description": "Your family gets by, paycheck to paycheck."
+  },
+  {
+    "id": "middle_class",
+    "name": "Middle-Class",
+    "weight": 30,
+    "startingMoney": [3000, 15000],
+    "home": "Owned suburban house",
+    "motherJob": "Office worker or teacher",
+    "fatherJob": "Manager or skilled tradesperson",
+    "description": "Your family is comfortable, with some savings."
+  },
+  {
+    "id": "wealthy",
+    "name": "Wealthy",
+    "weight": 10,
+    "startingMoney": [15000, 100000],
+    "home": "Large owned home",
+    "motherJob": "Executive or business owner",
+    "fatherJob": "Executive or business owner",
+    "description": "Your family is well-off, wanting for nothing."
+  }
+]

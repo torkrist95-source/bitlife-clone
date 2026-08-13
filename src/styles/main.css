@@ -196,3 +196,86 @@ body {
 .nav-icon {
   font-size: 20px;
 }
+
+.screen.hidden {
+  display: none;
+}
+
+.creation-title {
+  text-align: center;
+  margin: 24px 0 28px;
+}
+
+.creation-field {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.creation-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+#country-select {
+  width: 100%;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.flavor-text {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.gender-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.gender-btn.selected {
+  background: var(--color-age-btn);
+  border-color: var(--color-age-btn);
+  color: #fff;
+}
+
+#start-life-btn {
+  width: 100%;
+  background: var(--color-age-btn);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+#start-life-btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}

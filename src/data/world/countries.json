@@ -1,0 +1,22 @@
+[
+  { "id": "us", "name": "United States", "costMultiplier": 1.4, "flavorTag": "city", "flavorText": "Land of opportunity, and rent." },
+  { "id": "uk", "name": "United Kingdom", "costMultiplier": 1.5, "flavorTag": "historic", "flavorText": "Grey skies, old castles, good tea." },
+  { "id": "fr", "name": "France", "costMultiplier": 1.4, "flavorTag": "historic", "flavorText": "Baguettes, berets, and bureaucracy." },
+  { "id": "de", "name": "Germany", "costMultiplier": 1.3, "flavorTag": "city", "flavorText": "Efficient trains, efficient everything." },
+  { "id": "jp", "name": "Japan", "costMultiplier": 1.5, "flavorTag": "city", "flavorText": "Neon cities and quiet shrines." },
+  { "id": "br", "name": "Brazil", "costMultiplier": 0.7, "flavorTag": "beach", "flavorText": "Beaches, samba, and carnival." },
+  { "id": "mx", "name": "Mexico", "costMultiplier": 0.6, "flavorTag": "beach", "flavorText": "Warm coasts and warmer food." },
+  { "id": "in", "name": "India", "costMultiplier": 0.4, "flavorTag": "city", "flavorText": "A billion stories, one subcontinent." },
+  { "id": "cn", "name": "China", "costMultiplier": 0.8, "flavorTag": "city", "flavorText": "Ancient history, modern skylines." },
+  { "id": "au", "name": "Australia", "costMultiplier": 1.5, "flavorTag": "beach", "flavorText": "Sun, surf, and everything trying to kill you." },
+  { "id": "ca", "name": "Canada", "costMultiplier": 1.3, "flavorTag": "adventure", "flavorText": "Polite people, endless wilderness." },
+  { "id": "it", "name": "Italy", "costMultiplier": 1.3, "flavorTag": "historic", "flavorText": "Pasta, art, and passionate arguments." },
+  { "id": "es", "name": "Spain", "costMultiplier": 1.1, "flavorTag": "beach", "flavorText": "Late dinners, later nights." },
+  { "id": "kr", "name": "South Korea", "costMultiplier": 1.2, "flavorTag": "city", "flavorText": "Pop culture powerhouse." },
+  { "id": "th", "name": "Thailand", "costMultiplier": 0.5, "flavorTag": "beach", "flavorText": "Street food and island hopping." },
+  { "id": "eg", "name": "Egypt", "costMultiplier": 0.5, "flavorTag": "historic", "flavorText": "Pyramids older than recorded history." },
+  { "id": "za", "name": "South Africa", "costMultiplier": 0.6, "flavorTag": "adventure", "flavorText": "Safari country." },
+  { "id": "no", "name": "Norway", "costMultiplier": 1.9, "flavorTag": "adventure", "flavorText": "Fjords and famously high prices." },
+  { "id": "gr", "name": "Greece", "costMultiplier": 1.0, "flavorTag": "historic", "flavorText": "Ruins, islands, and olive oil." },
+  { "id": "ng", "name": "Nigeria", "costMultiplier": 0.4, "flavorTag": "city", "flavorText": "West Africa's biggest hustle." }
+]
