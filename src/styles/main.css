@@ -8,6 +8,8 @@
   --color-happiness: #ffd93d;
   --color-smarts: #4d96ff;
   --color-looks: #c77dff;
+  --color-fame: #f5a623;
+  --color-reputation: #2ec4b6;
   --color-accent: #da7f8f;
   --color-border: #e1e5ea;
   --color-shadow: rgba(167, 187, 199, 0.3);
@@ -67,6 +69,13 @@ body {
   text-align: center;
   margin-bottom: 12px;
   flex-shrink: 0;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: opacity 0.15s ease;
+}
+
+.portrait-wrap:active {
+  opacity: 0.7;
 }
 
 #portrait {
@@ -145,6 +154,12 @@ body {
 }
 #bar-looks {
   background: var(--color-looks);
+}
+#bar-fame {
+  background: var(--color-fame);
+}
+#bar-reputation {
+  background: var(--color-reputation);
 }
 
 #char-money {
@@ -318,10 +333,31 @@ body {
   cursor: not-allowed;
 }
 
+.app-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.app-title {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.header-settings {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .settings-btn {
-  position: absolute;
-  top: calc(16px + env(safe-area-inset-top));
-  right: 16px;
   width: 36px;
   height: 36px;
   display: flex;
@@ -337,8 +373,8 @@ body {
 
 .settings-panel {
   position: absolute;
-  top: calc(58px + env(safe-area-inset-top));
-  right: 16px;
+  top: calc(100% + 8px);
+  right: 0;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 12px;

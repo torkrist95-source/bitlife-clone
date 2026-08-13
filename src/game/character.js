@@ -57,6 +57,8 @@ function createCharacter({ country, gender, wealthTiers }) {
       happiness: randInt(60, 100),
       smarts: randInt(30, 70),
       looks: randInt(30, 70),
+      fame: 0,
+      reputation: 50,
     },
     flags: {},
     pendingEventId: null,

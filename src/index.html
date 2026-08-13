@@ -3,20 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <title>Life Sim</title>
+  <title>One More Year</title>
   <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
   <div id="app">
-    <button id="settings-btn" class="settings-btn" aria-label="Settings" type="button">⚙️</button>
-    <div id="settings-panel" class="settings-panel">
-      <span class="settings-label">Theme</span>
-      <div class="theme-options">
-        <button type="button" class="theme-btn" data-theme="light">Light</button>
-        <button type="button" class="theme-btn" data-theme="dark">Dark</button>
-        <button type="button" class="theme-btn" data-theme="retro">Retro</button>
+    <header class="app-header">
+      <div class="header-spacer" aria-hidden="true"></div>
+      <span class="app-title">One More Year</span>
+      <div class="header-settings">
+        <button id="settings-btn" class="settings-btn" aria-label="Settings" type="button">⚙️</button>
+        <div id="settings-panel" class="settings-panel">
+          <span class="settings-label">Theme</span>
+          <div class="theme-options">
+            <button type="button" class="theme-btn" data-theme="light">Light</button>
+            <button type="button" class="theme-btn" data-theme="dark">Dark</button>
+            <button type="button" class="theme-btn" data-theme="retro">Retro</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
 
     <div id="creation-screen" class="screen">
       <h1 class="creation-title">Start a New Life</h1>
@@ -39,7 +45,7 @@
     </div>
 
     <div id="game-screen" class="screen hidden">
-      <div class="portrait-wrap">
+      <div id="profile-entry" class="portrait-wrap" role="button" tabindex="0" aria-label="Open character profile">
         <div id="portrait"></div>
         <h1 id="char-name"></h1>
         <p id="char-age"></p>
@@ -62,6 +68,14 @@
           <span class="stat-label">Looks</span>
           <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
         </div>
+        <div class="stat-row">
+          <span class="stat-label">Fame</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-fame"></div></div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Reputation</span>
+          <div class="stat-track"><div class="stat-fill" id="bar-reputation"></div></div>
+        </div>
       </div>
 
       <p id="char-money"></p>
@@ -74,8 +88,8 @@
         <button class="nav-btn" data-label="Occupation"><span class="nav-icon">💼</span>Occupation</button>
         <button class="nav-btn" data-label="Relationships"><span class="nav-icon">❤️</span>Relationships</button>
         <button class="nav-btn" data-label="Activities"><span class="nav-icon">⚡</span>Activities</button>
-        <button class="nav-btn" data-label="Assets"><span class="nav-icon">🏠</span>Assets</button>
-        <button class="nav-btn" data-label="Bank"><span class="nav-icon">🏦</span>Bank</button>
+        <button class="nav-btn" data-label="Social"><span class="nav-icon">📱</span>Social</button>
+        <button class="nav-btn" data-label="Finance"><span class="nav-icon">🏦</span>Finance</button>
       </nav>
     </div>
 

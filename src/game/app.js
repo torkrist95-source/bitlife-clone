@@ -21,6 +21,7 @@ const creation = {
 
 const game = {
   screen: document.getElementById("game-screen"),
+  profileEntry: document.getElementById("profile-entry"),
   portrait: document.getElementById("portrait"),
   name: document.getElementById("char-name"),
   age: document.getElementById("char-age"),
@@ -32,6 +33,8 @@ const game = {
     happiness: document.getElementById("bar-happiness"),
     smarts: document.getElementById("bar-smarts"),
     looks: document.getElementById("bar-looks"),
+    fame: document.getElementById("bar-fame"),
+    reputation: document.getElementById("bar-reputation"),
   },
   navBtns: document.querySelectorAll(".nav-btn"),
 };
@@ -93,7 +96,7 @@ function renderGame() {
   const stage = getLifeStage(character.age);
   game.portrait.textContent = stage.emoji;
   game.name.textContent = character.name;
-  game.age.textContent = `Age ${character.age} · ${stage.label}`;
+  game.age.textContent = `Age ${character.age} · ${stage.label} ›`;
   game.money.textContent = `$${character.money.toLocaleString()}`;
 
   for (const [stat, value] of Object.entries(character.stats)) {
@@ -151,6 +154,18 @@ game.navBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
     alert(`${btn.dataset.label} is coming soon.`);
   });
+});
+
+function openProfile() {
+  alert("Character Profile is coming soon.");
+}
+
+game.profileEntry.addEventListener("click", openProfile);
+game.profileEntry.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openProfile();
+  }
 });
 
 const settings = {
