@@ -21,16 +21,24 @@
             <button type="button" class="theme-btn" data-theme="retro">Retro</button>
           </div>
 
-          <div id="settings-game-actions" class="settings-game-actions hidden">
+          <div class="settings-game-actions">
             <span class="settings-label">Game</span>
-            <button type="button" id="new-life-btn" class="settings-action-btn">New Life</button>
-            <button type="button" id="delete-save-btn" class="settings-action-btn danger">Delete Save</button>
+            <button type="button" id="my-lives-btn" class="settings-action-btn">My Lives</button>
           </div>
         </div>
       </div>
     </header>
 
-    <div id="creation-screen" class="screen">
+    <div id="home-screen" class="screen hidden">
+      <h1 class="creation-title">My Lives</h1>
+
+      <div id="lives-list" class="lives-list"></div>
+      <p id="lives-empty" class="lives-empty hidden">No saved lives yet.</p>
+
+      <button type="button" id="create-life-btn" class="create-life-btn">+ Create New Life</button>
+    </div>
+
+    <div id="creation-screen" class="screen hidden">
       <h1 class="creation-title">Start a New Life</h1>
 
       <div class="creation-field">

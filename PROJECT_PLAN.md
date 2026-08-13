@@ -1025,6 +1025,8 @@ A payoff screen for all the multi-generational play the Continue-as-Child flow e
 ```
 Each time a life ends and the player continues as a child, the old character's summary gets appended to this log before the new one takes over. The viewer itself can be as simple as a scrollable list or a basic branching tree diagram — tapping an ancestor shows their life summary. No new event pool needed, just a small `meta_save.js` module reading/writing this log (shared with Achievements below, since both live in the same cross-life storage).
 
+**Not the same thing as My Lives** (see Save/Load Architecture) — My Lives holds currently *playable* characters the player can freely switch between; the Family Tree holds *historical* characters whose lives have ended. A life only moves from one to the other via the future Continue-as-Child flow, not by simply switching away from it in My Lives. Each playable life already has a stable id (`lives[id]`) so it can be referenced by a future Family Tree entry without a redesign.
+
 The underlying record should be capable of representing biological, adoptive, step, guardian, half-, and foster relationships without a future redesign — the MVP viewer doesn't need to render every relationship type, but the data shape shouldn't block adding that later.
 
 ## Achievements & Challenges
@@ -1123,8 +1125,8 @@ Only add a field when a section above actually reads or writes it — this list 
     character.js         # character state + stat logic
     engine.js             # the age-up loop, event resolution
     events.js             # event loading/filtering/weighting
-    save.js                # localStorage/IndexedDB read/write (single active character)
-    meta_save.js            # persistent cross-life storage: family tree log, achievements
+    save.js                # localStorage read/write for multiple playable lives + activeLifeId (see Save/Load below)
+    meta_save.js            # persistent cross-life storage: family tree log, achievements -- distinct from save.js's playable lives
     personality.js         # trait storage, drift, dominant-trait/weighting helpers
     npc.js                  # NPC background aging, memory log read/write
     legacy.js                # death handling, continue-as-child, inheritance
@@ -1277,7 +1279,7 @@ This document describes the intended *full* game. The actual `src/` implementati
 - Six primary stat bars (Health/Happiness/Smarts/Looks/Fame/Reputation) — Fame and Reputation are UI/data foundation only (both start at 0, no gameplay system moves them yet)
 - Header/navigation pass: "One More Year" branding, a tappable avatar/name area as a future Character Profile entry point (currently a placeholder), and bottom nav consolidated to Occupation / Relationships / Activities / Social / Finance
 - Settings menu with a Light/Dark/Retro theme picker, persisted via `localStorage`
-- **Save/load**: the full `character` object autosaves to `localStorage` after character creation, every Age Up, and every event choice, plus a manual Save button with a toast confirmation; loading on startup resumes the saved life instead of showing character creation; New Life and Delete Save both require confirmation before replacing/clearing the save; saves carry a version number and missing fields are defaulted on load rather than crashing; corrupted save data is quarantined (not destroyed) and the player falls back to a fresh life
+- **Save/load with multiple lives**: `localStorage` holds a `{ saveVersion, activeLifeId, lives: { [id]: { id, createdAt, updatedAt, character } } }` container — several independent playable lives can exist at once, each fully preserved when the player switches away from it. Autosaves after character creation, every Age Up, and every event choice, plus a manual Save button with a toast confirmation. A **Home / My Lives** screen (reached via Settings → My Lives, not the bottom nav) lists every saved life as a card with Continue and Delete, marks the active one, and hosts Create New Life. Deleting the active life safely returns to My Lives rather than leaving a broken game screen; deleting the last life shows an explicit empty state. An older single-character (v1) save format is transparently migrated into the multi-life shape on first load, so no existing progress was lost when this shipped. Missing fields are defaulted on load rather than crashing, and corrupted save data is quarantined (not destroyed).
 - GitHub Pages deployment via GitHub Actions, auto-deploying on every push to `main`
 
 **Not yet built:** Personality, Aspirations, Infancy events, School/classmates, Higher Education, Sexuality, Dating, Marriage/Divorce/Kids, NPC background simulation, Finance, Crime, Assets, Pets, Business, Social Media, Fame/Reputation *gameplay* effects, World/Country events, Death & Legacy, Family Tree, Achievements, and the actual Character Profile screen are all still design-stage only.

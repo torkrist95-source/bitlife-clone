@@ -247,11 +247,114 @@ body {
   display: none;
 }
 
-#game-screen:not(.hidden) {
+#game-screen:not(.hidden),
+#home-screen:not(.hidden) {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+.lives-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.lives-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.lives-empty.hidden {
+  display: none;
+}
+
+.life-card {
+  background: var(--color-card);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 14px;
+  flex-shrink: 0;
+}
+
+.life-card.current {
+  border-color: var(--color-accent);
+}
+
+.life-card-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.life-card-meta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.life-card-money {
+  margin: 4px 0 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.life-card-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.life-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.life-card-continue-btn {
+  flex: 1;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.life-card-delete-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 15px;
+  width: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.create-life-btn {
+  width: 100%;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .creation-title {
@@ -434,10 +537,6 @@ body {
   gap: 8px;
 }
 
-.settings-game-actions.hidden {
-  display: none;
-}
-
 .settings-action-btn {
   width: 100%;
   background: var(--color-bg);
@@ -449,11 +548,6 @@ body {
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
-}
-
-.settings-action-btn.danger {
-  color: #d64545;
-  border-color: #d64545;
 }
 
 .modal-overlay {

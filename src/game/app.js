@@ -2,11 +2,12 @@ import { createCharacter, getLifeStage } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
 import { loadCountries, loadWealthTiers, loadAgeUpEvents } from "./data.js";
-import { saveCharacter, loadCharacter, deleteSave } from "./save.js";
+import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
 const MAX_FEED_ENTRIES = 6;
 
 let character = null;
+let activeLifeId = null;
 let countries = [];
 let wealthTiers = [];
 let ageUpEvents = [];
@@ -18,6 +19,13 @@ const creation = {
   countryFlavor: document.getElementById("country-flavor"),
   genderBtns: document.querySelectorAll(".gender-btn"),
   startBtn: document.getElementById("start-life-btn"),
+};
+
+const home = {
+  screen: document.getElementById("home-screen"),
+  livesList: document.getElementById("lives-list"),
+  empty: document.getElementById("lives-empty"),
+  createBtn: document.getElementById("create-life-btn"),
 };
 
 const game = {
@@ -58,21 +66,12 @@ const toast = document.getElementById("toast");
 
 // ---------- Screen switching ----------
 
-function showCreationScreen() {
-  game.screen.classList.add("hidden");
-  creation.screen.classList.remove("hidden");
-  updateSettingsGameActions();
-}
+const screens = { home: home.screen, creation: creation.screen, game: game.screen };
 
-function showGameScreen() {
-  creation.screen.classList.add("hidden");
-  game.screen.classList.remove("hidden");
-  updateSettingsGameActions();
-}
-
-function updateSettingsGameActions() {
-  const active = !game.screen.classList.contains("hidden");
-  settingsGameActions.classList.toggle("hidden", !active);
+function showScreen(name) {
+  for (const [key, el] of Object.entries(screens)) {
+    el.classList.toggle("hidden", key !== name);
+  }
 }
 
 // ---------- Toast ----------
@@ -91,13 +90,13 @@ function showToast(message) {
 // ---------- Save / autosave ----------
 
 function autosave() {
-  const ok = saveCharacter(character);
+  const ok = saveCharacter(activeLifeId, character);
   showToast(ok ? "Saved" : "Couldn't save your progress");
 }
 
 function manualSave() {
-  if (!character) return;
-  const ok = saveCharacter(character);
+  if (!character || !activeLifeId) return;
+  const ok = saveCharacter(activeLifeId, character);
   showToast(ok ? "Game saved." : "Couldn't save your progress");
 }
 
@@ -123,6 +122,109 @@ confirmModal.confirmBtn.addEventListener("click", () => {
   const action = pendingConfirmAction;
   hideConfirm();
   if (action) action();
+});
+
+// ---------- Home / My Lives screen ----------
+
+function renderHomeScreen() {
+  const lives = listLives();
+  home.empty.classList.toggle("hidden", lives.length > 0);
+  home.livesList.innerHTML = "";
+
+  for (const life of lives) {
+    const stage = getLifeStage(life.character.age);
+    const isCurrent = life.id === activeLifeId;
+
+    const card = document.createElement("div");
+    card.className = isCurrent ? "life-card current" : "life-card";
+
+    const info = document.createElement("div");
+    info.innerHTML = `
+      <p class="life-card-name"></p>
+      <p class="life-card-meta"></p>
+      <p class="life-card-money"></p>
+    `;
+    info.querySelector(".life-card-name").textContent = life.character.name;
+    info.querySelector(".life-card-meta").textContent = `Age ${life.character.age} · ${stage.label}`;
+    info.querySelector(".life-card-money").textContent = `$${life.character.money.toLocaleString()}`;
+
+    if (isCurrent) {
+      const badge = document.createElement("span");
+      badge.className = "life-card-badge";
+      badge.textContent = "✓ Current Life";
+      info.appendChild(badge);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "life-card-actions";
+
+    const continueBtn = document.createElement("button");
+    continueBtn.type = "button";
+    continueBtn.className = "life-card-continue-btn";
+    continueBtn.textContent = "Continue";
+    continueBtn.addEventListener("click", () => continueLife(life.id));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "life-card-delete-btn";
+    deleteBtn.setAttribute("aria-label", `Delete ${life.character.name}'s life`);
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.addEventListener("click", () => requestDeleteLife(life.id, life.character.name));
+
+    actions.appendChild(continueBtn);
+    actions.appendChild(deleteBtn);
+
+    card.appendChild(info);
+    card.appendChild(actions);
+    home.livesList.appendChild(card);
+  }
+}
+
+function showHomeScreen() {
+  if (character && activeLifeId) {
+    saveCharacter(activeLifeId, character);
+  }
+  renderHomeScreen();
+  showScreen("home");
+  settings.panel.classList.remove("open");
+}
+
+function continueLife(lifeId) {
+  const life = listLives().find((l) => l.id === lifeId);
+  if (!life) return;
+
+  if (character && activeLifeId && activeLifeId !== lifeId) {
+    saveCharacter(activeLifeId, character);
+  }
+
+  character = life.character;
+  activeLifeId = life.id;
+  setActiveLife(lifeId);
+
+  showScreen("game");
+  renderGame();
+}
+
+function requestDeleteLife(lifeId, name) {
+  showConfirm({
+    title: `Delete ${name}'s life?`,
+    message: "This saved life will be permanently deleted. This cannot be undone.",
+    confirmLabel: "Delete",
+    onConfirm: () => {
+      deleteLife(lifeId);
+      if (lifeId === activeLifeId) {
+        character = null;
+        activeLifeId = null;
+      }
+      renderHomeScreen();
+    },
+  });
+}
+
+home.createBtn.addEventListener("click", () => {
+  resetCreationForm();
+  showScreen("creation");
+  settings.panel.classList.remove("open");
 });
 
 // ---------- Creation screen ----------
@@ -170,10 +272,11 @@ function resetCreationForm() {
 function startLife() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
   character = createCharacter({ country, gender: selectedGender, wealthTiers });
+  activeLifeId = createLife(character);
 
-  showGameScreen();
+  showScreen("game");
   renderGame();
-  autosave();
+  showToast("Saved");
 }
 
 // ---------- Game screen rendering ----------
@@ -256,44 +359,7 @@ game.profileEntry.addEventListener("keydown", (event) => {
   }
 });
 
-// ---------- New Life / Delete Save ----------
-
-function resetToNewLifeState() {
-  deleteSave();
-  character = null;
-  resetCreationForm();
-  showCreationScreen();
-  settings.panel.classList.remove("open");
-}
-
-function requestNewLife() {
-  if (!character) return;
-  showConfirm({
-    title: "Start a new life?",
-    message: "Your current life will be replaced if you continue.",
-    confirmLabel: "Start New Life",
-    onConfirm: resetToNewLifeState,
-  });
-}
-
-function requestDeleteSave() {
-  if (!character) return;
-  showConfirm({
-    title: "Delete this life?",
-    message: "This cannot be undone.",
-    confirmLabel: "Delete",
-    onConfirm: resetToNewLifeState,
-  });
-}
-
-const newLifeBtn = document.getElementById("new-life-btn");
-const deleteSaveBtn = document.getElementById("delete-save-btn");
-const settingsGameActions = document.getElementById("settings-game-actions");
-
-newLifeBtn.addEventListener("click", requestNewLife);
-deleteSaveBtn.addEventListener("click", requestDeleteSave);
-
-// ---------- Settings (theme + save button) ----------
+// ---------- Settings (theme + save button + My Lives) ----------
 
 const settings = {
   btn: document.getElementById("settings-btn"),
@@ -328,6 +394,7 @@ function initSettings() {
 }
 
 document.getElementById("save-btn").addEventListener("click", manualSave);
+document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen);
 
 // ---------- Startup ----------
 
@@ -342,20 +409,22 @@ async function init() {
   wireCreationScreen();
   initSettings();
 
-  const { character: savedCharacter, corrupted } = loadCharacter();
+  const { character: savedCharacter, lifeId, corrupted } = loadActiveCharacter();
+  if (corrupted) showToast("Your previous save couldn't be loaded. Starting fresh.");
+
   if (savedCharacter) {
     character = savedCharacter;
-    showGameScreen();
+    activeLifeId = lifeId;
+    showScreen("game");
     renderGame();
   } else {
-    if (corrupted) showToast("Your previous save couldn't be loaded. Starting fresh.");
-    showCreationScreen();
+    showHomeScreen();
   }
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden" && character) {
-    saveCharacter(character);
+  if (document.visibilityState === "hidden" && character && activeLifeId) {
+    saveCharacter(activeLifeId, character);
   }
 });
 
