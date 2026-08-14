@@ -20,6 +20,10 @@ function loadFamilyStructures() {
   return loadJSON("data/character_creation/family_structures.json");
 }
 
+function loadNamePools() {
+  return loadJSON("data/character_creation/names.json");
+}
+
 async function loadAgeUpEvents() {
   const pools = await Promise.all([
     loadJSON("data/events/age_up/childhood.json"),
@@ -29,4 +33,4 @@ async function loadAgeUpEvents() {
   return pools.flat();
 }
 
-export { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents };
+export { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadAgeUpEvents };

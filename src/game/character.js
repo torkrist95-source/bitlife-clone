@@ -1,5 +1,11 @@
+// Fallback-only pool, used if a country's name data fails to load.
 const FIRST_NAMES = ["Alex", "Jordan", "Sam", "Taylor", "Casey", "Riley", "Morgan", "Jamie", "Avery", "Quinn"];
 const LAST_NAMES = ["Smith", "Johnson", "Brown", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Lee", "Walker"];
+
+// Chance a name is drawn from a different country's pool entirely, so
+// birth country doesn't rigidly determine name origin (immigrant/
+// multicultural families).
+const CROSS_CULTURE_NAME_CHANCE = 0.15;
 const GUARDIAN_RELATIONS = ["grandmother", "grandfather", "aunt", "uncle", "older sibling", "family friend"];
 const PET_TYPES = ["dog", "cat", "bird", "fish", "rabbit"];
 const PET_NAMES = ["Rex", "Bella", "Max", "Luna", "Charlie", "Daisy", "Rocky", "Milo", "Coco", "Buddy"];
@@ -48,6 +54,32 @@ function getLifeStage(age) {
   return LIFE_STAGES.find((stage) => age >= stage.minAge && age <= stage.maxAge) ?? LIFE_STAGES[LIFE_STAGES.length - 1];
 }
 
+// Resolves which country's name pool to draw from for a given birth
+// country: usually that country's own pool, occasionally a random other
+// one, so origin biases names without hard-determining them.
+function resolveNamePool(namePools, countryId) {
+  if (!namePools) return null;
+  const pool = namePools[countryId] ?? namePools.default;
+  if (Math.random() < CROSS_CULTURE_NAME_CHANCE) {
+    const ids = Object.keys(namePools).filter((id) => id !== "default");
+    if (ids.length > 0) return namePools[randChoice(ids)];
+  }
+  return pool ?? null;
+}
+
+function randomFirstName(namePools, countryId, gender, excludeNames = []) {
+  const pool = resolveNamePool(namePools, countryId);
+  const resolvedGender = gender === "male" || gender === "female" ? gender : Math.random() < 0.5 ? "male" : "female";
+  const candidates = pool?.[resolvedGender] ?? FIRST_NAMES;
+  const filtered = candidates.filter((n) => !excludeNames.includes(n));
+  return randChoice(filtered.length > 0 ? filtered : candidates);
+}
+
+function randomSurname(namePools, countryId) {
+  const pool = resolveNamePool(namePools, countryId);
+  return randChoice(pool?.surnames ?? LAST_NAMES);
+}
+
 function rollWeighted(items) {
   const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
   let roll = Math.random() * totalWeight;
@@ -79,9 +111,12 @@ function getZodiacSign(month, day) {
   return result;
 }
 
-function randFamilyFirstName(excludeNames) {
-  const pool = FIRST_NAMES.filter((n) => !excludeNames.includes(n));
-  return randChoice(pool.length > 0 ? pool : FIRST_NAMES);
+// Maps a guardian relation to the gender its first name should be drawn
+// from; relations that could go either way roll randomly per character.
+const GUARDIAN_GENDER = { grandmother: "female", grandfather: "male", aunt: "female", uncle: "male" };
+
+function guardianGender(guardianRelation) {
+  return GUARDIAN_GENDER[guardianRelation] ?? (Math.random() < 0.5 ? "male" : "female");
 }
 
 // Every parent/guardian resolves to exactly one concrete occupation, or
@@ -93,25 +128,26 @@ function rollParentOccupation(tier) {
   return { employed: true, job: randChoice(tier.occupations) };
 }
 
-function generateParent(role, relationshipType, lastName, tier, excludeNames) {
+function generateParent(role, relationshipType, lastName, tier, excludeNames, namePools, countryId) {
   const occupation = rollParentOccupation(tier);
+  const gender = role === "mother" ? "female" : "male";
   return {
     role,
     relationshipType,
-    name: `${randFamilyFirstName(excludeNames)} ${lastName}`,
+    name: `${randomFirstName(namePools, countryId, gender, excludeNames)} ${lastName}`,
     age: randInt(24, 45),
     employed: occupation.employed,
     job: occupation.job,
   };
 }
 
-function generateFamilyMembers(structureId, lastName, tier, excludeName) {
+function generateFamilyMembers(structureId, lastName, tier, excludeName, namePools, countryId) {
   const flags = {};
   const used = [excludeName];
   let parents;
 
   function addParent(role, relationshipType) {
-    const parent = generateParent(role, relationshipType, lastName, tier, used);
+    const parent = generateParent(role, relationshipType, lastName, tier, used, namePools, countryId);
     used.push(parent.name.split(" ")[0]);
     return parent;
   }
@@ -122,7 +158,7 @@ function generateFamilyMembers(structureId, lastName, tier, excludeName) {
       role: "guardian",
       relationshipType,
       guardianRelation,
-      name: `${randFamilyFirstName(used)} ${lastName}`,
+      name: `${randomFirstName(namePools, countryId, guardianGender(guardianRelation), used)} ${lastName}`,
       age: randInt(ageRange[0], ageRange[1]),
       employed: occupation.employed,
       job: occupation.job,
@@ -170,13 +206,13 @@ function rollSiblingCount() {
   return 3;
 }
 
-function generateSiblings(count, lastName, structureId, excludeNames) {
+function generateSiblings(count, lastName, structureId, excludeNames, namePools, countryId) {
   const relationshipType = structureId === "adopted" ? "adoptive" : structureId === "biological_plus_step" ? "step" : "biological";
   const siblings = [];
   const usedNames = [...excludeNames];
   for (let i = 0; i < count; i++) {
-    const pool = FIRST_NAMES.filter((n) => !usedNames.includes(n));
-    const firstName = randChoice(pool.length > 0 ? pool : FIRST_NAMES);
+    const gender = Math.random() < 0.5 ? "male" : "female";
+    const firstName = randomFirstName(namePools, countryId, gender, usedNames);
     usedNames.push(firstName);
     siblings.push({
       name: `${firstName} ${lastName}`,
@@ -252,22 +288,28 @@ function buildBirthHistoryLines({ formattedDate, country, tier, structureId, par
   return lines;
 }
 
-function generateRandomName() {
-  return `${randChoice(FIRST_NAMES)} ${randChoice(LAST_NAMES)}`;
+function generateRandomName(namePools, countryId, gender) {
+  const firstName = randomFirstName(namePools, countryId, gender);
+  const lastName = randomSurname(namePools, countryId);
+  return `${firstName} ${lastName}`;
 }
 
-function parsePlayerName(fullName) {
+// Player-typed names pass through completely unchanged; name pools only
+// fill in a surname when the player provides just one word, and only
+// generate a full name at all when the field was left empty.
+function parsePlayerName(fullName, namePools, countryId, gender) {
   const trimmed = (fullName ?? "").trim().replace(/\s+/g, " ");
-  if (!trimmed) return parsePlayerName(generateRandomName());
+  if (!trimmed) return parsePlayerName(generateRandomName(namePools, countryId, gender), namePools, countryId, gender);
 
   const parts = trimmed.split(" ");
   const firstName = parts[0];
-  const lastName = parts.length > 1 ? parts[parts.length - 1] : randChoice(LAST_NAMES);
+  const lastName = parts.length > 1 ? parts[parts.length - 1] : randomSurname(namePools, countryId);
   return { name: trimmed, firstName, lastName };
 }
 
-function createCharacter({ name, country, gender, wealthTiers, birthCircumstances, familyStructures }) {
-  const { name: playerName, firstName, lastName } = parsePlayerName(name);
+function createCharacter({ name, country, gender, wealthTiers, birthCircumstances, familyStructures, namePools }) {
+  const countryId = country?.id;
+  const { name: playerName, firstName, lastName } = parsePlayerName(name, namePools, countryId, gender);
   const tier = rollWealthTier(wealthTiers);
 
   const circumstance = rollWeighted(birthCircumstances);
@@ -275,9 +317,9 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
     ? familyStructures.find((s) => s.id === "single_biological_parent") ?? rollWeighted(familyStructures)
     : rollWeighted(familyStructures);
 
-  const { parents, flags: familyFlags } = generateFamilyMembers(structure.id, lastName, tier, firstName);
+  const { parents, flags: familyFlags } = generateFamilyMembers(structure.id, lastName, tier, firstName, namePools, countryId);
   const usedFirstNames = [firstName, ...parents.map((p) => p.name.split(" ")[0])];
-  const siblings = generateSiblings(rollSiblingCount(), lastName, structure.id, usedFirstNames);
+  const siblings = generateSiblings(rollSiblingCount(), lastName, structure.id, usedFirstNames, namePools, countryId);
   const pet = maybeGeneratePet();
 
   const birthDate = randomBirthDate();

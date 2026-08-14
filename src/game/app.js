@@ -1,7 +1,7 @@
 import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
-import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents } from "./data.js";
+import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadAgeUpEvents } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
 const MAX_FEED_ENTRIES = 6;
@@ -12,6 +12,7 @@ let countries = [];
 let wealthTiers = [];
 let birthCircumstances = [];
 let familyStructures = [];
+let namePools = {};
 let ageUpEvents = [];
 let selectedGender = null;
 
@@ -65,6 +66,16 @@ const confirmModal = {
   message: document.getElementById("confirm-modal-message"),
   cancelBtn: document.getElementById("confirm-modal-cancel"),
   confirmBtn: document.getElementById("confirm-modal-confirm"),
+};
+
+const profileModal = {
+  overlay: document.getElementById("profile-modal-overlay"),
+  portrait: document.getElementById("profile-modal-portrait"),
+  name: document.getElementById("profile-modal-name"),
+  stage: document.getElementById("profile-modal-stage"),
+  birthDate: document.getElementById("profile-modal-birthdate"),
+  zodiac: document.getElementById("profile-modal-zodiac"),
+  closeBtn: document.getElementById("profile-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -267,12 +278,13 @@ function selectGender(gender) {
 }
 
 function randomizeCharacter() {
-  creation.nameInput.value = generateRandomName();
-  selectGender(Math.random() < 0.5 ? "male" : "female");
+  const gender = Math.random() < 0.5 ? "male" : "female";
+  selectGender(gender);
   if (countries.length > 0) {
     creation.countrySelect.value = countries[randInt(0, countries.length - 1)].id;
     updateCountryFlavor();
   }
+  creation.nameInput.value = generateRandomName(namePools, creation.countrySelect.value, gender);
   updateStartButton();
 }
 
@@ -281,7 +293,7 @@ function wireCreationScreen() {
   creation.nameInput.addEventListener("input", updateStartButton);
 
   creation.randomizeNameBtn.addEventListener("click", () => {
-    creation.nameInput.value = generateRandomName();
+    creation.nameInput.value = generateRandomName(namePools, creation.countrySelect.value, selectedGender);
     updateStartButton();
   });
 
@@ -304,7 +316,7 @@ function resetCreationForm() {
 function startLife() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
   const name = creation.nameInput.value.trim();
-  character = createCharacter({ name, country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures });
+  character = createCharacter({ name, country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures, namePools });
   activeLifeId = createLife(character);
 
   showScreen("game");
@@ -319,7 +331,7 @@ function renderGame() {
   game.portrait.textContent = stage.emoji;
   game.name.textContent = character.name;
   game.age.textContent = `Age ${character.age} · ${stage.label} ›`;
-  game.money.textContent = `💰 $${character.money.toLocaleString()}`;
+  game.money.textContent = `$${character.money.toLocaleString()}`;
 
   for (const [stat, value] of Object.entries(character.stats)) {
     const bar = game.bars[stat];
@@ -381,9 +393,18 @@ game.navBtns.forEach((btn) => {
 });
 
 function openProfile() {
-  const birthDateLine = character?.birthDate ? `\n\nBirth Date: ${formatBirthDate(character.birthDate)}` : "";
-  const zodiacLine = character?.zodiacSign ? `\nZodiac: ${character.zodiacSign}` : "";
-  alert(`Character Profile is coming soon.${birthDateLine}${zodiacLine}`);
+  if (!character) return;
+  const stage = getLifeStage(character.age);
+  profileModal.portrait.textContent = stage.emoji;
+  profileModal.name.textContent = character.name;
+  profileModal.stage.textContent = `Age ${character.age} · ${stage.label}`;
+  profileModal.birthDate.textContent = character.birthDate ? formatBirthDate(character.birthDate) : "Unknown";
+  profileModal.zodiac.textContent = character.zodiacSign ?? "Unknown";
+  profileModal.overlay.classList.remove("hidden");
+}
+
+function hideProfile() {
+  profileModal.overlay.classList.add("hidden");
 }
 
 game.profileEntry.addEventListener("click", openProfile);
@@ -393,6 +414,8 @@ game.profileEntry.addEventListener("keydown", (event) => {
     openProfile();
   }
 });
+
+profileModal.closeBtn.addEventListener("click", hideProfile);
 
 // ---------- Settings (theme + save button + My Lives) ----------
 
@@ -434,11 +457,12 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, birthCircumstances, familyStructures, ageUpEvents] = await Promise.all([
+  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, ageUpEvents] = await Promise.all([
     loadCountries(),
     loadWealthTiers(),
     loadBirthCircumstances(),
     loadFamilyStructures(),
+    loadNamePools(),
     loadAgeUpEvents(),
   ]);
 

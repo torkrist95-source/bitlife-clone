@@ -1,0 +1,237 @@
+{
+  "us": {
+    "male": ["James", "Michael", "William", "Ethan", "Daniel", "Matthew", "Christopher", "Andrew", "Joshua", "Tyler", "Brandon", "Kevin"],
+    "female": ["Emily", "Emma", "Olivia", "Ashley", "Jessica", "Amanda", "Sarah", "Megan", "Lauren", "Hannah", "Rachel", "Samantha"],
+    "surnames": ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Wilson", "Anderson", "Thomas", "Taylor"]
+  },
+  "uk": {
+    "male": ["Oliver", "George", "Harry", "Jack", "Charlie", "Thomas", "Jacob", "Alfie", "Freddie", "Archie", "Henry", "Arthur"],
+    "female": ["Amelia", "Olivia", "Isla", "Ava", "Mia", "Grace", "Sophie", "Poppy", "Charlotte", "Freya", "Evie", "Ruby"],
+    "surnames": ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Evans", "Thomas", "Roberts", "Walker", "Hughes", "Edwards"]
+  },
+  "fr": {
+    "male": ["Lucas", "Louis", "Gabriel", "Hugo", "Jules", "Arthur", "Adam", "Raphael", "Nathan", "Leo", "Ethan", "Paul"],
+    "female": ["Emma", "Louise", "Jade", "Alice", "Chloe", "Lea", "Manon", "Camille", "Sarah", "Ines", "Zoe", "Juliette"],
+    "surnames": ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Petit", "Durand", "Leroy", "Moreau", "Simon", "Laurent", "Michel"]
+  },
+  "de": {
+    "male": ["Maximilian", "Alexander", "Paul", "Leon", "Felix", "Jonas", "Lukas", "Elias", "Noah", "Finn", "Ben", "Julian"],
+    "female": ["Emma", "Mia", "Hannah", "Sofia", "Anna", "Lea", "Marie", "Lena", "Laura", "Emilia", "Johanna", "Clara"],
+    "surnames": ["Muller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Hoffmann", "Schulz", "Koch", "Richter"]
+  },
+  "jp": {
+    "male": ["Haruto", "Yuto", "Sota", "Ren", "Riku", "Sora", "Yuma", "Kaito", "Hayato", "Daiki", "Kenta", "Takumi"],
+    "female": ["Yui", "Aoi", "Hina", "Sakura", "Yuna", "Mio", "Riko", "Koharu", "Rin", "Akari", "Nanami", "Mei"],
+    "surnames": ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato", "Yoshida", "Yamada"]
+  },
+  "br": {
+    "male": ["Miguel", "Arthur", "Gael", "Heitor", "Theo", "Davi", "Bernardo", "Pedro", "Gabriel", "Lucas", "Matheus", "Rafael"],
+    "female": ["Alice", "Sophia", "Helena", "Valentina", "Laura", "Isabella", "Manuela", "Julia", "Heloisa", "Luiza", "Maria", "Ana"],
+    "surnames": ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro"]
+  },
+  "mx": {
+    "male": ["Santiago", "Mateo", "Sebastian", "Leonardo", "Emiliano", "Diego", "Alejandro", "Miguel", "Angel", "Daniel", "Jose", "Luis"],
+    "female": ["Sofia", "Valentina", "Ximena", "Camila", "Maria", "Regina", "Renata", "Victoria", "Fernanda", "Daniela", "Paola", "Guadalupe"],
+    "surnames": ["Hernandez", "Garcia", "Martinez", "Lopez", "Gonzalez", "Rodriguez", "Perez", "Sanchez", "Ramirez", "Torres", "Flores", "Vazquez"]
+  },
+  "in": {
+    "male": ["Arjun", "Aditya", "Rohan", "Vikram", "Aryan", "Ishaan", "Karan", "Rahul", "Vivaan", "Kabir", "Aarav", "Dev"],
+    "female": ["Priya", "Ananya", "Diya", "Isha", "Kavya", "Neha", "Pooja", "Riya", "Saanvi", "Anika", "Meera", "Divya"],
+    "surnames": ["Sharma", "Verma", "Gupta", "Patel", "Kumar", "Singh", "Reddy", "Rao", "Mehta", "Nair", "Iyer", "Chatterjee"]
+  },
+  "cn": {
+    "male": ["Wei", "Jun", "Hao", "Yong", "Feng", "Qiang", "Lei", "Bo", "Peng", "Yang", "Chao", "Ming"],
+    "female": ["Mei", "Ling", "Xia", "Hui", "Fang", "Jing", "Yan", "Li", "Xin", "Yu", "Qing", "Na"],
+    "surnames": ["Wang", "Li", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou", "Xu", "Sun"]
+  },
+  "au": {
+    "male": ["Jack", "Oliver", "William", "Noah", "Thomas", "Lachlan", "Cooper", "Ethan", "Hunter", "Mason", "Riley", "Angus"],
+    "female": ["Charlotte", "Chloe", "Ava", "Mia", "Isla", "Ruby", "Zoe", "Matilda", "Grace", "Amelia", "Willow", "Ella"],
+    "surnames": ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Clarke", "Kelly", "White", "Anderson", "Ryan", "Mitchell"]
+  },
+  "ca": {
+    "male": ["Liam", "Noah", "William", "Benjamin", "Jacob", "Ethan", "Logan", "Nathan", "Owen", "Gabriel", "Samuel", "Charles"],
+    "female": ["Olivia", "Emma", "Charlotte", "Sophie", "Chloe", "Abigail", "Mia", "Zoe", "Isabelle", "Emily", "Maya", "Camille"],
+    "surnames": ["Smith", "Tremblay", "Roy", "Gagnon", "Wilson", "Brown", "Martin", "Bouchard", "Belanger", "MacDonald", "Campbell", "Leblanc"]
+  },
+  "it": {
+    "male": ["Leonardo", "Francesco", "Alessandro", "Lorenzo", "Mattia", "Andrea", "Gabriele", "Riccardo", "Tommaso", "Edoardo", "Giuseppe", "Antonio"],
+    "female": ["Sofia", "Giulia", "Aurora", "Alice", "Ginevra", "Emma", "Giorgia", "Beatrice", "Chiara", "Martina", "Vittoria", "Elena"],
+    "surnames": ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo"]
+  },
+  "es": {
+    "male": ["Hugo", "Martin", "Lucas", "Mateo", "Leo", "Daniel", "Alejandro", "Pablo", "Manuel", "Alvaro", "Adrian", "David"],
+    "female": ["Lucia", "Sofia", "Martina", "Maria", "Julia", "Paula", "Valeria", "Emma", "Daniela", "Carla", "Alba", "Sara"],
+    "surnames": ["Garcia", "Fernandez", "Gonzalez", "Rodriguez", "Lopez", "Martinez", "Sanchez", "Perez", "Gomez", "Martin", "Jimenez", "Ruiz"]
+  },
+  "kr": {
+    "male": ["Minjun", "Jihoon", "Seojun", "Doyoon", "Junho", "Hyunwoo", "Minseok", "Jiho", "Woojin", "Taeyang", "Siwoo", "Jaeyoung"],
+    "female": ["Seoyeon", "Jiwoo", "Seoyul", "Haeun", "Yuna", "Jimin", "Chaeyeon", "Yerin", "Soomin", "Nayeon", "Eunji", "Hyerin"],
+    "surnames": ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim", "Han", "Oh"]
+  },
+  "th": {
+    "male": ["Somchai", "Somsak", "Anucha", "Kittipong", "Chatchai", "Sombat", "Prasert", "Wichai", "Thanawat", "Nattapong", "Pichai", "Suriya"],
+    "female": ["Siriporn", "Pranee", "Malee", "Sudarat", "Wanida", "Kanya", "Suchada", "Nichakan", "Pornthip", "Ratana", "Sasithorn", "Duangjai"],
+    "surnames": ["Saetang", "Chaiyasit", "Suksawat", "Boonmee", "Charoensuk", "Wongsawat", "Rattanakul", "Phromma", "Kittikorn", "Thongchai", "Sirisak", "Mongkol"]
+  },
+  "eg": {
+    "male": ["Ahmed", "Mohamed", "Mahmoud", "Omar", "Youssef", "Khaled", "Karim", "Amr", "Tarek", "Hassan", "Ibrahim", "Mostafa"],
+    "female": ["Fatima", "Mariam", "Nour", "Yasmin", "Salma", "Aya", "Hana", "Dina", "Rania", "Amira", "Heba", "Laila"],
+    "surnames": ["Hassan", "Ibrahim", "Mahmoud", "Ali", "Mohamed", "Ahmed", "Youssef", "Khalil", "Mansour", "Sayed", "Abdel-Rahman", "Farouk"]
+  },
+  "za": {
+    "male": ["Sipho", "Thabo", "Lwazi", "Karabo", "Tebogo", "Mandla", "Bongani", "Andile", "Jan", "Pieter", "Ryan", "Sean"],
+    "female": ["Thandiwe", "Nomvula", "Lerato", "Naledi", "Zanele", "Anele", "Amahle", "Nomsa", "Anke", "Elzette", "Kayla", "Amy"],
+    "surnames": ["Nkosi", "Dlamini", "Khumalo", "Mokoena", "Botha", "van der Merwe", "Pretorius", "Naidoo", "Zulu", "Sithole", "Mahlangu", "Fourie"]
+  },
+  "no": {
+    "male": ["Jakob", "Emil", "Noah", "Oliver", "Aksel", "Filip", "Elias", "Lucas", "Oskar", "William", "Isak", "Henrik"],
+    "female": ["Nora", "Emma", "Sofie", "Olivia", "Ella", "Sara", "Ingrid", "Frida", "Maja", "Thea", "Amalie", "Lea"],
+    "surnames": ["Hansen", "Johansen", "Olsen", "Larsen", "Andersen", "Pedersen", "Nilsen", "Kristiansen", "Jensen", "Karlsen", "Johnsen", "Pettersen"]
+  },
+  "gr": {
+    "male": ["Georgios", "Dimitrios", "Ioannis", "Konstantinos", "Nikolaos", "Panagiotis", "Vasilios", "Christos", "Michail", "Andreas", "Athanasios", "Stavros"],
+    "female": ["Maria", "Eleni", "Aikaterini", "Vasiliki", "Sofia", "Georgia", "Dimitra", "Angeliki", "Ioanna", "Konstantina", "Anastasia", "Christina"],
+    "surnames": ["Papadopoulos", "Papadakis", "Nikolaou", "Georgiou", "Vasileiou", "Konstantinou", "Ioannidis", "Antoniou", "Dimitriou", "Christodoulou", "Athanasiou", "Stavrou"]
+  },
+  "ng": {
+    "male": ["Chinedu", "Emeka", "Oluwaseun", "Adewale", "Ifeanyi", "Tunde", "Chukwuemeka", "Babajide", "Uche", "Ayodele", "Femi", "Obinna"],
+    "female": ["Ngozi", "Chioma", "Amara", "Folake", "Yetunde", "Adaeze", "Bukola", "Ifeoma", "Chiamaka", "Temitope", "Aisha", "Zainab"],
+    "surnames": ["Okafor", "Okonkwo", "Adeyemi", "Balogun", "Eze", "Nwosu", "Abubakar", "Yusuf", "Afolabi", "Chukwu", "Okoro", "Ibrahim"]
+  },
+  "ar": {
+    "male": ["Mateo", "Benjamin", "Santiago", "Thiago", "Bautista", "Joaquin", "Lautaro", "Tomas", "Valentino", "Franco", "Ignacio", "Nicolas"],
+    "female": ["Emma", "Isabella", "Mia", "Valentina", "Sofia", "Catalina", "Martina", "Olivia", "Delfina", "Julieta", "Camila", "Victoria"],
+    "surnames": ["Gonzalez", "Rodriguez", "Fernandez", "Lopez", "Martinez", "Garcia", "Perez", "Sanchez", "Romero", "Torres", "Diaz", "Alvarez"]
+  },
+  "cl": {
+    "male": ["Mateo", "Benjamin", "Vicente", "Martin", "Agustin", "Diego", "Tomas", "Joaquin", "Gaspar", "Cristobal", "Maximiliano", "Ignacio"],
+    "female": ["Isidora", "Martina", "Emilia", "Sofia", "Amanda", "Antonia", "Trinidad", "Josefa", "Florencia", "Valentina", "Catalina", "Fernanda"],
+    "surnames": ["Gonzalez", "Munoz", "Rojas", "Diaz", "Perez", "Soto", "Contreras", "Silva", "Martinez", "Sepulveda", "Morales", "Rodriguez"]
+  },
+  "co": {
+    "male": ["Samuel", "Santiago", "Mateo", "Juan", "Andres", "David", "Nicolas", "Alejandro", "Sebastian", "Miguel", "Camilo", "Julian"],
+    "female": ["Isabella", "Sofia", "Valentina", "Maria", "Salome", "Luciana", "Manuela", "Gabriela", "Mariana", "Antonella", "Valeria", "Daniela"],
+    "surnames": ["Rodriguez", "Gomez", "Gonzalez", "Martinez", "Lopez", "Ramirez", "Hernandez", "Rojas", "Vargas", "Castro", "Ortiz", "Moreno"]
+  },
+  "pe": {
+    "male": ["Diego", "Sebastian", "Mateo", "Adrian", "Rodrigo", "Fabian", "Gael", "Piero", "Jose", "Luis", "Renzo", "Bruno"],
+    "female": ["Valentina", "Sofia", "Camila", "Luciana", "Ariana", "Fernanda", "Mia", "Antonella", "Rafaella", "Maria", "Gabriela", "Ximena"],
+    "surnames": ["Quispe", "Mamani", "Flores", "Huaman", "Rojas", "Vargas", "Torres", "Diaz", "Chavez", "Ramos", "Gutierrez", "Condori"]
+  },
+  "ru": {
+    "male": ["Alexander", "Ivan", "Dmitri", "Sergei", "Mikhail", "Nikolai", "Andrei", "Maxim", "Artem", "Vladimir", "Denis", "Igor"],
+    "female": ["Anastasia", "Maria", "Anna", "Elena", "Ekaterina", "Olga", "Natalia", "Svetlana", "Tatiana", "Irina", "Yulia", "Daria"],
+    "surnames": ["Ivanov", "Smirnov", "Kuznetsov", "Popov", "Sokolov", "Volkov", "Fedorov", "Morozov", "Petrov", "Novikov", "Egorov", "Pavlov"]
+  },
+  "pl": {
+    "male": ["Jan", "Jakub", "Antoni", "Filip", "Szymon", "Aleksander", "Franciszek", "Mikolaj", "Wojciech", "Kacper", "Adam", "Piotr"],
+    "female": ["Zuzanna", "Julia", "Maja", "Zofia", "Hanna", "Lena", "Amelia", "Alicja", "Oliwia", "Wiktoria", "Natalia", "Emilia"],
+    "surnames": ["Nowak", "Kowalski", "Wisniewski", "Wojcik", "Kowalczyk", "Kaminski", "Lewandowski", "Zielinski", "Szymanski", "Wozniak", "Dabrowski", "Kozlowski"]
+  },
+  "nl": {
+    "male": ["Daan", "Sem", "Lucas", "Levi", "Finn", "Milan", "Luuk", "Bram", "Noah", "Sven", "Thijs", "Jesse"],
+    "female": ["Emma", "Julia", "Mila", "Tess", "Sophie", "Zoe", "Nora", "Sara", "Fenna", "Liv", "Eva", "Anna"],
+    "surnames": ["de Jong", "Jansen", "de Vries", "van den Berg", "van Dijk", "Bakker", "Visser", "Smit", "Meijer", "de Boer", "Mulder", "de Groot"]
+  },
+  "se": {
+    "male": ["William", "Liam", "Noah", "Oscar", "Lucas", "Elias", "Hugo", "Alexander", "Oliver", "Charlie", "Vincent", "Leo"],
+    "female": ["Alice", "Maja", "Elsa", "Vera", "Wilma", "Astrid", "Ella", "Alma", "Selma", "Ines", "Stella", "Freja"],
+    "surnames": ["Andersson", "Johansson", "Karlsson", "Nilsson", "Eriksson", "Larsson", "Olsson", "Persson", "Svensson", "Gustafsson", "Pettersson", "Jonsson"]
+  },
+  "ch": {
+    "male": ["Noah", "Liam", "Luca", "Matteo", "Elias", "Julian", "Leon", "Levin", "Gabriel", "David", "Nicolas", "Alessio"],
+    "female": ["Mia", "Emma", "Elena", "Lara", "Sofia", "Laura", "Alina", "Aline", "Chiara", "Anna", "Julia", "Nina"],
+    "surnames": ["Muller", "Meier", "Schmid", "Keller", "Weber", "Huber", "Schneider", "Meyer", "Steiner", "Fischer", "Baumann", "Gerber"]
+  },
+  "pt": {
+    "male": ["Joao", "Francisco", "Rodrigo", "Martim", "Santiago", "Afonso", "Guilherme", "Duarte", "Tomas", "Gabriel", "Diogo", "Miguel"],
+    "female": ["Maria", "Leonor", "Matilde", "Beatriz", "Carolina", "Mariana", "Sofia", "Ines", "Francisca", "Laura", "Lara", "Alice"],
+    "surnames": ["Silva", "Santos", "Ferreira", "Pereira", "Costa", "Rodrigues", "Martins", "Jesus", "Sousa", "Fernandes", "Goncalves", "Gomes"]
+  },
+  "tr": {
+    "male": ["Yusuf", "Mehmet", "Emir", "Mustafa", "Ahmet", "Omer", "Ali", "Burak", "Kerem", "Baris", "Ozan", "Cem"],
+    "female": ["Zeynep", "Elif", "Ayse", "Fatma", "Meryem", "Ecrin", "Defne", "Asel", "Yagmur", "Ecem", "Merve", "Sude"],
+    "surnames": ["Yilmaz", "Kaya", "Demir", "Sahin", "Celik", "Yildiz", "Yildirim", "Ozturk", "Aydin", "Ozdemir", "Arslan", "Dogan"]
+  },
+  "sa": {
+    "male": ["Abdullah", "Mohammed", "Ahmed", "Faisal", "Khalid", "Saud", "Fahad", "Nasser", "Sultan", "Bandar", "Turki", "Majed"],
+    "female": ["Fatima", "Noura", "Sara", "Aisha", "Layla", "Maha", "Reem", "Hessa", "Munira", "Amal", "Shatha", "Lina"],
+    "surnames": ["Al-Saud", "Al-Ghamdi", "Al-Zahrani", "Al-Qahtani", "Al-Otaibi", "Al-Harbi", "Al-Shehri", "Al-Mutairi", "Al-Dosari", "Al-Amri", "Al-Malki", "Al-Anzi"]
+  },
+  "ae": {
+    "male": ["Mohammed", "Ahmed", "Rashid", "Khalifa", "Hamdan", "Saeed", "Sultan", "Omar", "Zayed", "Hamad", "Faisal", "Marwan"],
+    "female": ["Fatima", "Maitha", "Shamma", "Alyazia", "Noora", "Mariam", "Latifa", "Hessa", "Reem", "Aisha", "Amna", "Salama"],
+    "surnames": ["Al Maktoum", "Al Nahyan", "Al Falasi", "Al Suwaidi", "Al Marri", "Al Shamsi", "Al Zaabi", "Al Mansoori", "Al Qassimi", "Al Hosani", "Al Ketbi", "Al Blooshi"]
+  },
+  "il": {
+    "male": ["Noam", "Yosef", "David", "Ariel", "Eitan", "Itai", "Omer", "Yonatan", "Liam", "Uri", "Amit", "Daniel"],
+    "female": ["Noa", "Maya", "Tamar", "Shira", "Yael", "Ella", "Talia", "Michal", "Adi", "Roni", "Avigail", "Hila"],
+    "surnames": ["Cohen", "Levi", "Mizrahi", "Peretz", "Biton", "Dahan", "Avraham", "Friedman", "Katz", "Azoulay", "Malka", "Shapiro"]
+  },
+  "vn": {
+    "male": ["Minh", "Nam", "Duc", "Hung", "Long", "Khang", "Phuc", "Bao", "Tuan", "Quang", "Dat", "Kiet"],
+    "female": ["Linh", "Huong", "Mai", "Trang", "Anh", "Ngoc", "Thao", "Chi", "Nhi", "Yen", "Hoa", "Van"],
+    "surnames": ["Nguyen", "Tran", "Le", "Pham", "Hoang", "Huynh", "Phan", "Vu", "Vo", "Dang", "Bui", "Do"]
+  },
+  "id": {
+    "male": ["Budi", "Agus", "Dedi", "Eko", "Rizky", "Adi", "Bayu", "Fajar", "Wahyu", "Dimas", "Ari", "Rian"],
+    "female": ["Siti", "Dewi", "Sri", "Ayu", "Putri", "Wulan", "Rina", "Fitri", "Indah", "Sari", "Anisa", "Rahayu"],
+    "surnames": ["Wijaya", "Kusuma", "Santoso", "Wibowo", "Setiawan", "Hartono", "Susanto", "Halim", "Gunawan", "Saputra", "Pratama", "Nugroho"]
+  },
+  "ph": {
+    "male": ["Juan", "Jose", "Miguel", "Gabriel", "Carlo", "Angelo", "Marco", "Rafael", "Daniel", "Joshua", "Christian", "Mark"],
+    "female": ["Maria", "Andrea", "Angel", "Nicole", "Kristine", "Reyna", "Camille", "Bianca", "Erika", "Jasmine", "Angelica", "Princess"],
+    "surnames": ["Santos", "Reyes", "Cruz", "Bautista", "Garcia", "Mendoza", "Torres", "Flores", "Ramos", "Villanueva", "Castillo", "Del Rosario"]
+  },
+  "pk": {
+    "male": ["Muhammad", "Ahmed", "Ali", "Hassan", "Bilal", "Usman", "Hamza", "Fahad", "Zain", "Umar", "Talha", "Saad"],
+    "female": ["Ayesha", "Fatima", "Zainab", "Maryam", "Sana", "Hira", "Amina", "Rabia", "Sadia", "Mahnoor", "Anum", "Iqra"],
+    "surnames": ["Khan", "Malik", "Ahmed", "Butt", "Chaudhry", "Sheikh", "Raza", "Qureshi", "Abbasi", "Hussain", "Farooq", "Baig"]
+  },
+  "bd": {
+    "male": ["Mohammad", "Abdul", "Rakib", "Sakib", "Rafiq", "Kamal", "Jahid", "Shakil", "Arif", "Tanvir", "Nayeem", "Rashed"],
+    "female": ["Fatima", "Nusrat", "Sultana", "Rehana", "Shirin", "Rima", "Sabina", "Taslima", "Farzana", "Nasrin", "Sharmin", "Ruma"],
+    "surnames": ["Islam", "Rahman", "Hossain", "Ahmed", "Chowdhury", "Khan", "Alam", "Uddin", "Miah", "Akter", "Karim", "Sarkar"]
+  },
+  "ke": {
+    "male": ["Kevin", "Brian", "Dennis", "Peter", "John", "David", "Samuel", "Daniel", "Josphat", "Kamau", "Otieno", "Mwangi"],
+    "female": ["Grace", "Faith", "Mercy", "Joyce", "Mary", "Ann", "Esther", "Beatrice", "Wanjiru", "Achieng", "Njeri", "Akinyi"],
+    "surnames": ["Kamau", "Mwangi", "Otieno", "Wanjiru", "Kiptoo", "Njoroge", "Odhiambo", "Kariuki", "Cheruiyot", "Wafula", "Omondi", "Njuguna"]
+  },
+  "ma": {
+    "male": ["Youssef", "Mohamed", "Ayoub", "Amine", "Ismail", "Anas", "Hamza", "Adam", "Zakaria", "Karim", "Rayan", "Othmane"],
+    "female": ["Fatima Zahra", "Imane", "Salma", "Sara", "Yasmine", "Meriem", "Ines", "Kenza", "Nour", "Hiba", "Malak", "Rim"],
+    "surnames": ["El Amrani", "Bennani", "Alaoui", "Idrissi", "Tazi", "Fassi", "Berrada", "Chraibi", "Lahlou", "Benjelloun", "Ziani", "Saidi"]
+  },
+  "is": {
+    "male": ["Jon", "Sigurdur", "Gunnar", "Einar", "Bjorn", "Olafur", "Kristjan", "Magnus", "Arni", "Thor", "Gudmundur", "Halldor"],
+    "female": ["Gudrun", "Anna", "Sigridur", "Kristin", "Margret", "Helga", "Elin", "Asta", "Bjork", "Freyja", "Sara", "Lilja"],
+    "surnames": ["Jonsson", "Sigurdsson", "Gunnarsson", "Einarsson", "Bjornsson", "Olafsson", "Kristjansson", "Magnusson", "Arnason", "Thorsson", "Gudmundsson", "Halldorsson"]
+  },
+  "ie": {
+    "male": ["Sean", "Conor", "Cian", "Oisin", "Liam", "Cillian", "Darragh", "Fionn", "Ronan", "Eoin", "Cormac", "Finn"],
+    "female": ["Aoife", "Saoirse", "Niamh", "Ciara", "Roisin", "Aisling", "Sinead", "Grainne", "Orla", "Caoimhe", "Eabha", "Maeve"],
+    "surnames": ["Murphy", "Kelly", "O'Sullivan", "Walsh", "Byrne", "Ryan", "O'Brien", "O'Connor", "McCarthy", "Gallagher", "Doyle", "Kennedy"]
+  },
+  "nz": {
+    "male": ["Jack", "William", "James", "Oliver", "Lachlan", "Mason", "Riley", "Cooper", "Rawiri", "Tane", "Nikau", "Wiremu"],
+    "female": ["Charlotte", "Amelia", "Isla", "Olivia", "Ruby", "Aria", "Mia", "Ivy", "Aroha", "Manaia", "Kiri", "Awhina"],
+    "surnames": ["Smith", "Williams", "Brown", "Wilson", "Taylor", "Anderson", "Ngata", "Wiremu", "Tane", "Walker", "Robinson", "Clark"]
+  },
+  "sg": {
+    "male": ["Wei Jie", "Jun Wei", "Kai", "Zhi Hao", "Aiman", "Arjun", "Ryan", "Daniel", "Jayden", "Marcus", "Ethan", "Nathaniel"],
+    "female": ["Hui Min", "Jia Xin", "Wei Ling", "Siti", "Nur", "Priya", "Sarah", "Rachel", "Emily", "Sophia", "Chloe", "Charlotte"],
+    "surnames": ["Tan", "Lim", "Lee", "Ng", "Wong", "Goh", "Chua", "Ong", "Teo", "Koh", "Ibrahim", "Rahman"]
+  },
+  "my": {
+    "male": ["Muhammad", "Ahmad", "Ali", "Hafiz", "Amir", "Danish", "Farid", "Iskandar", "Aiman", "Zulkifli", "Haziq", "Adam"],
+    "female": ["Nur", "Siti", "Aisyah", "Nurul", "Farah", "Aina", "Alya", "Batrisyia", "Sofea", "Puteri", "Amira", "Iman"],
+    "surnames": ["Abdullah", "Ismail", "Hassan", "Ibrahim", "Rahman", "Yusof", "Ahmad", "Kassim", "Wei Ling", "Tan", "Lim", "Chong"]
+  },
+  "default": {
+    "male": ["James", "Michael", "Alex", "Daniel", "David", "John", "Chris", "Ryan", "Sam", "Ben", "Marcus", "Adrian"],
+    "female": ["Emma", "Sarah", "Anna", "Maria", "Sofia", "Grace", "Julia", "Laura", "Elena", "Nina", "Amara", "Zara"],
+    "surnames": ["Smith", "Johnson", "Miller", "Brown", "Garcia", "Kim", "Khan", "Silva", "Kowalski", "Novak", "Reyes", "Andersen"]
+  }
+}
