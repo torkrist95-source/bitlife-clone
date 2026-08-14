@@ -84,13 +84,24 @@ function randFamilyFirstName(excludeNames) {
   return randChoice(pool.length > 0 ? pool : FIRST_NAMES);
 }
 
-function generateParent(role, relationshipType, lastName, job, excludeNames) {
+// Every parent/guardian resolves to exactly one concrete occupation, or
+// explicit unemployment -- never an "X or Y" combined job string.
+function rollParentOccupation(tier) {
+  if (randInt(0, 99) < tier.unemploymentChance) {
+    return { employed: false, job: null };
+  }
+  return { employed: true, job: randChoice(tier.occupations) };
+}
+
+function generateParent(role, relationshipType, lastName, tier, excludeNames) {
+  const occupation = rollParentOccupation(tier);
   return {
     role,
     relationshipType,
     name: `${randFamilyFirstName(excludeNames)} ${lastName}`,
     age: randInt(24, 45),
-    job,
+    employed: occupation.employed,
+    job: occupation.job,
   };
 }
 
@@ -99,65 +110,53 @@ function generateFamilyMembers(structureId, lastName, tier, excludeName) {
   const used = [excludeName];
   let parents;
 
-  function addParent(role, relationshipType, job) {
-    const parent = generateParent(role, relationshipType, lastName, job, used);
+  function addParent(role, relationshipType) {
+    const parent = generateParent(role, relationshipType, lastName, tier, used);
     used.push(parent.name.split(" ")[0]);
     return parent;
+  }
+
+  function addGuardian(relationshipType, guardianRelation, ageRange) {
+    const occupation = rollParentOccupation(tier);
+    const guardian = {
+      role: "guardian",
+      relationshipType,
+      guardianRelation,
+      name: `${randFamilyFirstName(used)} ${lastName}`,
+      age: randInt(ageRange[0], ageRange[1]),
+      employed: occupation.employed,
+      job: occupation.job,
+    };
+    used.push(guardian.name.split(" ")[0]);
+    return guardian;
   }
 
   switch (structureId) {
     case "single_biological_parent": {
       const role = randChoice(["mother", "father"]);
-      const job = role === "mother" ? tier.motherJob : tier.fatherJob;
-      parents = [addParent(role, "biological", job)];
+      parents = [addParent(role, "biological")];
       break;
     }
     case "biological_plus_step": {
       const bioRole = randChoice(["mother", "father"]);
       const stepRole = bioRole === "mother" ? "father" : "mother";
-      const bioJob = bioRole === "mother" ? tier.motherJob : tier.fatherJob;
-      const stepJob = stepRole === "mother" ? tier.motherJob : tier.fatherJob;
-      parents = [addParent(bioRole, "biological", bioJob), addParent(stepRole, "step", stepJob)];
+      parents = [addParent(bioRole, "biological"), addParent(stepRole, "step")];
       break;
     }
     case "adopted":
-      parents = [
-        addParent("mother", "adoptive", tier.motherJob),
-        addParent("father", "adoptive", tier.fatherJob),
-      ];
+      parents = [addParent("mother", "adoptive"), addParent("father", "adoptive")];
       flags.isAdopted = true;
       break;
     case "guardian":
-      parents = [
-        {
-          role: "guardian",
-          relationshipType: "guardian",
-          guardianRelation: randChoice(GUARDIAN_RELATIONS),
-          name: `${randFamilyFirstName(used)} ${lastName}`,
-          age: randInt(30, 65),
-          job: tier.motherJob,
-        },
-      ];
+      parents = [addGuardian("guardian", randChoice(GUARDIAN_RELATIONS), [30, 65])];
       break;
     case "foster_care":
-      parents = [
-        {
-          role: "guardian",
-          relationshipType: "foster",
-          guardianRelation: "foster caregiver",
-          name: `${randFamilyFirstName(used)} ${lastName}`,
-          age: randInt(30, 60),
-          job: tier.motherJob,
-        },
-      ];
+      parents = [addGuardian("foster", "foster caregiver", [30, 60])];
       flags.inFosterCare = true;
       break;
     case "two_biological_parents":
     default:
-      parents = [
-        addParent("mother", "biological", tier.motherJob),
-        addParent("father", "biological", tier.fatherJob),
-      ];
+      parents = [addParent("mother", "biological"), addParent("father", "biological")];
   }
 
   return { parents, flags };
@@ -196,33 +195,35 @@ function maybeGeneratePet() {
 function buildBirthHistoryLines({ formattedDate, country, tier, structureId, parents, siblings, pet }) {
   const lines = [];
   const tierLabel = tier.name.toLowerCase();
+  const employment = (p) => (p.employed ? `works as ${p.job}` : "is currently unemployed");
+  const employmentParenthetical = (p) => (p.employed ? `works as ${p.job}` : "currently unemployed");
 
   if (structureId === "adopted") {
     const [p1, p2] = parents;
     lines.push(
       `You were born on ${formattedDate} in ${country.name}. You were adopted into a ${tierLabel} family. ` +
-        `Your ${p1.role}, ${p1.name}, is ${p1.age} and works as ${p1.job}. ` +
-        `Your ${p2.role}, ${p2.name}, is ${p2.age} and works as ${p2.job}.`
+        `Your ${p1.role}, ${p1.name}, is ${p1.age} and ${employment(p1)}. ` +
+        `Your ${p2.role}, ${p2.name}, is ${p2.age} and ${employment(p2)}.`
     );
   } else if (structureId === "biological_plus_step") {
     const bio = parents.find((p) => p.relationshipType === "biological");
     const step = parents.find((p) => p.relationshipType === "step");
     lines.push(
       `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family. ` +
-        `Your ${bio.role}, ${bio.name} (${bio.age}, works as ${bio.job}), raised you alongside your step${step.role}, ` +
-        `${step.name} (${step.age}, works as ${step.job}).`
+        `Your ${bio.role}, ${bio.name} (${bio.age}, ${employmentParenthetical(bio)}), raised you alongside your step${step.role}, ` +
+        `${step.name} (${step.age}, ${employmentParenthetical(step)}).`
     );
   } else if (structureId === "single_biological_parent") {
     const p = parents[0];
     lines.push(
       `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family, raised by your ${p.role}, ` +
-        `${p.name}, who is ${p.age} and works as ${p.job}.`
+        `${p.name}, who is ${p.age} and ${employment(p)}.`
     );
   } else if (structureId === "guardian") {
     const g = parents[0];
     lines.push(
       `You were born on ${formattedDate} in ${country.name}. You were raised by your ${g.guardianRelation}, ${g.name}, ` +
-        `who is ${g.age} and works as ${g.job}.`
+        `who is ${g.age} and ${employment(g)}.`
     );
   } else if (structureId === "foster_care") {
     const g = parents[0];
@@ -233,8 +234,8 @@ function buildBirthHistoryLines({ formattedDate, country, tier, structureId, par
     const [p1, p2] = parents;
     lines.push(
       `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family. ` +
-        `Your ${p1.role}, ${p1.name}, is ${p1.age} and works as ${p1.job}. ` +
-        `Your ${p2.role}, ${p2.name}, is ${p2.age} and works as ${p2.job}.`
+        `Your ${p1.role}, ${p1.name}, is ${p1.age} and ${employment(p1)}. ` +
+        `Your ${p2.role}, ${p2.name}, is ${p2.age} and ${employment(p2)}.`
     );
   }
 
