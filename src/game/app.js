@@ -1,7 +1,22 @@
-import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
+import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate, MIN_DATING_AGE } from "./character.js";
 import { ageUp } from "./engine.js";
 import { applyChoice, getEligibleChoices, rollAgeUpHappening } from "./events.js";
-import { ensureSocialCircle, talk, hangOut, giveGift, developRomance, askOut, askForHelp, thankTeacher } from "./npc.js";
+import {
+  ensureSocialCircle,
+  ensureCoworkers,
+  endCoworkerRelationships,
+  canRomanticallyMatch,
+  talk,
+  getToKnow,
+  hangOut,
+  confide,
+  giveGift,
+  askToBecomeFriends,
+  developRomance,
+  askOut,
+  askForHelp,
+  thankTeacher,
+} from "./npc.js";
 import {
   getGradeLabel,
   getStatusLabel,
@@ -44,6 +59,7 @@ const NAV_CATEGORIES = {
   Occupation: [
     { id: "school", label: "School", actions: [{ label: "View School", handler: () => openSchoolModal() }] },
     { id: "jobs", label: "Jobs", actions: [{ label: "Manage Jobs", handler: () => openOccupationModal() }] },
+    { id: "coworkers", label: "Coworkers", actions: [{ label: "View Coworkers", handler: () => openCoworkersModal() }] },
     { id: "special_careers", label: "Special Careers", render: renderComingSoon },
     { id: "career_history", label: "Career History", render: renderComingSoon },
   ],
@@ -92,6 +108,7 @@ let worldUpdates = [];
 let clubsData = [];
 let extracurricularsData = [];
 let selectedGender = null;
+let selectedAttraction = null;
 
 const creation = {
   screen: document.getElementById("creation-screen"),
@@ -100,7 +117,10 @@ const creation = {
   randomizeCharacterBtn: document.getElementById("randomize-character-btn"),
   countrySelect: document.getElementById("country-select"),
   countryFlavor: document.getElementById("country-flavor"),
-  genderBtns: document.querySelectorAll(".gender-btn"),
+  // Both button groups share the .gender-btn style, so each is scoped by
+  // its own data attribute rather than the shared class alone.
+  genderBtns: document.querySelectorAll(".gender-btn[data-gender]"),
+  attractionBtns: document.querySelectorAll(".gender-btn[data-attraction]"),
   startBtn: document.getElementById("start-life-btn"),
 };
 
@@ -215,6 +235,12 @@ const classmatesModal = {
   overlay: document.getElementById("classmates-modal-overlay"),
   list: document.getElementById("classmates-list"),
   closeBtn: document.getElementById("classmates-modal-close"),
+};
+
+const coworkersModal = {
+  overlay: document.getElementById("coworkers-modal-overlay"),
+  list: document.getElementById("coworkers-list"),
+  closeBtn: document.getElementById("coworkers-modal-close"),
 };
 
 const npcProfileModal = {
@@ -416,7 +442,7 @@ function updateCountryFlavor() {
 }
 
 function updateStartButton() {
-  creation.startBtn.disabled = !selectedGender || !creation.nameInput.value.trim();
+  creation.startBtn.disabled = !selectedGender || !selectedAttraction || !creation.nameInput.value.trim();
 }
 
 function populateCountrySelect() {
@@ -436,9 +462,17 @@ function selectGender(gender) {
   updateStartButton();
 }
 
+function selectAttraction(attraction) {
+  selectedAttraction = attraction;
+  creation.attractionBtns.forEach((b) => b.classList.toggle("selected", b.dataset.attraction === attraction));
+  updateStartButton();
+}
+
 function randomizeCharacter() {
   const gender = Math.random() < 0.5 ? "male" : "female";
   selectGender(gender);
+  const attractionOptions = ["male", "female", "both"];
+  selectAttraction(attractionOptions[randInt(0, attractionOptions.length - 1)]);
   if (countries.length > 0) {
     creation.countrySelect.value = countries[randInt(0, countries.length - 1)].id;
     updateCountryFlavor();
@@ -462,20 +496,42 @@ function wireCreationScreen() {
     btn.addEventListener("click", () => selectGender(btn.dataset.gender));
   });
 
+  creation.attractionBtns.forEach((btn) => {
+    btn.addEventListener("click", () => selectAttraction(btn.dataset.attraction));
+  });
+
   creation.startBtn.addEventListener("click", startLife);
 }
 
 function resetCreationForm() {
   creation.nameInput.value = "";
   selectedGender = null;
+  selectedAttraction = null;
   creation.genderBtns.forEach((b) => b.classList.remove("selected"));
+  creation.attractionBtns.forEach((b) => b.classList.remove("selected"));
   updateStartButton();
+}
+
+// "both" is a single button for the player to pick, but the underlying
+// model is a list of genders the character is attracted to -- translate
+// here rather than carrying two different representations around.
+function resolveAttractedTo(attraction) {
+  return attraction === "both" ? ["male", "female"] : [attraction];
 }
 
 function startLife() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
   const name = creation.nameInput.value.trim();
-  character = createCharacter({ name, country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures, namePools });
+  character = createCharacter({
+    name,
+    country,
+    gender: selectedGender,
+    attractedTo: resolveAttractedTo(selectedAttraction),
+    wealthTiers,
+    birthCircumstances,
+    familyStructures,
+    namePools,
+  });
   activeLifeId = createLife(character);
 
   showScreen("game");
@@ -711,6 +767,7 @@ function renderOccupationModal() {
     // Either unemployed, or character.job refers to a job/level that no
     // longer exists in jobsData -- treat that the same as unemployed
     // rather than crashing on a stale reference.
+    if (character.job) endCoworkerRelationships(character);
     character.job = null;
     occupationModal.employedView.classList.add("hidden");
     occupationModal.unemployedView.classList.remove("hidden");
@@ -728,6 +785,7 @@ function applyForJob(jobId) {
   character.job = { jobId, levelIndex: 0, yearsInRole: 0 };
   const level = getJobLevel(jobId, 0);
   character.history.push(`You got a job as ${level.title}.`);
+  ensureCoworkers(character, namePools, character.country);
   renderOccupationModal();
   renderGame();
   autosave();
@@ -737,6 +795,7 @@ function applyForJob(jobId) {
 function requestQuitJob() {
   const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
   if (!level) {
+    if (character.job) endCoworkerRelationships(character);
     character.job = null;
     renderOccupationModal();
     return;
@@ -747,6 +806,7 @@ function requestQuitJob() {
     confirmLabel: "Quit",
     onConfirm: () => {
       character.job = null;
+      endCoworkerRelationships(character);
       character.history.push(`You quit your job as ${level.title}.`);
       renderOccupationModal();
       renderGame();
@@ -789,7 +849,6 @@ const SCHOOL_STATUS_MESSAGES = {
 };
 
 const ENROLLED_STATUSES = new Set(["elementary", "middle", "high_school"]);
-const CLASSMATE_ROMANCE_MIN_AGE = 12;
 
 function renderSchoolModal() {
   const edu = character.education;
@@ -972,6 +1031,21 @@ activitiesModal.closeBtn.addEventListener("click", hideActivitiesModal);
 
 // ---------- Classmates ----------
 
+// Shared meta-line builder for any list of non-family relationship NPCs
+// (classmates, coworkers) -- shows the friendship tier alongside its raw
+// closeness number so the tier itself is visible at a glance, not just
+// buried in a number the player would have to know the thresholds for.
+function buildRelationshipMeta(npc, roleLabel = null) {
+  const tierLabel = FRIEND_LEVEL_LABELS[npc.friendLevel] ?? npc.friendLevel;
+  const roleSegment = roleLabel ? `${roleLabel} · ` : "";
+  let meta = `Age ${npc.age} · ${roleSegment}${tierLabel} (${npc.closeness})`;
+  const showRomance = character.age >= MIN_DATING_AGE && npc.romanceStatus && npc.romanceStatus !== "none";
+  if (showRomance) {
+    meta += ` · ${ROMANCE_STATUS_LABELS[npc.romanceStatus]} (${npc.romance ?? 0})`;
+  }
+  return meta;
+}
+
 function renderClassmatesList() {
   ensureSocialCircle(character, namePools, character.country);
   classmatesModal.list.innerHTML = "";
@@ -985,13 +1059,8 @@ function renderClassmatesList() {
     return;
   }
 
-  const showRomance = character.age >= CLASSMATE_ROMANCE_MIN_AGE;
-
   for (const npc of circle) {
-    const meta = showRomance
-      ? `Age ${npc.age} · Student · Friendship ${npc.closeness} · Romance ${npc.romance ?? 0}`
-      : `Age ${npc.age} · Student · Friendship ${npc.closeness}`;
-    const card = buildPersonCard({ name: npc.name, meta });
+    const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc, "Student") });
     card.classList.add("classmate-card");
     card.addEventListener("click", () => openNpcProfile(npc, "classmate"));
     classmatesModal.list.appendChild(card);
@@ -1009,10 +1078,53 @@ function hideClassmatesModal() {
 
 classmatesModal.closeBtn.addEventListener("click", hideClassmatesModal);
 
-// ---------- NPC Profile (reused for classmates and the teacher) ----------
+// ---------- Coworkers ----------
+
+function renderCoworkersList() {
+  if (character.job) ensureCoworkers(character, namePools, character.country);
+  coworkersModal.list.innerHTML = "";
+  const coworkers = character.coworkers ?? [];
+
+  if (coworkers.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = character.job ? "You don't have any coworkers yet." : "You don't have a job right now.";
+    coworkersModal.list.appendChild(empty);
+    return;
+  }
+
+  for (const npc of coworkers) {
+    const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc, "Coworker") });
+    card.classList.add("classmate-card");
+    card.addEventListener("click", () => openNpcProfile(npc, "coworker"));
+    coworkersModal.list.appendChild(card);
+  }
+}
+
+function openCoworkersModal() {
+  renderCoworkersList();
+  coworkersModal.overlay.classList.remove("hidden");
+}
+
+function hideCoworkersModal() {
+  coworkersModal.overlay.classList.add("hidden");
+}
+
+coworkersModal.closeBtn.addEventListener("click", () => {
+  hideCoworkersModal();
+  hideNavDrawer();
+});
+
+// ---------- NPC Profile (reused for classmates, coworkers, and the teacher) ----------
 
 let currentNpcProfile = null;
 
+// Cumulative by friendship tier -- each tier keeps everything the one
+// below it had, per the interaction lists in the spec (Best Friend never
+// loses something Close Friend could already do). The one gesture that
+// isn't automatic is Acquaintance -> Friend itself: everything else above
+// that is reached by closeness crossing a threshold (see
+// maybeTierUpFriendship in npc.js), not by asking again.
 function getNpcInteractions(npc, kind) {
   if (kind === "teacher") {
     return [
@@ -1022,21 +1134,26 @@ function getNpcInteractions(npc, kind) {
     ];
   }
 
-  const interactions = [
-    { label: "Talk", run: () => talk(character, npc) },
-    { label: "Hang Out", run: () => hangOut(character, npc) },
-  ];
-  if (npc.closeness < 40) {
-    interactions.push({ label: "Make Friends", run: () => hangOut(character, npc) });
+  const interactions = [{ label: "Talk", run: () => talk(character, npc) }];
+
+  if (npc.friendLevel === "acquaintance") {
+    interactions.push({ label: "Get to Know", run: () => getToKnow(character, npc) });
+    interactions.push({ label: "Ask to Become Friends", run: () => askToBecomeFriends(character, npc) });
+    return interactions;
   }
+
+  interactions.push({ label: "Hang Out", run: () => hangOut(character, npc) });
   interactions.push({ label: "Give Gift", run: () => giveGift(character, npc) });
   interactions.push({ label: "Ask for Help", run: () => askForHelp(character, npc) });
 
-  if (character.age >= CLASSMATE_ROMANCE_MIN_AGE) {
-    if (npc.type === "friend" && npc.closeness >= 40) {
+  if (npc.friendLevel === "close_friend" || npc.friendLevel === "best_friend") {
+    interactions.push({ label: "Confide", run: () => confide(character, npc) });
+  }
+
+  if (character.age >= MIN_DATING_AGE && canRomanticallyMatch(character, npc)) {
+    if (npc.romanceStatus === "none") {
       interactions.push({ label: "Develop Romance", run: () => developRomance(character, npc) });
-    }
-    if (npc.type === "crush") {
+    } else if (npc.romanceStatus === "crush") {
       interactions.push({ label: "Ask Out", run: () => askOut(character, npc).resultText });
     }
   }
@@ -1044,22 +1161,41 @@ function getNpcInteractions(npc, kind) {
   return interactions;
 }
 
+const FRIEND_LEVEL_LABELS = {
+  acquaintance: "Acquaintance",
+  friend: "Friend",
+  close_friend: "Close Friend",
+  best_friend: "Best Friend",
+};
+
+const ROMANCE_STATUS_LABELS = {
+  crush: "Crush",
+  dating: "Dating",
+  partner: "Partner",
+};
+
 function renderNpcProfile() {
   if (!currentNpcProfile) return;
   const { npc, kind } = currentNpcProfile;
   const stage = getLifeStage(npc.age);
   npcProfileModal.portrait.textContent = kind === "teacher" ? "🧑‍🏫" : stage.emoji;
   npcProfileModal.name.textContent = npc.name;
-  npcProfileModal.meta.textContent =
-    kind === "teacher" ? `Age ${npc.age} · ${npc.subject} Teacher` : `Age ${npc.age} · Student`;
+  const roleLabel = kind === "teacher" ? `${npc.subject} Teacher` : kind === "coworker" ? "Coworker" : "Student";
+  const tierSuffix = kind === "teacher" ? "" : ` · ${FRIEND_LEVEL_LABELS[npc.friendLevel] ?? npc.friendLevel}`;
+  npcProfileModal.meta.textContent = `Age ${npc.age} · ${roleLabel}${tierSuffix}`;
 
   renderStatBars(npc.stats, npcProfileModal.bars);
 
   npcProfileModal.friendshipValue.textContent = npc.closeness;
 
-  const showRomance = kind === "classmate" && character.age >= CLASSMATE_ROMANCE_MIN_AGE;
+  const showRomance = (kind === "classmate" || kind === "coworker") && character.age >= MIN_DATING_AGE;
   npcProfileModal.romanceRow.classList.toggle("hidden", !showRomance);
-  if (showRomance) npcProfileModal.romanceValue.textContent = npc.romance ?? 0;
+  if (showRomance) {
+    npcProfileModal.romanceValue.textContent =
+      npc.romanceStatus && npc.romanceStatus !== "none"
+        ? `${ROMANCE_STATUS_LABELS[npc.romanceStatus]} (${npc.romance ?? 0})`
+        : npc.romance ?? 0;
+  }
 
   npcProfileModal.interactions.innerHTML = "";
   for (const interaction of getNpcInteractions(npc, kind)) {
@@ -1073,6 +1209,9 @@ function renderNpcProfile() {
       renderNpcProfile();
       if (kind === "classmate" && !classmatesModal.overlay.classList.contains("hidden")) {
         renderClassmatesList();
+      }
+      if (kind === "coworker" && !coworkersModal.overlay.classList.contains("hidden")) {
+        renderCoworkersList();
       }
       autosave();
       showToast(line);
@@ -1133,8 +1272,6 @@ financeModal.closeBtn.addEventListener("click", () => {
 // "View Friends"/"View Family" click-through) so the list is right there
 // the moment the section opens.
 
-const SOCIAL_TYPE_LABELS = { friend: "Friend", crush: "Crush", romantic_interest: "Romantic Interest" };
-
 function renderComingSoon(container) {
   container.innerHTML = "";
   const message = document.createElement("p");
@@ -1165,25 +1302,28 @@ function buildPersonCard({ name, meta, action }) {
 function renderFriendsListInto(container) {
   ensureSocialCircle(character, namePools, character.country);
   container.innerHTML = "";
-  const circle = character.socialCircle ?? [];
+  // Acquaintances don't show here -- being in the character's orbit isn't
+  // the same as being their friend. They're still visible in whichever
+  // list they came from (Classmates, Coworkers) until the player actually
+  // develops the relationship via Ask to Become Friends.
+  const friends = (character.socialCircle ?? []).filter((npc) => npc.friendLevel !== "acquaintance");
 
-  if (circle.length === 0) {
+  if (friends.length === 0) {
     const empty = document.createElement("p");
     empty.className = "occupation-unemployed-label";
-    empty.textContent = "You don't have anyone in your circle yet.";
+    empty.textContent = "You don't have any friends yet.";
     container.appendChild(empty);
     return;
   }
 
-  for (const npc of circle) {
+  for (const npc of friends) {
     const hangoutBtn = document.createElement("button");
     hangoutBtn.type = "button";
     hangoutBtn.className = "friend-hangout-btn";
     hangoutBtn.textContent = "Hang Out";
     hangoutBtn.addEventListener("click", () => hangOutWithFriend(npc.id, container));
 
-    const meta = `${SOCIAL_TYPE_LABELS[npc.type] ?? npc.type} · Closeness ${npc.closeness}`;
-    container.appendChild(buildPersonCard({ name: npc.name, meta, action: hangoutBtn }));
+    container.appendChild(buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc), action: hangoutBtn }));
   }
 }
 

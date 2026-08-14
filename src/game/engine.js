@@ -1,5 +1,6 @@
 import { getLifeStage, clampStat, randInt } from "./character.js";
 import { applySchoolYear } from "./school.js";
+import { ensureCoworkers, maybeChurnCoworkers, endCoworkerRelationships } from "./npc.js";
 
 // Once promoted into a role, a character needs at least this many years in
 // it before another promotion can be rolled.
@@ -23,7 +24,16 @@ function applyJobYear(character, jobsData) {
 
   const jobDef = jobsData?.find((j) => j.id === character.job.jobId);
   const level = jobDef?.levels[character.job.levelIndex];
-  if (!jobDef || !level) return null;
+  if (!jobDef || !level) {
+    // A job/level that no longer resolves against jobsData -- treat it the
+    // same as unemployed rather than silently leaving character.job set,
+    // which would otherwise keep ensureCoworkers/maybeChurnCoworkers
+    // generating and churning coworkers for a job that no longer exists
+    // (app.js's occupation screens already treat this the same way).
+    character.job = null;
+    endCoworkerRelationships(character);
+    return null;
+  }
 
   character.money += level.salary;
   character.job.yearsInRole += 1;
@@ -31,6 +41,7 @@ function applyJobYear(character, jobsData) {
   if (randInt(0, 99) < LAYOFF_CHANCE) {
     const title = level.title;
     character.job = null;
+    endCoworkerRelationships(character);
     return `You were laid off from your job as ${title}.`;
   }
 
@@ -59,6 +70,12 @@ function ageUp(character, jobsData, namePools, countryId) {
 
   const jobLine = applyJobYear(character, jobsData);
   if (jobLine) character.history.push(jobLine);
+
+  if (character.job) {
+    ensureCoworkers(character, namePools, countryId);
+    const coworkerLine = maybeChurnCoworkers(character, namePools, countryId);
+    if (coworkerLine) character.history.push(coworkerLine);
+  }
 
   const schoolLines = applySchoolYear(character, namePools, countryId);
   for (const schoolLine of schoolLines) character.history.push(schoolLine);

@@ -71,7 +71,9 @@ function generateTeacher(namePools, countryId, status) {
       fame: 0,
       reputation: randInt(50, 80),
     },
-    closeness: randInt(40, 60),
+    // Starts at acquaintance-level rapport, same as every other new NPC --
+    // has to be built up via Ask for Help / Thank Teacher, not assumed.
+    closeness: randInt(10, 30),
   };
 }
 

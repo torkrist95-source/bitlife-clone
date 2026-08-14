@@ -58,6 +58,15 @@
       </div>
 
       <div class="creation-field">
+        <label>Attracted To</label>
+        <div class="gender-toggle">
+          <button type="button" class="gender-btn" data-attraction="male">Men</button>
+          <button type="button" class="gender-btn" data-attraction="female">Women</button>
+          <button type="button" class="gender-btn" data-attraction="both">Both</button>
+        </div>
+      </div>
+
+      <div class="creation-field">
         <label for="country-select">Country of Birth</label>
         <select id="country-select"></select>
         <p id="country-flavor" class="flavor-text"></p>
@@ -250,6 +259,14 @@
         <h2 class="occupation-modal-title">Classmates</h2>
         <div id="classmates-list" class="occupation-job-list"></div>
         <button type="button" id="classmates-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
+    <div id="coworkers-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">Coworkers</h2>
+        <div id="coworkers-list" class="occupation-job-list"></div>
+        <button type="button" id="coworkers-modal-close" class="event-choice-btn">Close</button>
       </div>
     </div>
 

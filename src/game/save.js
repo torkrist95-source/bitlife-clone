@@ -7,6 +7,18 @@ function generateLifeId() {
   return `life_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function randomGender() {
+  return Math.random() < 0.5 ? "male" : "female";
+}
+
+// Same "mostly one, sometimes both" shape npc.js uses for freshly-created
+// NPCs -- duplicated rather than imported so migration stays self-contained,
+// same reasoning as the NPC stat-block defaults already duplicated below.
+function randomAttractedTo() {
+  if (Math.random() < 0.1) return ["male", "female"];
+  return [randomGender()];
+}
+
 function migrateCharacterFields(character) {
   if (!character.stats) character.stats = {};
   character.stats.fame ??= 0;
@@ -15,6 +27,15 @@ function migrateCharacterFields(character) {
   character.skills ??= {};
   character.hobbies ??= [];
   character.socialCircle ??= [];
+  // Safest possible default -- doesn't retroactively invalidate any
+  // romantic relationship an existing save already has, regardless of the
+  // genders involved.
+  character.attractedTo ??= ["male", "female"];
+  // Old saves simply have none until the next hire; ensureCoworkers is
+  // lazy/idempotent (same as ensureSocialCircle), so an already-employed
+  // character picks up coworkers the next time the list opens or they age
+  // up, no namePools-dependent generation needed here.
+  character.coworkers ??= [];
   character.recentEventIds ??= [];
   character.pendingEventId ??= null;
   character.history ??= [];
@@ -65,6 +86,36 @@ function migrateCharacterFields(character) {
         reputation: randInt(30, 60),
       };
     }
+    // Never stored before this feature existed -- no way to recover the
+    // original, so backfill plausible values the same way every other
+    // missing NPC field already is above.
+    npc.gender ??= randomGender();
+    npc.attractedTo ??= randomAttractedTo();
+
+    // Migrate the old single `type` field ("friend" | "crush" |
+    // "romantic_interest") to the new friendLevel/romanceStatus pair
+    // WITHOUT resetting anything -- every pre-existing NPC becomes at
+    // least a "friend" (never demoted to acquaintance and dropped out of
+    // the Friends list just because the model changed), and only
+    // newly-created NPCs going forward start at "acquaintance". `type`
+    // itself is left in place rather than deleted -- a harmless dead
+    // field is cheaper and lower-risk than stripping it.
+    if (!npc.friendLevel) {
+      if (npc.type === "crush") {
+        npc.friendLevel = "friend";
+        npc.romanceStatus = "crush";
+      } else if (npc.type === "romantic_interest") {
+        npc.friendLevel = "friend";
+        npc.romanceStatus = "dating";
+      } else {
+        // "friend" or any unexpected/missing value -- err toward not
+        // resetting a relationship that already existed rather than
+        // guessing it was a never-interacted-with acquaintance.
+        npc.friendLevel = "friend";
+        npc.romanceStatus = "none";
+      }
+    }
+    npc.romanceStatus ??= "none";
   }
 
   return character;

@@ -323,7 +323,7 @@ function parsePlayerName(fullName, namePools, countryId, gender) {
   return { name: trimmed, firstName, lastName };
 }
 
-function createCharacter({ name, country, gender, wealthTiers, birthCircumstances, familyStructures, namePools }) {
+function createCharacter({ name, country, gender, attractedTo, wealthTiers, birthCircumstances, familyStructures, namePools }) {
   const countryId = country?.id;
   const { name: playerName, firstName, lastName } = parsePlayerName(name, namePools, countryId, gender);
   const tier = rollWealthTier(wealthTiers);
@@ -355,6 +355,7 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
   return {
     name: playerName,
     gender,
+    attractedTo: attractedTo?.length ? attractedTo : ["male", "female"],
     country: country.id,
     countryName: country.name,
     birthDate,
@@ -385,6 +386,7 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
     skills: {},
     hobbies: [],
     socialCircle: [],
+    coworkers: [],
     recentEventIds: [],
     education: {
       status: "not_started",
@@ -415,6 +417,11 @@ function clampStat(value) {
 // by any system that moves money in or out of the character's own pocket
 // (events, gifts, tuition, etc.) so this guard only lives in one place.
 const MIN_EARNING_AGE = 14;
+
+// Earliest age romance-track interactions (Develop Romance, Ask Out) can
+// appear at all -- shared by npc.js's own gating (not just which buttons
+// app.js renders) so nothing can bypass it by calling the functions directly.
+const MIN_DATING_AGE = 12;
 
 // Returns whether the delta was actually applied, so a caller granting some
 // other benefit alongside a cost (a gift's closeness boost, say) can check
@@ -447,6 +454,7 @@ export {
   randInt,
   weightedPick,
   applyMoneyDelta,
+  MIN_DATING_AGE,
   LIFE_STAGES,
   formatBirthDate,
 };
