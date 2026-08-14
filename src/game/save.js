@@ -97,6 +97,7 @@ function migrateCharacterFields(character) {
   character.recentNpcUpdateIds ??= [];
   character.recentWorldUpdateIds ??= [];
   character.recentOddJobIds ??= [];
+  character.recentCelebrityIds ??= [];
   character.pendingEventId ??= null;
   character.history = migrateHistory(character.history);
 

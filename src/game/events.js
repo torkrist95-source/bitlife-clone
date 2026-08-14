@@ -265,10 +265,74 @@ function pickNpcUpdateLine(character, templates, namePools, countryId) {
   return fillTemplate(template.template, { name: npc.name, relation: npc.relationLabel, hobby });
 }
 
-function pickWorldUpdateLine(character, worldUpdates, countryName) {
+// Fictional stand-ins filled into celebrity-flavored world updates below --
+// the celebrity themselves is real (see celebrities.json), but the movie/
+// character/album/song they're attached to is invented per-roll, the same
+// way the game already invents fictional companies/bands/awards elsewhere
+// in world_updates.json (Verdant Systems, Glass Horizon, the Lumen Awards).
+const CELEBRITY_MOVIE_TITLES = [
+  "The House Beyond the Pines", "Midnight in Alderwood", "Wildfire Season",
+  "The Paper Kingdom", "Nocturne Falls", "The Quiet Storm", "Ashes of Tomorrow",
+  "The Velvet Line", "Harbor Lights", "The Long Way Home", "Echoes of Autumn",
+  "The Salt Road", "A Thousand Small Rooms", "The Ember Trail", "Lowtide",
+  "The Cartographer's Daughter",
+];
+
+const CELEBRITY_CHARACTER_NAMES = [
+  "Eleanor Vance", "Marcus Reyes", "Isla Bennett", "Dahlia Frost", "Theo Marsh",
+  "Corinne Blackwood", "Simon Delacroix", "Winnie Sharpe", "Adrian Pierce",
+  "Nadia Osei", "Elliot Graves", "Rosalind Hale", "Desmond Cray", "Junie Alvarez",
+  "Felix Duran", "Marisol Vega",
+];
+
+const CELEBRITY_ALBUM_TITLES = [
+  "Wildflower Hour", "Neon Static", "Golden Hour Rewind", "Paper Moons",
+  "Afterglow", "Velvet Skyline", "Midnight Radio", "Slow Bloom", "Electric Heart",
+  "Blue November", "Firelight", "Kaleidoscope Heart", "Runaway Season",
+  "Static & Stardust", "Better Days Ahead", "Undertow",
+];
+
+const CELEBRITY_SONG_TITLES = [
+  "Weightless", "Neon Blue", "Falling Slow", "Better Than This", "Windows Down",
+  "Slow Burn", "Halfway Gone", "Little Storms", "Learning to Fly Again",
+  "Bright Sky, Dark Room", "Paper Hearts", "Wildflower",
+];
+
+// Picks a real celebrity/band (celebrities.json) matching the template's
+// required category, avoiding whoever's been picked recently -- same
+// degrading-window mechanism as everything else in this file, just keyed by
+// a dedicated `recentCelebrityIds` field so celebrity repetition is tracked
+// independently of which *template* got used.
+function pickCelebrityForCategory(character, celebrities, category) {
+  const eligible = (celebrities ?? []).filter((c) => c.category === category);
+  if (eligible.length === 0) return null;
+  const candidates = pickRecentAware(character, "recentCelebrityIds", eligible);
+  const celeb = candidates[randInt(0, candidates.length - 1)];
+  rememberUpdate(character, "recentCelebrityIds", celeb.id);
+  return celeb;
+}
+
+function pickWorldUpdateLine(character, worldUpdates, countryName, celebrities) {
   if (!worldUpdates || worldUpdates.length === 0) return null;
   const candidates = pickRecentAware(character, "recentWorldUpdateIds", worldUpdates);
   const entry = weightedPick(candidates);
+
+  if (entry.celebrityCategory) {
+    const celeb = pickCelebrityForCategory(character, celebrities, entry.celebrityCategory);
+    // No eligible celebrity for this category (data not loaded, or an
+    // exhausted pool) -- skip rather than render a broken line; the caller
+    // already treats a null return the same as any other missed roll.
+    if (!celeb) return null;
+    rememberUpdate(character, "recentWorldUpdateIds", entry.id);
+    return fillTemplate(entry.template, {
+      celebrity: celeb.name,
+      title: CELEBRITY_MOVIE_TITLES[randInt(0, CELEBRITY_MOVIE_TITLES.length - 1)],
+      character: CELEBRITY_CHARACTER_NAMES[randInt(0, CELEBRITY_CHARACTER_NAMES.length - 1)],
+      album: CELEBRITY_ALBUM_TITLES[randInt(0, CELEBRITY_ALBUM_TITLES.length - 1)],
+      song: CELEBRITY_SONG_TITLES[randInt(0, CELEBRITY_SONG_TITLES.length - 1)],
+    });
+  }
+
   rememberUpdate(character, "recentWorldUpdateIds", entry.id);
   return fillTemplate(entry.template, { country: countryName ?? "your country" });
 }
@@ -378,8 +442,19 @@ const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
 // things, just several smaller things, or be quiet. Player-event odds
 // fall back gracefully to nothing when no event is eligible at this age.
 function rollAgeUpHappening(character, pools) {
-  const { ageUpEvents, npcUpdates, worldUpdates, oddJobsData, clubsData, extracurricularsData, namePools, countryId, countryName, jobsData } =
-    pools;
+  const {
+    ageUpEvents,
+    npcUpdates,
+    worldUpdates,
+    oddJobsData,
+    celebrities,
+    clubsData,
+    extracurricularsData,
+    namePools,
+    countryId,
+    countryName,
+    jobsData,
+  } = pools;
 
   let lines = applyNpcLifeYear(character, namePools, countryId, jobsData);
 
@@ -391,7 +466,7 @@ function rollAgeUpHappening(character, pools) {
   }
   for (let i = 0; i < WORLD_FLAVOR_SLOTS; i++) {
     if (randInt(0, 99) < WORLD_FLAVOR_CHANCE_PER_SLOT) {
-      const line = pickWorldUpdateLine(character, worldUpdates, countryName);
+      const line = pickWorldUpdateLine(character, worldUpdates, countryName, celebrities);
       if (line) lines.push(line);
     }
   }

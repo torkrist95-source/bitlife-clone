@@ -48,6 +48,7 @@ import {
   loadNpcUpdates,
   loadWorldUpdates,
   loadOddJobs,
+  loadCelebrities,
   loadClubs,
   loadExtracurriculars,
 } from "./data.js";
@@ -114,6 +115,7 @@ let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
 let oddJobsData = [];
+let celebrities = [];
 let clubsData = [];
 let extracurricularsData = [];
 let selectedGender = null;
@@ -653,6 +655,7 @@ game.ageBtn.addEventListener("click", () => {
     npcUpdates,
     worldUpdates,
     oddJobsData,
+    celebrities,
     clubsData,
     extracurricularsData,
     namePools,
@@ -1504,6 +1507,7 @@ async function init() {
     npcUpdates,
     worldUpdates,
     oddJobsData,
+    celebrities,
     clubsData,
     extracurricularsData,
   ] = await Promise.all([
@@ -1517,6 +1521,7 @@ async function init() {
     loadNpcUpdates(),
     loadWorldUpdates(),
     loadOddJobs(),
+    loadCelebrities(),
     loadClubs(),
     loadExtracurriculars(),
   ]);

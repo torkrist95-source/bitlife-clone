@@ -22,5 +22,19 @@
   { "id": "world_award_show", "weight": 6, "template": "The Lumen Awards ceremony was full of surprises and speeches people were still quoting weeks later." },
   { "id": "world_economic_headline", "weight": 5, "template": "The Global Economic Forum warned that rising prices were putting pressure on households everywhere." },
   { "id": "world_summit", "weight": 4, "template": "World leaders gathered for a major international summit focused on climate and trade." },
-  { "id": "world_space_launch", "weight": 5, "template": "Aurelian Aerospace successfully launched its first crewed mission, and people gathered around screens everywhere to watch." }
+  { "id": "world_space_launch", "weight": 5, "template": "Aurelian Aerospace successfully launched its first crewed mission, and people gathered around screens everywhere to watch." },
+
+  { "id": "world_celeb_cast", "weight": 6, "celebrityCategory": "actor", "template": "{celebrity} was cast as {character} in {title}." },
+  { "id": "world_celeb_star", "weight": 5, "celebrityCategory": "actor", "template": "{celebrity} is set to star in the upcoming film {title}." },
+  { "id": "world_celeb_reviews", "weight": 5, "celebrityCategory": "actor", "template": "{celebrity} received rave reviews for their role in {title}." },
+  { "id": "world_celeb_award_nom", "weight": 4, "celebrityCategory": "actor", "template": "{celebrity} was nominated for a major award for their performance in {title}." },
+  { "id": "world_celeb_series", "weight": 4, "celebrityCategory": "actor", "template": "{celebrity} signed on for a new limited series called {title}." },
+  { "id": "world_celeb_wrap", "weight": 4, "celebrityCategory": "actor", "template": "{celebrity} wrapped filming on {title}, and fans are already buzzing about it." },
+
+  { "id": "world_celeb_tour", "weight": 6, "celebrityCategory": "musician", "template": "{celebrity} announced a global tour." },
+  { "id": "world_celeb_album", "weight": 6, "celebrityCategory": "musician", "template": "{celebrity} topped the charts with a surprise new album, {album}." },
+  { "id": "world_celeb_single", "weight": 5, "celebrityCategory": "musician", "template": "{celebrity} released a new single called \"{song}\"." },
+  { "id": "world_celeb_soldout", "weight": 5, "celebrityCategory": "musician", "template": "{celebrity} performed a sold-out show that broke box office records." },
+  { "id": "world_celeb_music_award", "weight": 4, "celebrityCategory": "musician", "template": "{celebrity} won a major music award for {album}." },
+  { "id": "world_celeb_festival", "weight": 6, "celebrityCategory": "musician", "template": "{celebrity} performed at a major international festival." }
 ]
