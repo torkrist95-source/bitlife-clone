@@ -1,0 +1,274 @@
+[
+  {
+    "id": "vaccinations",
+    "trigger": "age_up",
+    "conditions": { "minAge": 1, "maxAge": 2 },
+    "weight": 8,
+    "text": "You are getting your vaccinations today. You don't like the idea of getting a shot.",
+    "choices": [
+      {
+        "label": "Cry the whole time",
+        "effects": { "happiness": -4 },
+        "resultText": "You cried the whole time, but the nurse said you did great anyway."
+      },
+      {
+        "label": "Stay brave",
+        "effects": { "happiness": 2, "health": 1 },
+        "resultText": "You surprised everyone by staying brave through the shot."
+      },
+      {
+        "label": "Try to squirm away",
+        "effects": { "happiness": -1 },
+        "resultText": "You squirmed and wriggled, but there was no escaping it."
+      }
+    ]
+  },
+  {
+    "id": "first_steps",
+    "trigger": "age_up",
+    "conditions": { "minAge": 1, "maxAge": 1 },
+    "weight": 10,
+    "text": "You're learning to walk and keep wobbling around the living room.",
+    "choices": [
+      {
+        "label": "Keep trying",
+        "effects": { "happiness": 4, "health": 1 },
+        "resultText": "You kept falling and getting back up until you finally took your first real steps."
+      },
+      {
+        "label": "Hold onto the furniture",
+        "effects": { "happiness": 1 },
+        "resultText": "You stuck close to the couch, cruising along the edge of it instead."
+      }
+    ]
+  },
+  {
+    "id": "first_word",
+    "trigger": "age_up",
+    "conditions": { "minAge": 1, "maxAge": 2 },
+    "weight": 9,
+    "text": "Everyone's been waiting for it, and you finally say your first word.",
+    "choices": [
+      {
+        "label": "Say \"Mama\" or \"Dada\"",
+        "effects": { "happiness": 5, "smarts": 1 },
+        "resultText": "You said your first word and your family couldn't stop celebrating."
+      },
+      {
+        "label": "Just babble instead",
+        "effects": { "happiness": 1 },
+        "resultText": "You babbled happily, not quite ready for real words yet."
+      }
+    ]
+  },
+  {
+    "id": "teething",
+    "trigger": "age_up",
+    "conditions": { "minAge": 1, "maxAge": 2 },
+    "weight": 7,
+    "text": "Your teeth are coming in and your gums are sore.",
+    "choices": [
+      {
+        "label": "Fuss and cry about it",
+        "effects": { "happiness": -3, "health": -1 },
+        "resultText": "You fussed and cried for days until the new tooth finally came through."
+      },
+      {
+        "label": "Chew on anything nearby",
+        "effects": { "happiness": -1 },
+        "resultText": "You gnawed on everything within reach to soothe your gums."
+      }
+    ]
+  },
+  {
+    "id": "sleep_trouble",
+    "trigger": "age_up",
+    "conditions": { "minAge": 1, "maxAge": 3 },
+    "weight": 6,
+    "text": "You've been waking up crying in the middle of the night, over and over.",
+    "choices": [
+      {
+        "label": "Keep everyone up",
+        "effects": { "happiness": -2, "health": -2 },
+        "resultText": "You kept the whole house up most nights this year."
+      },
+      {
+        "label": "Settle down after some comforting",
+        "effects": { "happiness": 2 },
+        "resultText": "A little comforting each night was usually enough to settle you back down."
+      }
+    ]
+  },
+  {
+    "id": "stranger_at_playground",
+    "trigger": "age_up",
+    "conditions": { "minAge": 2, "maxAge": 3 },
+    "weight": 6,
+    "text": "A friendly stranger at the playground leans down and says hello to you.",
+    "choices": [
+      {
+        "label": "Hide behind your parent's leg",
+        "effects": { "happiness": -1 },
+        "resultText": "You hid behind your parent's leg until the stranger walked away."
+      },
+      {
+        "label": "Wave back and smile",
+        "effects": { "happiness": 3 },
+        "resultText": "You waved and smiled, delighted by the attention."
+      }
+    ]
+  },
+  {
+    "id": "favorite_toy",
+    "trigger": "age_up",
+    "conditions": { "minAge": 2, "maxAge": 3 },
+    "weight": 6,
+    "text": "You've become completely attached to one toy and refuse to go anywhere without it.",
+    "choices": [
+      {
+        "label": "Carry it everywhere",
+        "effects": { "happiness": 4 },
+        "resultText": "You carried it everywhere and had a meltdown the one time it got left behind."
+      },
+      {
+        "label": "Share it with a cousin",
+        "effects": { "happiness": 2 },
+        "resultText": "You reluctantly let a cousin play with it for a little while."
+      }
+    ]
+  },
+  {
+    "id": "thunderstorm_scare",
+    "trigger": "age_up",
+    "conditions": { "minAge": 2, "maxAge": 4 },
+    "weight": 5,
+    "text": "A loud thunderstorm rattles the windows one night and you're terrified.",
+    "choices": [
+      {
+        "label": "Run to your parents' bed",
+        "effects": { "happiness": 1 },
+        "resultText": "You ran straight to your parents' bed and slept there the rest of the night."
+      },
+      {
+        "label": "Try to tough it out alone",
+        "effects": { "happiness": -3, "health": -1 },
+        "resultText": "You tried to tough it out alone, hiding under the blankets until it passed."
+      }
+    ]
+  },
+  {
+    "id": "picky_eating",
+    "trigger": "age_up",
+    "conditions": { "minAge": 2, "maxAge": 4 },
+    "weight": 6,
+    "text": "You've suddenly decided you only want to eat about three different foods.",
+    "choices": [
+      {
+        "label": "Refuse everything else",
+        "effects": { "happiness": 2, "health": -2 },
+        "resultText": "You refused pretty much everything that wasn't one of your three foods."
+      },
+      {
+        "label": "Try a few new bites",
+        "effects": { "health": 2 },
+        "resultText": "You grudgingly tried a few new bites, to your parents' relief."
+      }
+    ]
+  },
+  {
+    "id": "first_haircut",
+    "trigger": "age_up",
+    "conditions": { "minAge": 2, "maxAge": 3 },
+    "weight": 5,
+    "text": "It's time for your very first haircut, and the clippers make you nervous.",
+    "choices": [
+      {
+        "label": "Sit still for it",
+        "effects": { "happiness": 1, "looks": 2 },
+        "resultText": "You sat still the whole time and everyone said how grown-up you looked afterward."
+      },
+      {
+        "label": "Squirm through the whole thing",
+        "effects": { "happiness": -2 },
+        "resultText": "You squirmed through the whole thing and ended up with a slightly crooked fringe."
+      }
+    ]
+  },
+  {
+    "id": "starting_daycare",
+    "trigger": "age_up",
+    "conditions": { "minAge": 3, "maxAge": 4 },
+    "weight": 8,
+    "text": "Today's your first day at daycare, and you're not sure what to make of all these new kids.",
+    "choices": [
+      {
+        "label": "Make an effort to play with others",
+        "effects": { "happiness": 3 },
+        "resultText": "You warmed up and started playing with the other kids by the end of the day.",
+        "next_event": "daycare_first_friend"
+      },
+      {
+        "label": "Stick close to the teacher instead",
+        "effects": { "happiness": -1, "smarts": 1 },
+        "resultText": "You stuck close to the teacher for most of the day, watching everyone else from a safe distance."
+      }
+    ]
+  },
+  {
+    "id": "daycare_first_friend",
+    "trigger": "age_up",
+    "conditions": { "minAge": 3, "maxAge": 4 },
+    "weight": 0,
+    "text": "A kid at daycare keeps sitting next to you at snack time and wants to play together.",
+    "choices": [
+      {
+        "label": "Become friends",
+        "effects": { "happiness": 5 },
+        "resultText": "You and your new daycare friend became inseparable."
+      },
+      {
+        "label": "Keep to yourself",
+        "effects": { "happiness": -1 },
+        "resultText": "You were polite, but mostly kept to yourself."
+      }
+    ]
+  },
+  {
+    "id": "coloring_the_wall",
+    "trigger": "age_up",
+    "conditions": { "minAge": 3, "maxAge": 4 },
+    "weight": 5,
+    "text": "You found a marker and decided the living room wall needed some artwork.",
+    "choices": [
+      {
+        "label": "Proudly show off your masterpiece",
+        "effects": { "happiness": 3 },
+        "resultText": "You proudly showed off your wall masterpiece. Your parents were less impressed."
+      },
+      {
+        "label": "Try to hide the evidence",
+        "effects": { "happiness": 1, "smarts": 1 },
+        "resultText": "You tried to hide the evidence, but the marker gave you away almost instantly."
+      }
+    ]
+  },
+  {
+    "id": "getting_praised",
+    "trigger": "age_up",
+    "conditions": { "minAge": 3, "maxAge": 4 },
+    "weight": 6,
+    "text": "You stacked your blocks higher than ever before, and your family made a big deal out of it.",
+    "choices": [
+      {
+        "label": "Soak up the praise",
+        "effects": { "happiness": 5 },
+        "resultText": "You soaked up the praise and immediately wanted to build it even higher."
+      },
+      {
+        "label": "Knock it down and start over",
+        "effects": { "happiness": 2, "smarts": 1 },
+        "resultText": "You knocked it down just to build it again, more interested in the process than the praise."
+      }
+    ]
+  }
+]

@@ -26,6 +26,7 @@ function loadNamePools() {
 
 async function loadAgeUpEvents() {
   const pools = await Promise.all([
+    loadJSON("data/events/age_up/infant.json"),
     loadJSON("data/events/age_up/childhood.json"),
     loadJSON("data/events/age_up/teen.json"),
     loadJSON("data/events/age_up/adult.json"),
