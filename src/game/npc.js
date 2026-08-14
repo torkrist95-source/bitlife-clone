@@ -43,6 +43,11 @@ function createSocialNpc(namePools, countryId, age) {
     },
     closeness: randInt(10, 30),
     romance: 0,
+    // Mirror the player's own job/hobbies shape so the yearly NPC-life tick
+    // (npcLife.js) can reuse the exact same "grant a hobby"/"start a job"
+    // logic patterns instead of inventing NPC-only representations.
+    job: null,
+    hobbies: [],
   };
 }
 
@@ -74,7 +79,6 @@ function ensureSocialCircle(character, namePools, countryId) {
 
 const COWORKER_MIN_SIZE = 2;
 const COWORKER_MAX_SIZE = 4;
-const COWORKER_CHURN_CHANCE = 12; // percent per year while employed
 // Coworkers should read as plausible working-age adults regardless of how
 // young the character themselves is (jobs start at 16) -- the +/-8 jitter
 // alone could otherwise roll an implausible child "coworker".
@@ -99,27 +103,6 @@ function ensureCoworkers(character, namePools, countryId) {
     coworkers.push(createSocialNpc(namePools, countryId, coworkerAge(character)));
   }
   character.coworkers = coworkers;
-}
-
-function maybeChurnCoworkers(character, namePools, countryId) {
-  const coworkers = character.coworkers ?? [];
-  if (coworkers.length === 0) return null;
-  if (randInt(0, 99) >= COWORKER_CHURN_CHANCE) return null;
-
-  if (Math.random() < 0.6 && coworkers.length > 1) {
-    const index = randInt(0, coworkers.length - 1);
-    const [gone] = coworkers.splice(index, 1);
-    const reasons = [
-      `${gone.name} left the company for a new opportunity.`,
-      `${gone.name} was let go.`,
-      `${gone.name} transferred to a different branch.`,
-    ];
-    return reasons[randInt(0, reasons.length - 1)];
-  }
-
-  const newcomer = createSocialNpc(namePools, countryId, coworkerAge(character));
-  coworkers.push(newcomer);
-  return `${newcomer.name} joined as a new coworker.`;
 }
 
 // Called from every place character.job becomes null (quit, layoff, stale
@@ -569,7 +552,7 @@ function registerDynamicGenerators(extra) {
 export {
   ensureSocialCircle,
   ensureCoworkers,
-  maybeChurnCoworkers,
+  coworkerAge,
   endCoworkerRelationships,
   getKnownNpcs,
   developCrush,

@@ -1,5 +1,6 @@
 import { clampStat, randInt, weightedPick, applyMoneyDelta } from "./character.js";
 import { ensureSocialCircle, getKnownNpcs, resolveDynamicChoice } from "./npc.js";
+import { applyNpcLifeYear } from "./npcLife.js";
 
 // ---------- Condition engine ----------
 // A `requires` array on an event, choice, or outcome is a list of
@@ -82,6 +83,28 @@ function rememberEvent(character, eventId) {
   character.recentEventIds = [eventId, ...recent].slice(0, RECENT_EVENT_MEMORY);
 }
 
+// Same degrading-window shape as recentEventIds/RECENT_EVENT_MEMORY above,
+// generalized for any small keyed memory (NPC-update and world-update
+// template ids, which previously had zero repetition tracking and could
+// fire back-to-back). Memory is smaller than the player-event one since
+// these pools are much smaller (a dozen-ish entries vs. dozens of events).
+const RECENT_UPDATE_MEMORY = 3;
+
+function rememberUpdate(character, field, id) {
+  const recent = character[field] ?? [];
+  character[field] = [id, ...recent].slice(0, RECENT_UPDATE_MEMORY);
+}
+
+function pickRecentAware(character, field, pool) {
+  const recent = character[field] ?? [];
+  for (let memory = RECENT_UPDATE_MEMORY; memory > 0; memory--) {
+    const avoid = recent.slice(0, memory);
+    const filtered = pool.filter((entry) => !avoid.includes(entry.id));
+    if (filtered.length > 0) return filtered;
+  }
+  return pool;
+}
+
 function pickEvent(character, pool) {
   if (character.pendingEventId) {
     const forced = pool.find((event) => event.id === character.pendingEventId);
@@ -148,7 +171,22 @@ function applyResolved(character, resolved, fallbackText) {
     Object.assign(character.flags, resolved.flags);
   }
 
-  character.history.push(resolved.resultText ?? fallbackText ?? resolved.label ?? "");
+  // Some dynamic generators wrap a shared NPC-interaction function (e.g.
+  // askForHelp/thankTeacher, npc.js) that already pushes its own line to
+  // history when called directly from an NPC profile -- when that same
+  // function is wrapped by a dynamic choice instead, pushing `resultText`
+  // here too would duplicate it. Those generators signal this explicitly
+  // with `resultText: null` (as opposed to simply omitting it, which still
+  // falls through to fallbackText/label as normal) so the skip is based on
+  // an explicit "I already handled history" signal rather than guessing
+  // from text equality -- two unrelated generators can legitimately
+  // produce the same wording back-to-back (e.g. both `develop_crush_pursue`
+  // and `develop_crush_quiet` share a "no one in mind" fallback line), and
+  // a text-comparison guard would wrongly swallow the second, legitimate
+  // one along with its differing effects.
+  if (resolved.resultText !== null) {
+    character.history.push(resolved.resultText ?? fallbackText ?? resolved.label ?? "");
+  }
 
   if (resolved.next_event) {
     character.pendingEventId = resolved.next_event;
@@ -206,7 +244,10 @@ function pickNpcUpdateLine(character, templates, namePools, countryId) {
   const eligibleTemplates = templates.filter((t) => knownNpcs.some((npc) => t.appliesTo.includes(npc.relation)));
   if (eligibleTemplates.length === 0) return null;
 
-  const template = weightedPick(eligibleTemplates);
+  const candidates = pickRecentAware(character, "recentNpcUpdateIds", eligibleTemplates);
+  const template = weightedPick(candidates);
+  rememberUpdate(character, "recentNpcUpdateIds", template.id);
+
   const candidateNpcs = knownNpcs.filter((npc) => template.appliesTo.includes(npc.relation));
   const npc = candidateNpcs[randInt(0, candidateNpcs.length - 1)];
   const hobby = HOBBY_FLAVOR_WORDS[randInt(0, HOBBY_FLAVOR_WORDS.length - 1)];
@@ -214,57 +255,75 @@ function pickNpcUpdateLine(character, templates, namePools, countryId) {
   return fillTemplate(template.template, { name: npc.name, relation: npc.relationLabel, hobby });
 }
 
-function pickWorldUpdateLine(worldUpdates, countryName) {
+function pickWorldUpdateLine(character, worldUpdates, countryName) {
   if (!worldUpdates || worldUpdates.length === 0) return null;
-  const entry = weightedPick(worldUpdates);
+  const candidates = pickRecentAware(character, "recentWorldUpdateIds", worldUpdates);
+  const entry = weightedPick(candidates);
+  rememberUpdate(character, "recentWorldUpdateIds", entry.id);
   return fillTemplate(entry.template, { country: countryName ?? "your country" });
 }
 
-// The Age Up dispatcher: decides what kind of thing happens this year --
-// a player decision, a passing NPC update, a world-news tidbit, more than
-// one of those together, or nothing notable at all -- so Age Up doesn't
-// always mean "here's a choice to make." Player-event odds fall back
-// gracefully to a quieter happening when nothing is eligible at this age.
+// A year that produced no background developments and no interactive
+// event still needs to feel like a year passed, not a silent no-op.
+const QUIET_YEAR_LINES = [
+  "You had a relatively quiet year.",
+  "Nothing major happened this year -- just the ordinary rhythm of life.",
+  "It was a calm year, mostly spent on the everyday stuff.",
+];
+
+// Keeps a year readable even if several independent rolls all hit at
+// once -- a short summary, not a wall of text. Development-tick lines
+// (real, state-changing) are pushed into `lines` before the lighter
+// flavor-only channels below, so slicing to this cap drops the least
+// meaningful lines first.
+const MAX_BACKGROUND_LINES = 4;
+
+const NPC_FLAVOR_CHANCE = 30; // percent, independent roll
+const WORLD_FLAVOR_CHANCE = 30; // percent, independent roll
+const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
+
+// The Age Up dispatcher: assembles the year as a bundle of independently-
+// rolled developments (NPC personal-life ticks, lighter NPC/world flavor)
+// plus, separately, a chance at an interactive event -- not mutually
+// exclusive, so a year can contain a major decision *and* several smaller
+// things, just several smaller things, or be quiet. Player-event odds
+// fall back gracefully to nothing when no event is eligible at this age.
 function rollAgeUpHappening(character, pools) {
-  const { ageUpEvents, npcUpdates, worldUpdates, namePools, countryId, countryName } = pools;
+  const { ageUpEvents, npcUpdates, worldUpdates, namePools, countryId, countryName, jobsData } = pools;
+
+  let lines = applyNpcLifeYear(character, namePools, countryId, jobsData);
+
+  if (randInt(0, 99) < NPC_FLAVOR_CHANCE) {
+    const line = pickNpcUpdateLine(character, npcUpdates, namePools, countryId);
+    if (line) lines.push(line);
+  }
+  if (randInt(0, 99) < WORLD_FLAVOR_CHANCE) {
+    const line = pickWorldUpdateLine(character, worldUpdates, countryName);
+    if (line) lines.push(line);
+  }
+
+  if (lines.length > MAX_BACKGROUND_LINES) {
+    lines = lines.slice(0, MAX_BACKGROUND_LINES);
+  }
+  for (const line of lines) character.history.push(line);
 
   // A forced/chained event (e.g. graduation, set by the yearly school tick
-  // before this runs) must fire the year it's set, not whenever the dice
-  // happen to land in the player_event branch below.
+  // before this runs) must fire the year it's set -- checked *after* the
+  // background bundle above so a forced-event year still gets its NPC/
+  // world developments too, instead of skipping them entirely the way an
+  // early-return here would.
   if (character.pendingEventId) {
     const event = pickEvent(character, ageUpEvents);
     if (event) return { type: "player_event", event };
   }
 
-  const roll = randInt(0, 99);
-
-  if (roll < 45) {
+  if (randInt(0, 99) < INTERACTIVE_EVENT_CHANCE) {
     const event = pickEvent(character, ageUpEvents);
     if (event) return { type: "player_event", event };
-    // Nothing eligible for this age/character right now -- fall through.
   }
 
-  if (roll < 63) {
-    const line = pickNpcUpdateLine(character, npcUpdates, namePools, countryId);
-    if (line) {
-      character.history.push(line);
-      return { type: "quiet" };
-    }
-  }
-
-  if (roll < 78) {
-    const line = pickWorldUpdateLine(worldUpdates, countryName);
-    if (line) {
-      character.history.push(line);
-      return { type: "quiet" };
-    }
-  }
-
-  if (roll < 88) {
-    const npcLine = pickNpcUpdateLine(character, npcUpdates, namePools, countryId);
-    const worldLine = pickWorldUpdateLine(worldUpdates, countryName);
-    if (npcLine) character.history.push(npcLine);
-    if (worldLine) character.history.push(worldLine);
+  if (lines.length === 0) {
+    character.history.push(QUIET_YEAR_LINES[randInt(0, QUIET_YEAR_LINES.length - 1)]);
   }
 
   return { type: "quiet" };

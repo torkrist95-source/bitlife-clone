@@ -77,35 +77,6 @@ function generateTeacher(namePools, countryId, status) {
   };
 }
 
-// ---------- Classmate churn ----------
-// Occasional, low-probability roster change -- most classmates stay put
-// most years. Reuses the exact same NPC factory the general social
-// circle uses, so a "classmate" and a "friend" are never two different
-// kinds of record.
-
-const CLASSMATE_CHURN_CHANCE = 12; // percent per year while actively in school
-
-function maybeChurnClassmates(character, namePools, countryId) {
-  const circle = character.socialCircle ?? [];
-  if (circle.length === 0) return null;
-  if (randInt(0, 99) >= CLASSMATE_CHURN_CHANCE) return null;
-
-  if (Math.random() < 0.6 && circle.length > 1) {
-    const index = randInt(0, circle.length - 1);
-    const [gone] = circle.splice(index, 1);
-    const reasons = [
-      `${gone.name} transferred to another school.`,
-      `${gone.name}'s family moved away.`,
-      `${gone.name} left to be homeschooled.`,
-    ];
-    return reasons[randInt(0, reasons.length - 1)];
-  }
-
-  const newcomer = createSocialNpc(namePools, countryId, character.age + randInt(-1, 1));
-  circle.push(newcomer);
-  return `${newcomer.name} joined your class as a new student.`;
-}
-
 // ---------- Yearly tick, called from engine.js's ageUp ----------
 // Deterministic grade/status progression and GPA drift happen every year
 // automatically (like job income); classmate churn is a small per-year
@@ -138,7 +109,7 @@ function applySchoolYear(character, namePools, countryId) {
     // circle -- classmates are the same `socialCircle` friends/crushes
     // system used everywhere else, and moving up a school level shouldn't
     // silently erase relationships (romantic or otherwise) built there.
-    // Gradual turnover is handled by maybeChurnClassmates below instead.
+    // Gradual turnover is handled by applyNpcLifeYear instead.
     edu.teacher = generateTeacher(namePools, countryId, status);
     edu.gpa ??= Number((2.6 + Math.random() * 1.2).toFixed(2));
     edu.clubs = [];
@@ -165,8 +136,9 @@ function applySchoolYear(character, namePools, countryId) {
     edu.gpa = Math.max(0, Math.min(4, Number((edu.gpa + drift).toFixed(2))));
   }
 
-  const churnLine = maybeChurnClassmates(character, namePools, countryId);
-  if (churnLine) lines.push(churnLine);
+  // Classmate turnover/development itself happens in applyNpcLifeYear
+  // (called separately from rollAgeUpHappening) alongside every other
+  // relationship-tier-gated NPC development, not here.
 
   return lines;
 }
@@ -301,13 +273,19 @@ function leaveExtracurricular(character, activityId, activitiesData) {
 // than requiring events.js/app.js to know school.js exists -- any module
 // can extend the same mechanism this way.
 
+// A handful of these generators push their own line to history directly
+// (either because they build it themselves, or because they call a shared
+// NPC-interaction function like askForHelp that already self-pushes when
+// used from an NPC profile too) -- those return `resultText: null` to tell
+// applyResolved (events.js) "I already handled history, don't push this
+// again" instead of leaving it to guess from the text.
 registerDynamicGenerators({
   ask_classmate_for_help(character) {
     const circle = character.socialCircle ?? [];
     if (circle.length === 0) {
       const line = "You didn't have anyone in mind to ask, so you muddled through on your own.";
       character.history.push(line);
-      return { type: "resolve", effects: { smarts: -1 }, resultText: line };
+      return { type: "resolve", effects: { smarts: -1 }, resultText: null };
     }
 
     const classmate = circle[randInt(0, circle.length - 1)];
@@ -319,12 +297,12 @@ registerDynamicGenerators({
       character.stats.smarts = clampStat(character.stats.smarts + 2);
       const line = `${classmate.name} walked you through the parts you were stuck on, and it really helped.`;
       character.history.push(line);
-      return { type: "resolve", effects: { happiness: 2 }, resultText: line };
+      return { type: "resolve", effects: { happiness: 2 }, resultText: null };
     }
 
     const line = `${classmate.name} tried to help, but honestly seemed just as confused as you were.`;
     character.history.push(line);
-    return { type: "resolve", effects: {}, resultText: line };
+    return { type: "resolve", effects: {}, resultText: null };
   },
 
   ask_teacher_for_help(character) {
@@ -332,10 +310,10 @@ registerDynamicGenerators({
     if (!teacher) {
       const line = "You didn't have a teacher available to ask, so you did your best on your own.";
       character.history.push(line);
-      return { type: "resolve", effects: {}, resultText: line };
+      return { type: "resolve", effects: {}, resultText: null };
     }
-    const line = askForHelp(character, teacher);
-    return { type: "resolve", effects: {}, resultText: line };
+    askForHelp(character, teacher);
+    return { type: "resolve", effects: {}, resultText: null };
   },
 
   teacher_praise_reveal(character) {
@@ -347,7 +325,7 @@ registerDynamicGenerators({
     character.stats.reputation = clampStat(character.stats.reputation + 2);
     const line = `${teacher.name} told you that you've been doing excellent work lately and encouraged you to keep it up.`;
     character.history.push(line);
-    return { type: "resolve", effects: { happiness: 5 }, resultText: line };
+    return { type: "resolve", effects: { happiness: 5 }, resultText: null };
   },
 
   hs_graduation_reveal(character) {
@@ -390,14 +368,14 @@ registerDynamicGenerators({
     character.education.status = "workforce";
     const line = "You decided to skip college for now and jump straight into the workforce. Time to start your career.";
     character.history.push(line);
-    return { type: "resolve", effects: { happiness: 3 }, resultText: line };
+    return { type: "resolve", effects: { happiness: 3 }, resultText: null };
   },
 
   hs_graduation_no_college(character) {
     character.education.status = "graduated_hs";
     const line = "You decided not to go to college, at least for now. There's no rush -- you can always change your mind later.";
     character.history.push(line);
-    return { type: "resolve", effects: {}, resultText: line };
+    return { type: "resolve", effects: {}, resultText: null };
   },
 
   college_fund_parents(character) {
@@ -410,7 +388,7 @@ registerDynamicGenerators({
     if (randInt(0, 99) < chance) {
       const line = "Your parents agreed to pay your college tuition.";
       character.history.push(line);
-      return { type: "resolve", effects: { happiness: 6 }, resultText: line };
+      return { type: "resolve", effects: { happiness: 6 }, resultText: null };
     }
 
     let reason = "your family isn't currently able to cover the cost.";
@@ -421,7 +399,7 @@ registerDynamicGenerators({
     }
     const line = `Your parents declined to pay your tuition. Unfortunately, ${reason}`;
     character.history.push(line);
-    return { type: "resolve", effects: { happiness: -4 }, resultText: line };
+    return { type: "resolve", effects: { happiness: -4 }, resultText: null };
   },
 
   college_fund_loan(character) {
@@ -431,11 +409,11 @@ registerDynamicGenerators({
       applyMoneyDelta(character, amount);
       const line = `Your student loan application was approved. You were approved for $${amount.toLocaleString()} in student loans.`;
       character.history.push(line);
-      return { type: "resolve", effects: {}, resultText: line };
+      return { type: "resolve", effects: {}, resultText: null };
     }
     const line = "Your student loan application was rejected because you did not meet the lender's eligibility requirements.";
     character.history.push(line);
-    return { type: "resolve", effects: { happiness: -2 }, resultText: line };
+    return { type: "resolve", effects: { happiness: -2 }, resultText: null };
   },
 
   college_fund_scholarship(character) {
@@ -444,7 +422,7 @@ registerDynamicGenerators({
     if (gpa < minGpa) {
       const line = `Your scholarship application was rejected because the minimum GPA requirement was ${minGpa.toFixed(1)} and your GPA was ${gpa.toFixed(1)}.`;
       character.history.push(line);
-      return { type: "resolve", effects: { happiness: -2 }, resultText: line };
+      return { type: "resolve", effects: { happiness: -2 }, resultText: null };
     }
 
     const hasParticipation = (character.education.extracurriculars?.length ?? 0) > 0 || (character.education.clubs?.length ?? 0) > 0;
@@ -456,12 +434,12 @@ registerDynamicGenerators({
       const note = hasParticipation ? " Your academic record and extracurricular involvement helped your application stand out." : "";
       const line = `You were awarded a $${amount.toLocaleString()} scholarship.${note}`;
       character.history.push(line);
-      return { type: "resolve", effects: { happiness: 5, reputation: 2 }, resultText: line };
+      return { type: "resolve", effects: { happiness: 5, reputation: 2 }, resultText: null };
     }
 
     const line = "You met the scholarship's requirements, but the award was given to another applicant.";
     character.history.push(line);
-    return { type: "resolve", effects: { happiness: -1 }, resultText: line };
+    return { type: "resolve", effects: { happiness: -1 }, resultText: null };
   },
 });
 

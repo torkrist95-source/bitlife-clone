@@ -632,6 +632,7 @@ game.ageBtn.addEventListener("click", () => {
     namePools,
     countryId: character.country,
     countryName: character.countryName,
+    jobsData,
   });
 
   renderGame();

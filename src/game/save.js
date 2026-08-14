@@ -37,6 +37,12 @@ function migrateCharacterFields(character) {
   // up, no namePools-dependent generation needed here.
   character.coworkers ??= [];
   character.recentEventIds ??= [];
+  // Same degrading-memory idea as recentEventIds, just for the NPC-update
+  // and world-update flavor pools (see events.js's pickRecentAware) --
+  // simply absent on any pre-existing save, no special handling needed
+  // beyond the default.
+  character.recentNpcUpdateIds ??= [];
+  character.recentWorldUpdateIds ??= [];
   character.pendingEventId ??= null;
   character.history ??= [];
 
@@ -116,6 +122,21 @@ function migrateCharacterFields(character) {
       }
     }
     npc.romanceStatus ??= "none";
+
+    // Never stored before the yearly NPC-life simulation existed --
+    // mirrors the player's own job/hobbies shape, same "no way to recover
+    // the original, so start from a clean plausible default" reasoning
+    // as gender/attractedTo above.
+    npc.job ??= null;
+    npc.hobbies ??= [];
+  }
+
+  // Coworkers as a concept postdate the friendLevel/romanceStatus model,
+  // so every existing coworker record already has that richer shape --
+  // only the newer job/hobbies fields need backfilling here.
+  for (const npc of character.coworkers ?? []) {
+    npc.job ??= null;
+    npc.hobbies ??= [];
   }
 
   return character;
