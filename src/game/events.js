@@ -1,30 +1,5 @@
-import { clampStat, randInt, weightedPick } from "./character.js";
+import { clampStat, randInt, weightedPick, applyMoneyDelta } from "./character.js";
 import { ensureSocialCircle, getKnownNpcs, resolveDynamicChoice } from "./npc.js";
-
-// Characters can't personally earn money before this age (the earliest
-// income event is the age-14 part-time job offer). Below that, normal
-// childhood expenses -- birthday parties, school costs, etc. -- are paid
-// by the household/parents rather than the character's own cash.
-const MIN_EARNING_AGE = 14;
-
-function applyMoneyDelta(character, delta) {
-  if (delta >= 0) {
-    character.money += delta;
-    return;
-  }
-
-  if (character.age < MIN_EARNING_AGE) {
-    // Household/parents absorb the cost; personal money is untouched.
-    return;
-  }
-
-  if (character.money + delta < 0) {
-    // Can't personally afford it -- skip rather than go negative.
-    return;
-  }
-
-  character.money += delta;
-}
 
 // ---------- Condition engine ----------
 // A `requires` array on an event, choice, or outcome is a list of
@@ -252,6 +227,15 @@ function pickWorldUpdateLine(worldUpdates, countryName) {
 // gracefully to a quieter happening when nothing is eligible at this age.
 function rollAgeUpHappening(character, pools) {
   const { ageUpEvents, npcUpdates, worldUpdates, namePools, countryId, countryName } = pools;
+
+  // A forced/chained event (e.g. graduation, set by the yearly school tick
+  // before this runs) must fire the year it's set, not whenever the dice
+  // happen to land in the player_event branch below.
+  if (character.pendingEventId) {
+    const event = pickEvent(character, ageUpEvents);
+    if (event) return { type: "player_event", event };
+  }
+
   const roll = randInt(0, 99);
 
   if (roll < 45) {
@@ -286,4 +270,4 @@ function rollAgeUpHappening(character, pools) {
   return { type: "quiet" };
 }
 
-export { pickEvent, applyChoice, getEligibleChoices, rollAgeUpHappening };
+export { pickEvent, applyChoice, getEligibleChoices, rollAgeUpHappening, conditionsPass };

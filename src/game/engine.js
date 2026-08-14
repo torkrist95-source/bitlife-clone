@@ -1,4 +1,5 @@
 import { getLifeStage, clampStat, randInt } from "./character.js";
+import { applySchoolYear } from "./school.js";
 
 // Once promoted into a role, a character needs at least this many years in
 // it before another promotion can be rolled.
@@ -43,7 +44,7 @@ function applyJobYear(character, jobsData) {
   return null;
 }
 
-function ageUp(character, jobsData) {
+function ageUp(character, jobsData, namePools, countryId) {
   const previousStage = getLifeStage(character.age);
   character.age += 1;
   applyStatDrift(character);
@@ -58,6 +59,9 @@ function ageUp(character, jobsData) {
 
   const jobLine = applyJobYear(character, jobsData);
   if (jobLine) character.history.push(jobLine);
+
+  const schoolLines = applySchoolYear(character, namePools, countryId);
+  for (const schoolLine of schoolLines) character.history.push(schoolLine);
 
   return line;
 }

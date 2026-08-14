@@ -1,7 +1,18 @@
-import { createCharacter, generateRandomName, getLifeStage, randInt, clampStat, formatBirthDate } from "./character.js";
+import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
 import { applyChoice, getEligibleChoices, rollAgeUpHappening } from "./events.js";
-import { ensureSocialCircle } from "./npc.js";
+import { ensureSocialCircle, talk, hangOut, giveGift, developRomance, askOut, askForHelp, thankTeacher } from "./npc.js";
+import {
+  getGradeLabel,
+  getStatusLabel,
+  studyHarder,
+  getAvailableClubs,
+  joinClub,
+  leaveClub,
+  getAvailableExtracurriculars,
+  attemptExtracurricular,
+  leaveExtracurricular,
+} from "./school.js";
 import {
   loadCountries,
   loadWealthTiers,
@@ -12,6 +23,8 @@ import {
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
+  loadClubs,
+  loadExtracurriculars,
 } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
@@ -29,7 +42,7 @@ const MAX_FEED_ENTRIES = 6;
 // safe, since none of this is called until the player expands a system.
 const NAV_CATEGORIES = {
   Occupation: [
-    { id: "school", label: "School", render: renderComingSoon },
+    { id: "school", label: "School", actions: [{ label: "View School", handler: () => openSchoolModal() }] },
     { id: "jobs", label: "Jobs", actions: [{ label: "Manage Jobs", handler: () => openOccupationModal() }] },
     { id: "special_careers", label: "Special Careers", render: renderComingSoon },
     { id: "career_history", label: "Career History", render: renderComingSoon },
@@ -76,6 +89,8 @@ let jobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
+let clubsData = [];
+let extracurricularsData = [];
 let selectedGender = null;
 
 const creation = {
@@ -167,6 +182,59 @@ const financeModal = {
   incomeTitle: document.getElementById("finance-income-title"),
   incomeSalary: document.getElementById("finance-income-salary"),
   closeBtn: document.getElementById("finance-modal-close"),
+};
+
+const schoolModal = {
+  overlay: document.getElementById("school-modal-overlay"),
+  name: document.getElementById("school-name"),
+  gradeGpa: document.getElementById("school-grade-gpa"),
+  emptyText: document.getElementById("school-empty-text"),
+  contentView: document.getElementById("school-content-view"),
+  studyBtn: document.getElementById("school-study-btn"),
+  clubsBtn: document.getElementById("school-clubs-btn"),
+  activitiesBtn: document.getElementById("school-activities-btn"),
+  classmatesBtn: document.getElementById("school-classmates-btn"),
+  teacherBtn: document.getElementById("school-teacher-btn"),
+  closeBtn: document.getElementById("school-modal-close"),
+};
+
+const clubsModal = {
+  overlay: document.getElementById("clubs-modal-overlay"),
+  list: document.getElementById("clubs-list"),
+  closeBtn: document.getElementById("clubs-modal-close"),
+};
+
+const activitiesModal = {
+  overlay: document.getElementById("activities-modal-overlay"),
+  result: document.getElementById("activities-result"),
+  list: document.getElementById("activities-list"),
+  closeBtn: document.getElementById("activities-modal-close"),
+};
+
+const classmatesModal = {
+  overlay: document.getElementById("classmates-modal-overlay"),
+  list: document.getElementById("classmates-list"),
+  closeBtn: document.getElementById("classmates-modal-close"),
+};
+
+const npcProfileModal = {
+  overlay: document.getElementById("npc-profile-modal-overlay"),
+  portrait: document.getElementById("npc-profile-portrait"),
+  name: document.getElementById("npc-profile-name"),
+  meta: document.getElementById("npc-profile-meta"),
+  bars: {
+    health: document.getElementById("npc-profile-bar-health"),
+    happiness: document.getElementById("npc-profile-bar-happiness"),
+    smarts: document.getElementById("npc-profile-bar-smarts"),
+    looks: document.getElementById("npc-profile-bar-looks"),
+    fame: document.getElementById("npc-profile-bar-fame"),
+    reputation: document.getElementById("npc-profile-bar-reputation"),
+  },
+  friendshipValue: document.getElementById("npc-profile-friendship-value"),
+  romanceRow: document.getElementById("npc-profile-romance-row"),
+  romanceValue: document.getElementById("npc-profile-romance-value"),
+  interactions: document.getElementById("npc-profile-interactions"),
+  closeBtn: document.getElementById("npc-profile-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -417,6 +485,13 @@ function startLife() {
 
 // ---------- Game screen rendering ----------
 
+function renderStatBars(stats, barsMap) {
+  for (const [stat, value] of Object.entries(stats)) {
+    const bar = barsMap[stat];
+    if (bar) bar.style.width = `${value}%`;
+  }
+}
+
 function renderGame() {
   const stage = getLifeStage(character.age);
   game.portrait.textContent = stage.emoji;
@@ -424,10 +499,7 @@ function renderGame() {
   game.age.textContent = `Age ${character.age} · ${stage.label} ›`;
   game.money.textContent = `$${character.money.toLocaleString()}`;
 
-  for (const [stat, value] of Object.entries(character.stats)) {
-    const bar = game.bars[stat];
-    if (bar) bar.style.width = `${value}%`;
-  }
+  renderStatBars(character.stats, game.bars);
 
   game.feed.innerHTML = "";
   const recentHistory = character.history.slice(-MAX_FEED_ENTRIES);
@@ -495,7 +567,7 @@ function hideEventModal() {
 }
 
 game.ageBtn.addEventListener("click", () => {
-  ageUp(character, jobsData);
+  ageUp(character, jobsData, namePools, character.country);
 
   const happening = rollAgeUpHappening(character, {
     ageUpEvents,
@@ -699,6 +771,330 @@ occupationModal.closeBtn.addEventListener("click", () => {
   hideNavDrawer();
 });
 
+// ---------- Occupation: School ----------
+//
+// Overview -> Things To Do (Study/Clubs/Activities) + People (Classmates/
+// Teacher). Clubs/Activities/Classmates open on top of the overview;
+// the NPC Profile modal opens on top of either Classmates or the overview
+// directly (for the teacher), reusing the exact same profile+interactions
+// UI in both cases so classmates and the teacher aren't two parallel
+// person-detail systems.
+
+const SCHOOL_STATUS_MESSAGES = {
+  not_started: "You're not old enough for school yet.",
+  graduated_hs: "You graduated high school and are taking some time before deciding what's next.",
+  college: "You're off at college. (More to come here soon.)",
+  workforce: "You skipped college and went straight into the workforce.",
+  graduated_college: "You graduated college.",
+};
+
+const ENROLLED_STATUSES = new Set(["elementary", "middle", "high_school"]);
+const CLASSMATE_ROMANCE_MIN_AGE = 12;
+
+function renderSchoolModal() {
+  const edu = character.education;
+  const enrolled = ENROLLED_STATUSES.has(edu.status);
+
+  schoolModal.name.textContent = enrolled ? edu.schoolName : getStatusLabel(edu.status);
+  schoolModal.gradeGpa.textContent =
+    enrolled && edu.gradeLevel != null && edu.gpa != null ? `${getGradeLabel(edu.gradeLevel)} · GPA ${edu.gpa.toFixed(2)}` : "";
+
+  schoolModal.contentView.classList.toggle("hidden", !enrolled);
+  schoolModal.emptyText.classList.toggle("hidden", enrolled);
+  if (!enrolled) {
+    schoolModal.emptyText.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
+  }
+}
+
+function openSchoolModal() {
+  if (!character) return;
+  renderSchoolModal();
+  schoolModal.overlay.classList.remove("hidden");
+}
+
+function hideSchoolModal() {
+  schoolModal.overlay.classList.add("hidden");
+}
+
+function doStudyHarder() {
+  const line = studyHarder(character);
+  renderGame();
+  renderSchoolModal();
+  autosave();
+  showToast(line);
+}
+
+schoolModal.studyBtn.addEventListener("click", doStudyHarder);
+schoolModal.clubsBtn.addEventListener("click", openClubsModal);
+schoolModal.activitiesBtn.addEventListener("click", openActivitiesModal);
+schoolModal.classmatesBtn.addEventListener("click", openClassmatesModal);
+schoolModal.teacherBtn.addEventListener("click", () => openNpcProfile(character.education.teacher, "teacher"));
+schoolModal.closeBtn.addEventListener("click", () => {
+  hideSchoolModal();
+  hideNavDrawer();
+});
+
+function buildActionCard({ name, meta, actionLabel, onAction }) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "friend-hangout-btn";
+  btn.textContent = actionLabel;
+  btn.addEventListener("click", onAction);
+  return buildPersonCard({ name, meta, action: btn });
+}
+
+// ---------- Clubs ----------
+
+function renderClubsList() {
+  clubsModal.list.innerHTML = "";
+  const joinedIds = character.education.clubs ?? [];
+  const joined = clubsData.filter((c) => joinedIds.includes(c.id));
+  const available = getAvailableClubs(character, clubsData);
+
+  if (joined.length === 0 && available.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = "No clubs available right now.";
+    clubsModal.list.appendChild(empty);
+    return;
+  }
+
+  for (const club of joined) {
+    clubsModal.list.appendChild(
+      buildActionCard({
+        name: club.label,
+        meta: "Joined",
+        actionLabel: "Leave",
+        onAction: () => {
+          const line = leaveClub(character, club.id, clubsData);
+          renderClubsList();
+          renderGame();
+          autosave();
+          showToast(line);
+        },
+      })
+    );
+  }
+
+  for (const club of available) {
+    clubsModal.list.appendChild(
+      buildActionCard({
+        name: club.label,
+        meta: `Ages ${club.minAge}-${club.maxAge}`,
+        actionLabel: "Join",
+        onAction: () => {
+          const line = joinClub(character, club, namePools, character.country);
+          renderClubsList();
+          renderGame();
+          autosave();
+          showToast(line);
+        },
+      })
+    );
+  }
+}
+
+function openClubsModal() {
+  renderClubsList();
+  clubsModal.overlay.classList.remove("hidden");
+}
+
+function hideClubsModal() {
+  clubsModal.overlay.classList.add("hidden");
+}
+
+clubsModal.closeBtn.addEventListener("click", hideClubsModal);
+
+// ---------- Extracurriculars & tryouts ----------
+
+function renderActivitiesList() {
+  activitiesModal.list.innerHTML = "";
+  const joinedIds = character.education.extracurriculars ?? [];
+  const joined = extracurricularsData.filter((a) => joinedIds.includes(a.id));
+  const available = getAvailableExtracurriculars(character, extracurricularsData);
+
+  if (joined.length === 0 && available.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = "No activities available right now.";
+    activitiesModal.list.appendChild(empty);
+    return;
+  }
+
+  for (const activity of joined) {
+    activitiesModal.list.appendChild(
+      buildActionCard({
+        name: activity.label,
+        meta: "Joined",
+        actionLabel: "Leave",
+        onAction: () => {
+          const line = leaveExtracurricular(character, activity.id, extracurricularsData);
+          renderActivitiesList();
+          renderGame();
+          autosave();
+          showToast(line);
+        },
+      })
+    );
+  }
+
+  for (const activity of available) {
+    activitiesModal.list.appendChild(
+      buildActionCard({
+        name: activity.label,
+        meta: activity.tryout ? "Tryout required" : "Open enrollment",
+        actionLabel: activity.tryout ? "Try Out" : "Join",
+        onAction: () => {
+          const { resultText } = attemptExtracurricular(character, activity);
+          activitiesModal.result.textContent = resultText;
+          activitiesModal.result.classList.remove("hidden");
+          renderActivitiesList();
+          renderGame();
+          autosave();
+          showToast(resultText);
+        },
+      })
+    );
+  }
+}
+
+function openActivitiesModal() {
+  activitiesModal.result.classList.add("hidden");
+  renderActivitiesList();
+  activitiesModal.overlay.classList.remove("hidden");
+}
+
+function hideActivitiesModal() {
+  activitiesModal.overlay.classList.add("hidden");
+}
+
+activitiesModal.closeBtn.addEventListener("click", hideActivitiesModal);
+
+// ---------- Classmates ----------
+
+function renderClassmatesList() {
+  ensureSocialCircle(character, namePools, character.country);
+  classmatesModal.list.innerHTML = "";
+  const circle = character.socialCircle ?? [];
+
+  if (circle.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = "You don't have any classmates yet.";
+    classmatesModal.list.appendChild(empty);
+    return;
+  }
+
+  const showRomance = character.age >= CLASSMATE_ROMANCE_MIN_AGE;
+
+  for (const npc of circle) {
+    const meta = showRomance
+      ? `Age ${npc.age} · Student · Friendship ${npc.closeness} · Romance ${npc.romance ?? 0}`
+      : `Age ${npc.age} · Student · Friendship ${npc.closeness}`;
+    const card = buildPersonCard({ name: npc.name, meta });
+    card.classList.add("classmate-card");
+    card.addEventListener("click", () => openNpcProfile(npc, "classmate"));
+    classmatesModal.list.appendChild(card);
+  }
+}
+
+function openClassmatesModal() {
+  renderClassmatesList();
+  classmatesModal.overlay.classList.remove("hidden");
+}
+
+function hideClassmatesModal() {
+  classmatesModal.overlay.classList.add("hidden");
+}
+
+classmatesModal.closeBtn.addEventListener("click", hideClassmatesModal);
+
+// ---------- NPC Profile (reused for classmates and the teacher) ----------
+
+let currentNpcProfile = null;
+
+function getNpcInteractions(npc, kind) {
+  if (kind === "teacher") {
+    return [
+      { label: "Talk", run: () => talk(character, npc) },
+      { label: "Ask for Help", run: () => askForHelp(character, npc) },
+      { label: "Thank Teacher", run: () => thankTeacher(character, npc) },
+    ];
+  }
+
+  const interactions = [
+    { label: "Talk", run: () => talk(character, npc) },
+    { label: "Hang Out", run: () => hangOut(character, npc) },
+  ];
+  if (npc.closeness < 40) {
+    interactions.push({ label: "Make Friends", run: () => hangOut(character, npc) });
+  }
+  interactions.push({ label: "Give Gift", run: () => giveGift(character, npc) });
+  interactions.push({ label: "Ask for Help", run: () => askForHelp(character, npc) });
+
+  if (character.age >= CLASSMATE_ROMANCE_MIN_AGE) {
+    if (npc.type === "friend" && npc.closeness >= 40) {
+      interactions.push({ label: "Develop Romance", run: () => developRomance(character, npc) });
+    }
+    if (npc.type === "crush") {
+      interactions.push({ label: "Ask Out", run: () => askOut(character, npc).resultText });
+    }
+  }
+
+  return interactions;
+}
+
+function renderNpcProfile() {
+  if (!currentNpcProfile) return;
+  const { npc, kind } = currentNpcProfile;
+  const stage = getLifeStage(npc.age);
+  npcProfileModal.portrait.textContent = kind === "teacher" ? "🧑‍🏫" : stage.emoji;
+  npcProfileModal.name.textContent = npc.name;
+  npcProfileModal.meta.textContent =
+    kind === "teacher" ? `Age ${npc.age} · ${npc.subject} Teacher` : `Age ${npc.age} · Student`;
+
+  renderStatBars(npc.stats, npcProfileModal.bars);
+
+  npcProfileModal.friendshipValue.textContent = npc.closeness;
+
+  const showRomance = kind === "classmate" && character.age >= CLASSMATE_ROMANCE_MIN_AGE;
+  npcProfileModal.romanceRow.classList.toggle("hidden", !showRomance);
+  if (showRomance) npcProfileModal.romanceValue.textContent = npc.romance ?? 0;
+
+  npcProfileModal.interactions.innerHTML = "";
+  for (const interaction of getNpcInteractions(npc, kind)) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "event-choice-btn";
+    btn.textContent = interaction.label;
+    btn.addEventListener("click", () => {
+      const line = interaction.run();
+      renderGame();
+      renderNpcProfile();
+      if (kind === "classmate" && !classmatesModal.overlay.classList.contains("hidden")) {
+        renderClassmatesList();
+      }
+      autosave();
+      showToast(line);
+    });
+    npcProfileModal.interactions.appendChild(btn);
+  }
+}
+
+function openNpcProfile(npc, kind) {
+  if (!npc) return;
+  currentNpcProfile = { npc, kind };
+  renderNpcProfile();
+  npcProfileModal.overlay.classList.remove("hidden");
+}
+
+function hideNpcProfileModal() {
+  npcProfileModal.overlay.classList.add("hidden");
+  currentNpcProfile = null;
+}
+
+npcProfileModal.closeBtn.addEventListener("click", hideNpcProfileModal);
+
 // ---------- Finance ----------
 
 function renderFinanceOverview() {
@@ -794,9 +1190,7 @@ function renderFriendsListInto(container) {
 function hangOutWithFriend(npcId, container) {
   const npc = (character.socialCircle ?? []).find((n) => n.id === npcId);
   if (!npc) return;
-  npc.closeness = clampStat(npc.closeness + randInt(3, 8));
-  character.stats.happiness = clampStat(character.stats.happiness + 2);
-  character.history.push(`You hung out with ${npc.name}.`);
+  hangOut(character, npc);
   renderFriendsListInto(container);
   renderGame();
   autosave();
@@ -834,9 +1228,8 @@ function renderFamilyListInto(container) {
 }
 
 function hangOutWithFamilyMember(member, container) {
-  member.closeness = clampStat((member.closeness ?? 60) + randInt(3, 8));
-  character.stats.happiness = clampStat(character.stats.happiness + 2);
-  character.history.push(`You hung out with ${member.name}.`);
+  member.closeness ??= 60;
+  hangOut(character, member);
   renderFamilyListInto(container);
   renderGame();
   autosave();
@@ -907,7 +1300,7 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents, npcUpdates, worldUpdates] =
+  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents, npcUpdates, worldUpdates, clubsData, extracurricularsData] =
     await Promise.all([
       loadCountries(),
       loadWealthTiers(),
@@ -918,6 +1311,8 @@ async function init() {
       loadAgeUpEvents(),
       loadNpcUpdates(),
       loadWorldUpdates(),
+      loadClubs(),
+      loadExtracurriculars(),
     ]);
 
   populateCountrySelect();

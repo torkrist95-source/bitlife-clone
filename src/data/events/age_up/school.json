@@ -1,0 +1,227 @@
+[
+  {
+    "id": "hs_graduation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 0, "maxAge": 200 },
+    "weight": 0,
+    "text": "It's graduation day.",
+    "dynamic": "hs_graduation_reveal"
+  },
+  {
+    "id": "spelling_test",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 10 },
+    "requires": [{ "path": "education.status", "op": "==", "value": "elementary" }],
+    "weight": 8,
+    "text": "Your teacher announced a spelling test tomorrow.",
+    "choices": [
+      {
+        "label": "Study",
+        "outcomes": [
+          { "weight": 7, "effects": { "smarts": 2, "happiness": 1 }, "resultText": "You practiced your spelling words and aced the test." },
+          { "weight": 3, "effects": { "smarts": 1, "happiness": -1 }, "resultText": "You studied hard, but still mixed up a couple of tricky words." }
+        ]
+      },
+      {
+        "label": "Don't study",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": 2 }, "resultText": "You skipped studying and played instead. The test was harder than you expected." },
+          { "weight": 4, "effects": { "smarts": -1, "happiness": -1 }, "resultText": "You didn't study, and it showed -- you missed several words you should have known." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "algebra_test",
+    "trigger": "age_up",
+    "conditions": { "minAge": 12, "maxAge": 17 },
+    "requires": [{ "path": "education.gradeLevel", "op": ">=", "value": 7 }],
+    "weight": 8,
+    "text": "Your algebra test is tomorrow.",
+    "choices": [
+      {
+        "label": "Study",
+        "outcomes": [
+          { "weight": 6, "effects": { "smarts": 2 }, "resultText": "You studied for a couple hours and it paid off -- the test felt manageable." },
+          { "weight": 4, "effects": { "smarts": 1, "happiness": -1 }, "resultText": "You studied, but a few problems on the test still tripped you up." }
+        ]
+      },
+      {
+        "label": "Don't study",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 1 }, "resultText": "You skipped studying. The test went okay, but you were guessing on more than a few questions." },
+          { "weight": 5, "effects": { "smarts": -1, "happiness": -2 }, "resultText": "You didn't study and it caught up with you -- you struggled through most of the test." }
+        ]
+      },
+      {
+        "label": "Ask a classmate for help",
+        "dynamic": "ask_classmate_for_help"
+      }
+    ]
+  },
+  {
+    "id": "final_exams",
+    "trigger": "age_up",
+    "conditions": { "minAge": 15, "maxAge": 17 },
+    "requires": [{ "path": "education.gradeLevel", "op": ">=", "value": 10 }],
+    "weight": 7,
+    "text": "Your final exams are approaching.",
+    "choices": [
+      {
+        "label": "Study Hard",
+        "outcomes": [
+          { "weight": 7, "effects": { "smarts": 3, "happiness": -2 }, "resultText": "You spent every free hour studying. It was exhausting, but you walked into finals feeling prepared." },
+          { "weight": 3, "effects": { "smarts": 2, "happiness": -4 }, "resultText": "You studied around the clock and burned yourself out a little, but you covered everything you needed to." }
+        ]
+      },
+      {
+        "label": "Study Normally",
+        "outcomes": [
+          { "weight": 6, "effects": { "smarts": 1, "happiness": 1 }, "resultText": "You kept a normal study schedule and felt reasonably ready for finals." },
+          { "weight": 4, "effects": { "happiness": -1 }, "resultText": "Your normal amount of studying left a few gaps you noticed too late." }
+        ]
+      },
+      {
+        "label": "Don't Study",
+        "outcomes": [
+          { "weight": 4, "effects": { "happiness": 3 }, "resultText": "You decided finals week wasn't worth the stress and relaxed instead. Risky, but your week was a lot more fun." },
+          { "weight": 6, "effects": { "smarts": -2, "happiness": -2 }, "resultText": "You didn't study at all, and finals week hit you like a truck." }
+        ]
+      },
+      {
+        "label": "Ask Teacher for Help",
+        "dynamic": "ask_teacher_for_help"
+      }
+    ]
+  },
+  {
+    "id": "school_project",
+    "trigger": "age_up",
+    "conditions": { "minAge": 7, "maxAge": 13 },
+    "requires": [{ "path": "education.gradeLevel", "op": ">=", "value": 2 }],
+    "weight": 6,
+    "text": "You've been assigned a big school project due next week.",
+    "choices": [
+      {
+        "label": "Put in real effort",
+        "outcomes": [
+          { "weight": 6, "effects": { "smarts": 3, "happiness": 3, "reputation": 1 }, "resultText": "You put real effort into the project, and it showed -- you got one of the best grades in the class." },
+          { "weight": 4, "effects": { "smarts": 1, "happiness": 1 }, "resultText": "You worked hard on it, though it didn't turn out quite as polished as you'd hoped." }
+        ]
+      },
+      {
+        "label": "Throw it together last minute",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 2 }, "resultText": "You threw it together the night before. It wasn't great, but it was done." },
+          { "weight": 5, "effects": { "smarts": -1, "happiness": -1 }, "resultText": "Rushing it the night before was obvious to everyone, including your teacher." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "school_field_trip",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 17 },
+    "requires": [{ "path": "education.gradeLevel", "op": ">=", "value": 1 }],
+    "weight": 6,
+    "text": "Your class goes on a field trip.",
+    "choices": [
+      {
+        "label": "Explore with your classmates",
+        "outcomes": [
+          { "weight": 7, "effects": { "happiness": 5 }, "resultText": "The field trip was a blast, and you spent the whole day exploring with your classmates." },
+          { "weight": 3, "effects": { "happiness": 6, "reputation": 1 }, "resultText": "Something ridiculous happened on the field trip that the whole class still talks about." }
+        ]
+      },
+      {
+        "label": "Stick close to the teacher",
+        "effects": { "happiness": 2 },
+        "resultText": "You stuck close to the teacher for most of the trip, playing it safe."
+      }
+    ]
+  },
+  {
+    "id": "missing_assignment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 17 },
+    "requires": [{ "path": "education.gradeLevel", "op": ">=", "value": 3 }],
+    "weight": 5,
+    "text": "You realize you completely forgot about an assignment that was due today.",
+    "choices": [
+      {
+        "label": "Come clean to your teacher",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": -1 }, "resultText": "You admitted you forgot and asked for an extension. Your teacher wasn't thrilled, but appreciated the honesty." },
+          { "weight": 4, "effects": { "smarts": -1, "happiness": -2 }, "resultText": "You came clean, but your teacher docked points for the late work anyway." }
+        ]
+      },
+      {
+        "label": "Make up an excuse",
+        "outcomes": [
+          { "weight": 4, "effects": { "happiness": 1 }, "resultText": "Your excuse worked, and you bought yourself an extra day without any penalty." },
+          { "weight": 6, "effects": { "reputation": -2, "happiness": -2 }, "resultText": "Your teacher saw right through the excuse, and it didn't go over well." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "teacher_praise",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 17 },
+    "requires": [
+      { "path": "education.gradeLevel", "op": ">=", "value": 1 },
+      { "path": "stats.smarts", "op": ">=", "value": 60 }
+    ],
+    "weight": 4,
+    "text": "Your teacher pulled you aside after class.",
+    "dynamic": "teacher_praise_reveal"
+  },
+  {
+    "id": "school_election",
+    "trigger": "age_up",
+    "conditions": { "minAge": 11, "maxAge": 17 },
+    "requires": [
+      { "path": "education.gradeLevel", "op": ">=", "value": 6 },
+      { "path": "stats.reputation", "op": ">=", "value": 45 }
+    ],
+    "weight": 4,
+    "text": "Elections for student council are coming up, and people have been mentioning you'd be a good candidate.",
+    "choices": [
+      {
+        "label": "Run for student council",
+        "outcomes": [
+          { "weight": 5, "effects": { "reputation": 6, "happiness": 5, "fame": 2 }, "resultText": "You ran a solid campaign and won the election. You're officially on student council now." },
+          { "weight": 5, "effects": { "happiness": -2 }, "resultText": "You ran a good campaign, but lost the election to another candidate." }
+        ]
+      },
+      {
+        "label": "Stay out of it",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided student government wasn't for you and let someone else run."
+      }
+    ]
+  },
+  {
+    "id": "sports_competition",
+    "trigger": "age_up",
+    "conditions": { "minAge": 11, "maxAge": 17 },
+    "requires": [{ "path": "education.extracurriculars.length", "op": ">=", "value": 1 }],
+    "weight": 5,
+    "text": "Your team has a big competition this week.",
+    "choices": [
+      {
+        "label": "Give it everything you've got",
+        "outcomes": [
+          { "weight": 5, "requires": [{ "path": "stats.health", "op": ">=", "value": 55 }], "effects": { "happiness": 7, "reputation": 3, "fame": 1 }, "resultText": "You played the game of your life, and your team pulled off a big win." },
+          { "weight": 6, "effects": { "happiness": 2 }, "resultText": "You gave it your all, but your team came up just short." },
+          { "weight": 3, "effects": { "health": -4, "happiness": -1 }, "resultText": "You pushed yourself hard and picked up a minor injury along the way." }
+        ]
+      },
+      {
+        "label": "Play it safe",
+        "effects": { "happiness": 1 },
+        "resultText": "You played a more conservative game, more focused on not getting hurt than winning big."
+      }
+    ]
+  }
+]

@@ -386,6 +386,15 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
     hobbies: [],
     socialCircle: [],
     recentEventIds: [],
+    education: {
+      status: "not_started",
+      schoolName: null,
+      gradeLevel: null,
+      gpa: null,
+      clubs: [],
+      extracurriculars: [],
+      teacher: null,
+    },
     pendingEventId: null,
     history: historyLines,
   };
@@ -399,4 +408,45 @@ function clampStat(value) {
   return Math.max(0, Math.min(100, value));
 }
 
-export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, weightedPick, LIFE_STAGES, formatBirthDate };
+// Characters can't personally earn money before this age (the earliest
+// income event is the age-14 part-time job offer). Below that, normal
+// childhood expenses -- birthday parties, school costs, etc. -- are paid
+// by the household/parents rather than the character's own cash. Shared
+// by any system that moves money in or out of the character's own pocket
+// (events, gifts, tuition, etc.) so this guard only lives in one place.
+const MIN_EARNING_AGE = 14;
+
+// Returns whether the delta was actually applied, so a caller granting some
+// other benefit alongside a cost (a gift's closeness boost, say) can check
+// the character actually paid for it instead of assuming success.
+function applyMoneyDelta(character, delta) {
+  if (delta >= 0) {
+    character.money += delta;
+    return true;
+  }
+
+  if (character.age < MIN_EARNING_AGE) {
+    // Household/parents absorb the cost; personal money is untouched.
+    return false;
+  }
+
+  if (character.money + delta < 0) {
+    // Can't personally afford it -- skip rather than go negative.
+    return false;
+  }
+
+  character.money += delta;
+  return true;
+}
+
+export {
+  createCharacter,
+  generateRandomName,
+  getLifeStage,
+  clampStat,
+  randInt,
+  weightedPick,
+  applyMoneyDelta,
+  LIFE_STAGES,
+  formatBirthDate,
+};

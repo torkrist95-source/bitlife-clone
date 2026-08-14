@@ -1,3 +1,5 @@
+import { randInt, clampStat } from "./character.js";
+
 const SAVE_KEY = "onemoreyear:save";
 const SAVE_VERSION = 2;
 
@@ -22,6 +24,47 @@ function migrateCharacterFields(character) {
   }
   for (const sibling of character.family?.siblings ?? []) {
     sibling.closeness ??= 60;
+  }
+
+  const hadEducation = character.education != null;
+  character.education ??= {
+    status: "not_started",
+    schoolName: null,
+    gradeLevel: null,
+    gpa: null,
+    clubs: [],
+    extracurriculars: [],
+    teacher: null,
+  };
+  character.education.clubs ??= [];
+  character.education.extracurriculars ??= [];
+
+  // applySchoolYear only ever progresses status forward through ages 5-17,
+  // so a save from before this feature existed, for a character already
+  // past school age, would otherwise be frozen showing "not old enough for
+  // school" forever. Give them a sensible starting point instead.
+  if (!hadEducation && character.age >= 18) {
+    character.education.status = character.job ? "workforce" : "graduated_hs";
+  }
+
+  // Social-circle NPCs created before classmates existed as a richer
+  // concept won't have age/stats/romance yet -- backfill plausible
+  // defaults (age near the character's own, stats in a similar range to
+  // how the character itself was rolled) rather than leaving them
+  // undefined for code that now expects every NPC to have them.
+  for (const npc of character.socialCircle ?? []) {
+    npc.age ??= clampStat(character.age + randInt(-1, 1));
+    npc.romance ??= 0;
+    if (!npc.stats) {
+      npc.stats = {
+        health: randInt(60, 100),
+        happiness: randInt(50, 100),
+        smarts: randInt(30, 70),
+        looks: randInt(30, 70),
+        fame: 0,
+        reputation: randInt(30, 60),
+      };
+    }
   }
 
   return character;

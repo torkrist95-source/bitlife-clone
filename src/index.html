@@ -200,6 +200,107 @@
       </div>
     </div>
 
+    <div id="school-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <div class="school-header">
+          <h2 id="school-name" class="occupation-modal-title"></h2>
+          <p id="school-grade-gpa" class="occupation-job-salary"></p>
+        </div>
+
+        <p id="school-empty-text" class="occupation-unemployed-label hidden"></p>
+
+        <div id="school-content-view" class="hidden">
+          <p class="school-section-title">Things To Do</p>
+          <div class="school-action-list">
+            <button type="button" id="school-study-btn" class="nav-action-btn">Study Harder</button>
+            <button type="button" id="school-clubs-btn" class="nav-action-btn">Join a Club</button>
+            <button type="button" id="school-activities-btn" class="nav-action-btn">Join an After-School Activity</button>
+          </div>
+
+          <p class="school-section-title">People</p>
+          <div class="school-action-list">
+            <button type="button" id="school-classmates-btn" class="nav-action-btn">View Classmates</button>
+            <button type="button" id="school-teacher-btn" class="nav-action-btn">View Current Teacher</button>
+          </div>
+        </div>
+
+        <button type="button" id="school-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
+    <div id="clubs-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">Clubs</h2>
+        <div id="clubs-list" class="occupation-job-list"></div>
+        <button type="button" id="clubs-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
+    <div id="activities-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">After-School Activities</h2>
+        <p id="activities-result" class="occupation-unemployed-label hidden"></p>
+        <div id="activities-list" class="occupation-job-list"></div>
+        <button type="button" id="activities-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
+    <div id="classmates-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">Classmates</h2>
+        <div id="classmates-list" class="occupation-job-list"></div>
+        <button type="button" id="classmates-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
+    <div id="npc-profile-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal profile-modal">
+        <div id="npc-profile-portrait" class="profile-modal-portrait"></div>
+        <h2 id="npc-profile-name" class="profile-modal-name"></h2>
+        <p id="npc-profile-meta" class="profile-modal-stage"></p>
+
+        <div class="stat-bars npc-profile-bars">
+          <div class="stat-row">
+            <span class="stat-label">Health</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-health"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Happiness</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-happiness"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Smarts</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-smarts"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Looks</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-looks"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fame</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-fame"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Reputation</span>
+            <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-reputation"></div></div>
+          </div>
+        </div>
+
+        <div id="npc-profile-friendship-row" class="profile-detail-row">
+          <span class="profile-detail-label">Friendship</span>
+          <span id="npc-profile-friendship-value" class="profile-detail-value"></span>
+        </div>
+        <div id="npc-profile-romance-row" class="profile-detail-row">
+          <span class="profile-detail-label">Romance</span>
+          <span id="npc-profile-romance-value" class="profile-detail-value"></span>
+        </div>
+
+        <div id="npc-profile-interactions" class="event-modal-choices npc-profile-interactions"></div>
+
+        <button type="button" id="npc-profile-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
     <div id="confirm-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal">
         <p id="confirm-modal-title" class="confirm-modal-title"></p>

@@ -42,6 +42,10 @@
   box-sizing: border-box;
 }
 
+.hidden {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
@@ -186,6 +190,25 @@ body {
   background: var(--color-fame);
 }
 #bar-reputation {
+  background: var(--color-reputation);
+}
+
+#npc-profile-bar-health {
+  background: var(--color-health);
+}
+#npc-profile-bar-happiness {
+  background: var(--color-happiness);
+}
+#npc-profile-bar-smarts {
+  background: var(--color-smarts);
+}
+#npc-profile-bar-looks {
+  background: var(--color-looks);
+}
+#npc-profile-bar-fame {
+  background: var(--color-fame);
+}
+#npc-profile-bar-reputation {
   background: var(--color-reputation);
 }
 
@@ -663,6 +686,7 @@ body {
   font-weight: 700;
   line-height: 1.4;
   text-align: center;
+  white-space: pre-line;
 }
 
 .event-modal-choices {
@@ -1021,6 +1045,42 @@ body {
   color: var(--color-text-muted);
   font-size: 14px;
   margin: 12px 0;
+}
+
+.school-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.school-section-title {
+  margin: 18px 0 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.school-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.classmate-card {
+  cursor: pointer;
+}
+
+.classmate-card:active {
+  opacity: 0.8;
+}
+
+.npc-profile-bars {
+  margin-bottom: 16px;
+}
+
+.npc-profile-interactions {
+  margin-bottom: 18px;
 }
 
 .confirm-modal-title {

@@ -34,6 +34,7 @@ async function loadAgeUpEvents() {
     loadJSON("data/events/age_up/childhood.json"),
     loadJSON("data/events/age_up/teen.json"),
     loadJSON("data/events/age_up/adult.json"),
+    loadJSON("data/events/age_up/school.json"),
   ]);
   return pools.flat();
 }
@@ -46,6 +47,14 @@ function loadWorldUpdates() {
   return loadJSON("data/events/world_updates.json");
 }
 
+function loadClubs() {
+  return loadJSON("data/school/clubs.json");
+}
+
+function loadExtracurriculars() {
+  return loadJSON("data/school/extracurriculars.json");
+}
+
 export {
   loadCountries,
   loadWealthTiers,
@@ -56,4 +65,6 @@ export {
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
+  loadClubs,
+  loadExtracurriculars,
 };
