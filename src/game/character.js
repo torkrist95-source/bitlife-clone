@@ -151,6 +151,7 @@ function generateParent(role, relationshipType, lastName, tier, excludeNames, na
     age: randInt(24, 45),
     employed: occupation.employed,
     job: occupation.job,
+    closeness: randInt(40, 70),
   };
 }
 
@@ -175,6 +176,7 @@ function generateFamilyMembers(structureId, lastName, tier, excludeName, namePoo
       age: randInt(ageRange[0], ageRange[1]),
       employed: occupation.employed,
       job: occupation.job,
+      closeness: randInt(40, 70),
     };
     used.push(guardian.name.split(" ")[0]);
     return guardian;
@@ -231,6 +233,7 @@ function generateSiblings(count, lastName, structureId, excludeNames, namePools,
       name: `${firstName} ${lastName}`,
       age: randInt(1, 17),
       relationshipType,
+      closeness: randInt(40, 70),
     });
   }
   return siblings;

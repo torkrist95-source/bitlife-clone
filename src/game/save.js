@@ -16,6 +16,14 @@ function migrateCharacterFields(character) {
   character.recentEventIds ??= [];
   character.pendingEventId ??= null;
   character.history ??= [];
+
+  for (const parent of character.family?.parents ?? []) {
+    parent.closeness ??= 60;
+  }
+  for (const sibling of character.family?.siblings ?? []) {
+    sibling.closeness ??= 60;
+  }
+
   return character;
 }
 

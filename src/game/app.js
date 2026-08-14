@@ -17,31 +17,51 @@ import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLif
 
 const MAX_FEED_ENTRIES = 6;
 
-// Bottom-nav hierarchy: category -> systems available under it. A system
-// with `id: "jobs"` opens the real Jobs page; anything else opens a
-// generic "Coming soon" placeholder. Categories not listed here (or with
-// an empty array) show an empty category menu -- the shell is in place
-// for every category even before its systems exist.
+// Bottom-nav hierarchy: category -> the full roadmap of systems under it.
+// Each system expands (accordion-style) to reveal its content inline --
+// nothing here is a separate navigation page. A system has either:
+//   - `actions`: a list of buttons that open an existing modal/interaction
+//   - `render(container)`: builds custom content directly into the
+//     expanded area (e.g. the Friends list with Hang Out buttons)
+// Systems not yet built just use `render: renderComingSoon`, so the full
+// planned shape stays visible without pretending unbuilt features work.
+// Handlers/renderers reference functions defined later in this file --
+// safe, since none of this is called until the player expands a system.
 const NAV_CATEGORIES = {
   Occupation: [
-    { id: "school", label: "School" },
-    { id: "jobs", label: "Jobs" },
-    { id: "special_careers", label: "Special Careers" },
-    { id: "career_history", label: "Career History" },
+    { id: "school", label: "School", render: renderComingSoon },
+    { id: "jobs", label: "Jobs", actions: [{ label: "Manage Jobs", handler: () => openOccupationModal() }] },
+    { id: "special_careers", label: "Special Careers", render: renderComingSoon },
+    { id: "career_history", label: "Career History", render: renderComingSoon },
   ],
   Relationships: [
-    { id: "friends", label: "Friends" },
-    { id: "family", label: "Family" },
-    { id: "dating", label: "Dating" },
-    { id: "marriage", label: "Marriage" },
+    { id: "family", label: "Family", render: (container) => renderFamilyListInto(container) },
+    { id: "friends", label: "Friends", render: (container) => renderFriendsListInto(container) },
+    { id: "partner", label: "Partner", render: renderComingSoon },
+    { id: "children", label: "Children", render: renderComingSoon },
   ],
-  Activities: [],
-  Social: [],
+  Activities: [
+    { id: "hobbies", label: "Hobbies", render: renderComingSoon },
+    { id: "skills", label: "Skills", render: renderComingSoon },
+    { id: "exercise", label: "Exercise", render: renderComingSoon },
+    { id: "travel", label: "Travel/Vacation", render: renderComingSoon },
+    { id: "dating", label: "Go on a Date", render: renderComingSoon },
+  ],
+  Social: [
+    { id: "facepage", label: "Facepage", render: renderComingSoon },
+    { id: "instagrin", label: "Instagrin", render: renderComingSoon },
+    { id: "tikpop", label: "TikPop", render: renderComingSoon },
+    { id: "viewtube", label: "ViewTube", render: renderComingSoon },
+    { id: "readit", label: "Readit", render: renderComingSoon },
+    { id: "sparq", label: "Sparq", render: renderComingSoon },
+  ],
   Finance: [
-    { id: "finance_overview", label: "Overview" },
-    { id: "savings", label: "Savings" },
-    { id: "investments", label: "Investments" },
-    { id: "loans", label: "Loans" },
+    { id: "bank", label: "Bank", actions: [{ label: "View Balance", handler: () => openFinanceOverview() }] },
+    { id: "investments", label: "Investments", render: renderComingSoon },
+    { id: "assets", label: "Assets", render: renderComingSoon },
+    { id: "debt", label: "Debt", render: renderComingSoon },
+    { id: "insurance", label: "Insurance", render: renderComingSoon },
+    { id: "net_worth", label: "Net Worth", render: renderComingSoon },
   ],
 };
 
@@ -128,24 +148,15 @@ const occupationModal = {
   jobSalary: document.getElementById("occupation-job-salary"),
   jobList: document.getElementById("occupation-job-list"),
   quitBtn: document.getElementById("occupation-quit-btn"),
-  backBtn: document.getElementById("occupation-modal-back"),
   closeBtn: document.getElementById("occupation-modal-close"),
 };
 
-const categoryMenu = {
-  overlay: document.getElementById("category-menu-overlay"),
-  title: document.getElementById("category-menu-title"),
-  list: document.getElementById("category-menu-list"),
-  empty: document.getElementById("category-menu-empty"),
-  backBtn: document.getElementById("category-menu-back"),
-  closeBtn: document.getElementById("category-menu-close"),
-};
-
-const systemPlaceholder = {
-  overlay: document.getElementById("system-placeholder-overlay"),
-  title: document.getElementById("system-placeholder-title"),
-  backBtn: document.getElementById("system-placeholder-back"),
-  closeBtn: document.getElementById("system-placeholder-close"),
+const navDrawer = {
+  overlay: document.getElementById("nav-drawer-overlay"),
+  title: document.getElementById("nav-drawer-title"),
+  list: document.getElementById("nav-drawer-list"),
+  empty: document.getElementById("nav-drawer-empty"),
+  closeBtn: document.getElementById("nav-drawer-close"),
 };
 
 const financeModal = {
@@ -155,23 +166,7 @@ const financeModal = {
   unemployedView: document.getElementById("finance-income-unemployed"),
   incomeTitle: document.getElementById("finance-income-title"),
   incomeSalary: document.getElementById("finance-income-salary"),
-  backBtn: document.getElementById("finance-modal-back"),
   closeBtn: document.getElementById("finance-modal-close"),
-};
-
-const friendsModal = {
-  overlay: document.getElementById("friends-modal-overlay"),
-  list: document.getElementById("friends-list"),
-  empty: document.getElementById("friends-empty"),
-  backBtn: document.getElementById("friends-modal-back"),
-  closeBtn: document.getElementById("friends-modal-close"),
-};
-
-const familyModal = {
-  overlay: document.getElementById("family-modal-overlay"),
-  list: document.getElementById("family-list"),
-  backBtn: document.getElementById("family-modal-back"),
-  closeBtn: document.getElementById("family-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -521,77 +516,83 @@ game.ageBtn.addEventListener("click", () => {
 });
 
 game.navBtns.forEach((btn) => {
-  btn.addEventListener("click", () => openCategoryMenu(btn.dataset.label));
+  btn.addEventListener("click", () => openNavDrawer(btn.dataset.label));
 });
 
-// ---------- Bottom-nav hierarchy: category menu -> system page ----------
+// ---------- Bottom-nav hierarchy: category drawer with accordion systems ----------
 //
-// Gameplay -> [Category Menu] -> [System Page] -> actions
-// The category menu stays open underneath a system page (same stacking
-// pattern the confirm modal already uses over other modals), so a system
-// page's Back button just hides itself -- the menu is still there -- and
-// Close hides both, returning straight to gameplay.
+// Gameplay -> [Category Drawer] -> tap a system to expand/collapse its
+// actions inline -> tap an action to open that system's existing
+// modal/interaction. There's no separate "system page" to navigate to and
+// no Back stack -- the drawer stays open underneath (same stacking
+// pattern the confirm modal already uses over other modals) while an
+// action's modal is open on top, and that modal's own Close hides both,
+// returning straight to gameplay.
 
-function openCategoryMenu(categoryLabel) {
+function openNavDrawer(categoryLabel) {
   const systems = NAV_CATEGORIES[categoryLabel] ?? [];
-  categoryMenu.title.textContent = categoryLabel;
-  categoryMenu.list.innerHTML = "";
-  categoryMenu.empty.classList.toggle("hidden", systems.length > 0);
+  navDrawer.title.textContent = categoryLabel;
+  navDrawer.list.innerHTML = "";
+  navDrawer.empty.classList.toggle("hidden", systems.length > 0);
 
   for (const system of systems) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "category-menu-btn";
+    const item = document.createElement("div");
+    item.className = "nav-system";
+
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "nav-system-header";
+
+    const arrow = document.createElement("span");
+    arrow.className = "nav-system-arrow";
+    arrow.textContent = "▸";
 
     const label = document.createElement("span");
     label.textContent = system.label;
-    const arrow = document.createElement("span");
-    arrow.className = "category-menu-btn-arrow";
-    arrow.textContent = "›";
 
-    btn.appendChild(label);
-    btn.appendChild(arrow);
-    btn.addEventListener("click", () => openSystemPage(system));
-    categoryMenu.list.appendChild(btn);
+    header.appendChild(arrow);
+    header.appendChild(label);
+
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "nav-system-actions hidden";
+
+    if (system.render) {
+      system.render(actionsWrap);
+    } else {
+      for (const action of system.actions ?? []) {
+        const actionBtn = document.createElement("button");
+        actionBtn.type = "button";
+        actionBtn.className = "nav-action-btn";
+        actionBtn.textContent = action.label;
+        actionBtn.addEventListener("click", () => action.handler());
+        actionsWrap.appendChild(actionBtn);
+      }
+    }
+
+    header.addEventListener("click", () => {
+      const isExpanded = !actionsWrap.classList.contains("hidden");
+      // Accordion: only one system open at a time within this drawer.
+      navDrawer.list.querySelectorAll(".nav-system-actions").forEach((el) => el.classList.add("hidden"));
+      navDrawer.list.querySelectorAll(".nav-system-arrow").forEach((el) => (el.textContent = "▸"));
+      if (!isExpanded) {
+        actionsWrap.classList.remove("hidden");
+        arrow.textContent = "▾";
+      }
+    });
+
+    item.appendChild(header);
+    item.appendChild(actionsWrap);
+    navDrawer.list.appendChild(item);
   }
 
-  categoryMenu.overlay.classList.remove("hidden");
+  navDrawer.overlay.classList.remove("hidden");
 }
 
-function hideCategoryMenu() {
-  categoryMenu.overlay.classList.add("hidden");
+function hideNavDrawer() {
+  navDrawer.overlay.classList.add("hidden");
 }
 
-function openSystemPage(system) {
-  if (system.id === "jobs") {
-    openOccupationModal();
-  } else if (system.id === "finance_overview") {
-    openFinanceOverview();
-  } else if (system.id === "friends") {
-    openFriendsModal();
-  } else if (system.id === "family") {
-    openFamilyModal();
-  } else {
-    openSystemPlaceholder(system.label);
-  }
-}
-
-function openSystemPlaceholder(label) {
-  systemPlaceholder.title.textContent = label;
-  systemPlaceholder.overlay.classList.remove("hidden");
-}
-
-function hideSystemPlaceholder() {
-  systemPlaceholder.overlay.classList.add("hidden");
-}
-
-categoryMenu.backBtn.addEventListener("click", hideCategoryMenu);
-categoryMenu.closeBtn.addEventListener("click", hideCategoryMenu);
-systemPlaceholder.backBtn.addEventListener("click", hideSystemPlaceholder);
-systemPlaceholder.closeBtn.addEventListener("click", () => {
-  hideSystemPlaceholder();
-  hideCategoryMenu();
-});
+navDrawer.closeBtn.addEventListener("click", hideNavDrawer);
 
 // ---------- Occupation ----------
 
@@ -693,10 +694,9 @@ function hideOccupationModal() {
 }
 
 occupationModal.quitBtn.addEventListener("click", requestQuitJob);
-occupationModal.backBtn.addEventListener("click", hideOccupationModal);
 occupationModal.closeBtn.addEventListener("click", () => {
   hideOccupationModal();
-  hideCategoryMenu();
+  hideNavDrawer();
 });
 
 // ---------- Finance ----------
@@ -726,15 +726,26 @@ function hideFinanceOverview() {
   financeModal.overlay.classList.add("hidden");
 }
 
-financeModal.backBtn.addEventListener("click", hideFinanceOverview);
 financeModal.closeBtn.addEventListener("click", () => {
   hideFinanceOverview();
-  hideCategoryMenu();
+  hideNavDrawer();
 });
 
 // ---------- Relationships: Friends & Family ----------
+//
+// Both render directly into the accordion's expanded area (no separate
+// "View Friends"/"View Family" click-through) so the list is right there
+// the moment the section opens.
 
 const SOCIAL_TYPE_LABELS = { friend: "Friend", crush: "Crush", romantic_interest: "Romantic Interest" };
+
+function renderComingSoon(container) {
+  container.innerHTML = "";
+  const message = document.createElement("p");
+  message.className = "occupation-unemployed-label";
+  message.textContent = "Coming soon.";
+  container.appendChild(message);
+}
 
 function buildPersonCard({ name, meta, action }) {
   const card = document.createElement("div");
@@ -755,50 +766,41 @@ function buildPersonCard({ name, meta, action }) {
   return card;
 }
 
-function renderFriendsList() {
+function renderFriendsListInto(container) {
   ensureSocialCircle(character, namePools, character.country);
-  friendsModal.list.innerHTML = "";
+  container.innerHTML = "";
   const circle = character.socialCircle ?? [];
-  friendsModal.empty.classList.toggle("hidden", circle.length > 0);
+
+  if (circle.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "You don't have anyone in your circle yet.";
+    container.appendChild(empty);
+    return;
+  }
 
   for (const npc of circle) {
     const hangoutBtn = document.createElement("button");
     hangoutBtn.type = "button";
     hangoutBtn.className = "friend-hangout-btn";
     hangoutBtn.textContent = "Hang Out";
-    hangoutBtn.addEventListener("click", () => hangOutWith(npc.id));
+    hangoutBtn.addEventListener("click", () => hangOutWithFriend(npc.id, container));
 
     const meta = `${SOCIAL_TYPE_LABELS[npc.type] ?? npc.type} · Closeness ${npc.closeness}`;
-    friendsModal.list.appendChild(buildPersonCard({ name: npc.name, meta, action: hangoutBtn }));
+    container.appendChild(buildPersonCard({ name: npc.name, meta, action: hangoutBtn }));
   }
 }
 
-function hangOutWith(npcId) {
+function hangOutWithFriend(npcId, container) {
   const npc = (character.socialCircle ?? []).find((n) => n.id === npcId);
   if (!npc) return;
   npc.closeness = clampStat(npc.closeness + randInt(3, 8));
   character.stats.happiness = clampStat(character.stats.happiness + 2);
   character.history.push(`You hung out with ${npc.name}.`);
-  renderFriendsList();
+  renderFriendsListInto(container);
   renderGame();
   autosave();
 }
-
-function openFriendsModal() {
-  if (!character) return;
-  renderFriendsList();
-  friendsModal.overlay.classList.remove("hidden");
-}
-
-function hideFriendsModal() {
-  friendsModal.overlay.classList.add("hidden");
-}
-
-friendsModal.backBtn.addEventListener("click", hideFriendsModal);
-friendsModal.closeBtn.addEventListener("click", () => {
-  hideFriendsModal();
-  hideCategoryMenu();
-});
 
 function parentRelationLabel(parent) {
   if (parent.role === "guardian") {
@@ -809,35 +811,36 @@ function parentRelationLabel(parent) {
   return parent.relationshipType === "step" ? `Step${parent.role}` : base;
 }
 
-function renderFamilyList() {
-  familyModal.list.innerHTML = "";
+function renderFamilyListInto(container) {
+  container.innerHTML = "";
+  const members = [...(character.family?.parents ?? []), ...(character.family?.siblings ?? [])];
 
-  for (const parent of character.family?.parents ?? []) {
-    const jobText = parent.employed ? `works as ${parent.job}` : "unemployed";
-    const meta = `${parentRelationLabel(parent)} · Age ${parent.age} · ${jobText}`;
-    familyModal.list.appendChild(buildPersonCard({ name: parent.name, meta }));
+  for (const member of members) {
+    const isParent = "role" in member;
+    const jobText = isParent ? (member.employed ? `works as ${member.job}` : "unemployed") : null;
+    const relationLabel = isParent ? parentRelationLabel(member) : "Sibling";
+    const meta = isParent
+      ? `${relationLabel} · Age ${member.age} · Closeness ${member.closeness} · ${jobText}`
+      : `${relationLabel} · Age ${member.age} · Closeness ${member.closeness}`;
+
+    const hangoutBtn = document.createElement("button");
+    hangoutBtn.type = "button";
+    hangoutBtn.className = "friend-hangout-btn";
+    hangoutBtn.textContent = "Hang Out";
+    hangoutBtn.addEventListener("click", () => hangOutWithFamilyMember(member, container));
+
+    container.appendChild(buildPersonCard({ name: member.name, meta, action: hangoutBtn }));
   }
-
-  for (const sibling of character.family?.siblings ?? []) {
-    familyModal.list.appendChild(buildPersonCard({ name: sibling.name, meta: `Sibling · Age ${sibling.age}` }));
-  }
 }
 
-function openFamilyModal() {
-  if (!character) return;
-  renderFamilyList();
-  familyModal.overlay.classList.remove("hidden");
+function hangOutWithFamilyMember(member, container) {
+  member.closeness = clampStat((member.closeness ?? 60) + randInt(3, 8));
+  character.stats.happiness = clampStat(character.stats.happiness + 2);
+  character.history.push(`You hung out with ${member.name}.`);
+  renderFamilyListInto(container);
+  renderGame();
+  autosave();
 }
-
-function hideFamilyModal() {
-  familyModal.overlay.classList.add("hidden");
-}
-
-familyModal.backBtn.addEventListener("click", hideFamilyModal);
-familyModal.closeBtn.addEventListener("click", () => {
-  hideFamilyModal();
-  hideCategoryMenu();
-});
 
 function openProfile() {
   if (!character) return;

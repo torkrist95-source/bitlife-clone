@@ -146,29 +146,15 @@
       </div>
     </div>
 
-    <div id="category-menu-overlay" class="modal-overlay hidden">
+    <div id="nav-drawer-overlay" class="modal-overlay hidden">
       <div class="event-modal category-menu-modal">
-        <h2 id="category-menu-title" class="category-menu-title"></h2>
-
-        <div id="category-menu-list" class="category-menu-list"></div>
-        <p id="category-menu-empty" class="category-menu-empty hidden">Nothing here yet.</p>
-
-        <div class="nav-modal-footer">
-          <button type="button" id="category-menu-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="category-menu-close" class="event-choice-btn nav-close-btn">✕ Close</button>
+        <div class="nav-drawer-header">
+          <h2 id="nav-drawer-title" class="category-menu-title"></h2>
+          <button type="button" id="nav-drawer-close" class="nav-drawer-close-btn" aria-label="Close">✕</button>
         </div>
-      </div>
-    </div>
 
-    <div id="system-placeholder-overlay" class="modal-overlay hidden">
-      <div class="event-modal category-menu-modal">
-        <h2 id="system-placeholder-title" class="category-menu-title"></h2>
-        <p class="category-menu-empty">Coming soon.</p>
-
-        <div class="nav-modal-footer">
-          <button type="button" id="system-placeholder-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="system-placeholder-close" class="event-choice-btn nav-close-btn">✕ Close</button>
-        </div>
+        <div id="nav-drawer-list" class="nav-drawer-list"></div>
+        <p id="nav-drawer-empty" class="category-menu-empty hidden">Nothing here yet.</p>
       </div>
     </div>
 
@@ -187,16 +173,13 @@
           <div id="occupation-job-list" class="occupation-job-list"></div>
         </div>
 
-        <div class="nav-modal-footer">
-          <button type="button" id="occupation-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="occupation-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
-        </div>
+        <button type="button" id="occupation-modal-close" class="event-choice-btn">Close</button>
       </div>
     </div>
 
     <div id="finance-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal occupation-modal">
-        <h2 class="occupation-modal-title">Overview</h2>
+        <h2 class="occupation-modal-title">Bank</h2>
 
         <div class="finance-balance-block">
           <p class="finance-balance-label">Current Balance</p>
@@ -213,37 +196,7 @@
           <p class="occupation-unemployed-label">No current source of income.</p>
         </div>
 
-        <div class="nav-modal-footer">
-          <button type="button" id="finance-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="finance-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="friends-modal-overlay" class="modal-overlay hidden">
-      <div class="event-modal occupation-modal">
-        <h2 class="occupation-modal-title">Friends</h2>
-
-        <div id="friends-list" class="friends-list"></div>
-        <p id="friends-empty" class="occupation-unemployed-label hidden">You don't have anyone in your circle yet.</p>
-
-        <div class="nav-modal-footer">
-          <button type="button" id="friends-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="friends-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="family-modal-overlay" class="modal-overlay hidden">
-      <div class="event-modal occupation-modal">
-        <h2 class="occupation-modal-title">Family</h2>
-
-        <div id="family-list" class="friends-list"></div>
-
-        <div class="nav-modal-footer">
-          <button type="button" id="family-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
-          <button type="button" id="family-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
-        </div>
+        <button type="button" id="finance-modal-close" class="event-choice-btn">Close</button>
       </div>
     </div>
 
