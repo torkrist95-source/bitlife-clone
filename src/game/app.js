@@ -1,7 +1,7 @@
 import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
-import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadAgeUpEvents } from "./data.js";
+import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadJobs, loadAgeUpEvents } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
 const MAX_FEED_ENTRIES = 6;
@@ -13,6 +13,7 @@ let wealthTiers = [];
 let birthCircumstances = [];
 let familyStructures = [];
 let namePools = {};
+let jobsData = [];
 let ageUpEvents = [];
 let selectedGender = null;
 
@@ -76,6 +77,17 @@ const profileModal = {
   birthDate: document.getElementById("profile-modal-birthdate"),
   zodiac: document.getElementById("profile-modal-zodiac"),
   closeBtn: document.getElementById("profile-modal-close"),
+};
+
+const occupationModal = {
+  overlay: document.getElementById("occupation-modal-overlay"),
+  employedView: document.getElementById("occupation-employed-view"),
+  unemployedView: document.getElementById("occupation-unemployed-view"),
+  jobTitle: document.getElementById("occupation-job-title"),
+  jobSalary: document.getElementById("occupation-job-salary"),
+  jobList: document.getElementById("occupation-job-list"),
+  quitBtn: document.getElementById("occupation-quit-btn"),
+  closeBtn: document.getElementById("occupation-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -375,7 +387,7 @@ function hideEventModal() {
 }
 
 game.ageBtn.addEventListener("click", () => {
-  ageUp(character);
+  ageUp(character, jobsData);
   renderGame();
   autosave();
 
@@ -388,9 +400,115 @@ game.ageBtn.addEventListener("click", () => {
 
 game.navBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
-    alert(`${btn.dataset.label} is coming soon.`);
+    if (btn.dataset.label === "Occupation") {
+      openOccupationModal();
+    } else {
+      alert(`${btn.dataset.label} is coming soon.`);
+    }
   });
 });
+
+// ---------- Occupation ----------
+
+function getJobLevel(jobId, levelIndex) {
+  const jobDef = jobsData.find((j) => j.id === jobId);
+  return jobDef ? jobDef.levels[levelIndex] : null;
+}
+
+function renderJobList() {
+  occupationModal.jobList.innerHTML = "";
+  const eligible = jobsData.filter(
+    (j) => character.age >= j.minAge && (!j.minSmarts || character.stats.smarts >= j.minSmarts)
+  );
+
+  for (const job of eligible) {
+    const entryLevel = job.levels[0];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "occupation-job-btn";
+
+    const title = document.createElement("span");
+    title.textContent = entryLevel.title;
+    const salary = document.createElement("span");
+    salary.className = "occupation-job-btn-salary";
+    salary.textContent = `$${entryLevel.salary.toLocaleString()}/yr`;
+
+    btn.appendChild(title);
+    btn.appendChild(salary);
+    btn.addEventListener("click", () => applyForJob(job.id));
+    occupationModal.jobList.appendChild(btn);
+  }
+
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = character.age < 16 ? "You're not old enough to work yet." : "No jobs available to you right now.";
+    occupationModal.jobList.appendChild(empty);
+  }
+}
+
+function renderOccupationModal() {
+  const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
+  if (!level) {
+    // Either unemployed, or character.job refers to a job/level that no
+    // longer exists in jobsData -- treat that the same as unemployed
+    // rather than crashing on a stale reference.
+    character.job = null;
+    occupationModal.employedView.classList.add("hidden");
+    occupationModal.unemployedView.classList.remove("hidden");
+    renderJobList();
+    return;
+  }
+
+  occupationModal.jobTitle.textContent = level.title;
+  occupationModal.jobSalary.textContent = `$${level.salary.toLocaleString()} / year`;
+  occupationModal.employedView.classList.remove("hidden");
+  occupationModal.unemployedView.classList.add("hidden");
+}
+
+function applyForJob(jobId) {
+  character.job = { jobId, levelIndex: 0, yearsInRole: 0 };
+  const level = getJobLevel(jobId, 0);
+  character.history.push(`You got a job as ${level.title}.`);
+  renderOccupationModal();
+  renderGame();
+  autosave();
+  showToast(`Hired as ${level.title}!`);
+}
+
+function requestQuitJob() {
+  const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
+  if (!level) {
+    character.job = null;
+    renderOccupationModal();
+    return;
+  }
+  showConfirm({
+    title: "Quit your job?",
+    message: `Are you sure you want to quit your job as ${level.title}?`,
+    confirmLabel: "Quit",
+    onConfirm: () => {
+      character.job = null;
+      character.history.push(`You quit your job as ${level.title}.`);
+      renderOccupationModal();
+      renderGame();
+      autosave();
+    },
+  });
+}
+
+function openOccupationModal() {
+  if (!character) return;
+  renderOccupationModal();
+  occupationModal.overlay.classList.remove("hidden");
+}
+
+function hideOccupationModal() {
+  occupationModal.overlay.classList.add("hidden");
+}
+
+occupationModal.quitBtn.addEventListener("click", requestQuitJob);
+occupationModal.closeBtn.addEventListener("click", hideOccupationModal);
 
 function openProfile() {
   if (!character) return;
@@ -457,12 +575,13 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, ageUpEvents] = await Promise.all([
+  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents] = await Promise.all([
     loadCountries(),
     loadWealthTiers(),
     loadBirthCircumstances(),
     loadFamilyStructures(),
     loadNamePools(),
+    loadJobs(),
     loadAgeUpEvents(),
   ]);
 

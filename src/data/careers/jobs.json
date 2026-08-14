@@ -1,0 +1,149 @@
+[
+  {
+    "id": "fast_food",
+    "minAge": 16,
+    "levels": [
+      { "title": "Fast Food Worker", "salary": 18000 },
+      { "title": "Shift Leader", "salary": 24000 },
+      { "title": "Assistant Manager", "salary": 32000 }
+    ]
+  },
+  {
+    "id": "retail",
+    "minAge": 16,
+    "levels": [
+      { "title": "Retail Associate", "salary": 19000 },
+      { "title": "Shift Supervisor", "salary": 26000 },
+      { "title": "Store Manager", "salary": 42000 }
+    ]
+  },
+  {
+    "id": "grocery_cashier",
+    "minAge": 16,
+    "levels": [
+      { "title": "Grocery Cashier", "salary": 18500 },
+      { "title": "Head Cashier", "salary": 23000 },
+      { "title": "Front End Manager", "salary": 34000 }
+    ]
+  },
+  {
+    "id": "movie_usher",
+    "minAge": 16,
+    "levels": [
+      { "title": "Movie Theater Usher", "salary": 17000 },
+      { "title": "Shift Lead", "salary": 21000 },
+      { "title": "Theater Manager", "salary": 30000 }
+    ]
+  },
+  {
+    "id": "landscaper",
+    "minAge": 16,
+    "levels": [
+      { "title": "Landscaper", "salary": 20000 },
+      { "title": "Crew Lead", "salary": 27000 },
+      { "title": "Landscaping Foreman", "salary": 38000 }
+    ]
+  },
+  {
+    "id": "barista",
+    "minAge": 16,
+    "levels": [
+      { "title": "Barista", "salary": 19000 },
+      { "title": "Shift Supervisor", "salary": 24000 },
+      { "title": "Cafe Manager", "salary": 33000 }
+    ]
+  },
+  {
+    "id": "warehouse",
+    "minAge": 18,
+    "levels": [
+      { "title": "Warehouse Associate", "salary": 24000 },
+      { "title": "Team Lead", "salary": 31000 },
+      { "title": "Warehouse Supervisor", "salary": 45000 }
+    ]
+  },
+  {
+    "id": "delivery_driver",
+    "minAge": 18,
+    "levels": [
+      { "title": "Delivery Driver", "salary": 26000 },
+      { "title": "Senior Driver", "salary": 32000 },
+      { "title": "Fleet Coordinator", "salary": 40000 }
+    ]
+  },
+  {
+    "id": "security_guard",
+    "minAge": 18,
+    "levels": [
+      { "title": "Security Guard", "salary": 28000 },
+      { "title": "Senior Guard", "salary": 34000 },
+      { "title": "Security Supervisor", "salary": 42000 }
+    ]
+  },
+  {
+    "id": "office_assistant",
+    "minAge": 18,
+    "levels": [
+      { "title": "Office Assistant", "salary": 27000 },
+      { "title": "Administrative Coordinator", "salary": 35000 },
+      { "title": "Office Manager", "salary": 48000 }
+    ]
+  },
+  {
+    "id": "customer_service",
+    "minAge": 18,
+    "levels": [
+      { "title": "Customer Service Rep", "salary": 29000 },
+      { "title": "Senior Rep", "salary": 36000 },
+      { "title": "Team Lead", "salary": 44000 }
+    ]
+  },
+  {
+    "id": "bank_teller",
+    "minAge": 18,
+    "levels": [
+      { "title": "Bank Teller", "salary": 31000 },
+      { "title": "Senior Teller", "salary": 38000 },
+      { "title": "Branch Supervisor", "salary": 52000 }
+    ]
+  },
+  {
+    "id": "sales_rep",
+    "minAge": 18,
+    "levels": [
+      { "title": "Sales Representative", "salary": 30000 },
+      { "title": "Senior Sales Representative", "salary": 42000 },
+      { "title": "Sales Manager", "salary": 60000 }
+    ]
+  },
+  {
+    "id": "accountant",
+    "minAge": 18,
+    "minSmarts": 55,
+    "levels": [
+      { "title": "Junior Accountant", "salary": 45000 },
+      { "title": "Accountant", "salary": 58000 },
+      { "title": "Senior Accountant", "salary": 75000 }
+    ]
+  },
+  {
+    "id": "software_developer",
+    "minAge": 18,
+    "minSmarts": 60,
+    "levels": [
+      { "title": "Junior Developer", "salary": 55000 },
+      { "title": "Software Developer", "salary": 75000 },
+      { "title": "Senior Developer", "salary": 100000 }
+    ]
+  },
+  {
+    "id": "nurse",
+    "minAge": 18,
+    "minSmarts": 55,
+    "levels": [
+      { "title": "Registered Nurse", "salary": 50000 },
+      { "title": "Charge Nurse", "salary": 65000 },
+      { "title": "Nurse Manager", "salary": 85000 }
+    ]
+  }
+]

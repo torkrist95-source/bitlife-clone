@@ -347,6 +347,7 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
     familyStructure: structure.id,
     age: 0,
     money: 0,
+    job: null,
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,

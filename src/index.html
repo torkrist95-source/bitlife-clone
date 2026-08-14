@@ -146,6 +146,25 @@
       </div>
     </div>
 
+    <div id="occupation-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">Occupation</h2>
+
+        <div id="occupation-employed-view" class="occupation-employed-view hidden">
+          <p id="occupation-job-title" class="occupation-job-title"></p>
+          <p id="occupation-job-salary" class="occupation-job-salary"></p>
+          <button type="button" id="occupation-quit-btn" class="event-choice-btn danger">Quit Job</button>
+        </div>
+
+        <div id="occupation-unemployed-view" class="occupation-unemployed-view hidden">
+          <p class="occupation-unemployed-label">You're currently unemployed.</p>
+          <div id="occupation-job-list" class="occupation-job-list"></div>
+        </div>
+
+        <button type="button" id="occupation-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
+
     <div id="confirm-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal">
         <p id="confirm-modal-title" class="confirm-modal-title"></p>

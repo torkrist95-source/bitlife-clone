@@ -756,6 +756,86 @@ body {
   font-weight: 700;
 }
 
+.occupation-modal-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.occupation-employed-view {
+  text-align: center;
+}
+
+.occupation-job-title {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.occupation-job-salary {
+  margin: 0 0 18px;
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
+.occupation-unemployed-label {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 0 0 14px;
+}
+
+.occupation-job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 18px;
+}
+
+.occupation-job-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.occupation-job-btn:active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.occupation-job-btn-salary {
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.occupation-job-btn:active .occupation-job-btn-salary {
+  color: #fff;
+}
+
+.occupation-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 12px 0;
+}
+
 .confirm-modal-title {
   margin: 0 0 8px;
   font-size: 16px;
