@@ -69,38 +69,41 @@
     </div>
 
     <div id="game-screen" class="screen hidden">
-      <div id="char-money" class="money-badge"></div>
+      <div class="character-header">
+        <div class="character-left">
+          <div id="profile-entry" class="portrait-wrap" role="button" tabindex="0" aria-label="Open character profile">
+            <div id="portrait"></div>
+            <h1 id="char-name"></h1>
+            <p id="char-age"></p>
+          </div>
+          <p id="char-money" class="char-money"></p>
+        </div>
 
-      <div id="profile-entry" class="portrait-wrap" role="button" tabindex="0" aria-label="Open character profile">
-        <div id="portrait"></div>
-        <h1 id="char-name"></h1>
-        <p id="char-age"></p>
-      </div>
-
-      <div class="stat-bars">
-        <div class="stat-row">
-          <span class="stat-label">Health</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-health"></div></div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Happiness</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-happiness"></div></div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Smarts</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-smarts"></div></div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Looks</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Fame</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-fame"></div></div>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Reputation</span>
-          <div class="stat-track"><div class="stat-fill" id="bar-reputation"></div></div>
+        <div class="stat-bars">
+          <div class="stat-row">
+            <span class="stat-label">Health</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-health"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Happiness</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-happiness"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Smarts</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-smarts"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Looks</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-looks"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fame</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-fame"></div></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Reputation</span>
+            <div class="stat-track"><div class="stat-fill" id="bar-reputation"></div></div>
+          </div>
         </div>
       </div>
 
@@ -121,6 +124,25 @@
       <div id="event-modal" class="event-modal">
         <p id="event-modal-text"></p>
         <div id="event-modal-choices" class="event-modal-choices"></div>
+      </div>
+    </div>
+
+    <div id="profile-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal profile-modal">
+        <div id="profile-modal-portrait" class="profile-modal-portrait"></div>
+        <h2 id="profile-modal-name" class="profile-modal-name"></h2>
+        <p id="profile-modal-stage" class="profile-modal-stage"></p>
+
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Birth Date</span>
+          <span id="profile-modal-birthdate" class="profile-detail-value"></span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Zodiac</span>
+          <span id="profile-modal-zodiac" class="profile-detail-value"></span>
+        </div>
+
+        <button type="button" id="profile-modal-close" class="event-choice-btn">Close</button>
       </div>
     </div>
 
