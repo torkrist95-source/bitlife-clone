@@ -1,6 +1,6 @@
 import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
-import { pickEvent, applyChoice } from "./events.js";
+import { pickEvent, applyChoice, getEligibleChoices } from "./events.js";
 import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadJobs, loadAgeUpEvents } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
@@ -364,7 +364,27 @@ function showEventModal(event) {
   eventModal.text.textContent = event.text;
   eventModal.choices.innerHTML = "";
 
-  for (const choice of event.choices) {
+  const eligibleChoices = getEligibleChoices(character, event);
+  // Events with no choices (or none eligible for this character) resolve
+  // through a single acknowledgement button, applying the event's own
+  // top-level effects/outcomes -- the same applyChoice pipeline either way.
+  const renderedChoices =
+    eligibleChoices.length > 0
+      ? eligibleChoices
+      : [
+          {
+            label: "Continue",
+            effects: event.effects,
+            outcomes: event.outcomes,
+            flags: event.flags,
+            skills: event.skills,
+            hobbies: event.hobbies,
+            resultText: event.resultText,
+            next_event: event.next_event,
+          },
+        ];
+
+  for (const choice of renderedChoices) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "event-choice-btn";

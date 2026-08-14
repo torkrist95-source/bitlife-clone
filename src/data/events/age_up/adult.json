@@ -474,5 +474,200 @@
         "resultText": "You decided to manage the pain on your own instead."
       }
     ]
+  },
+  {
+    "id": "startup_pitch",
+    "trigger": "age_up",
+    "conditions": { "minAge": 24, "maxAge": 45 },
+    "requires": [{ "path": "skills.programming", "op": ">=", "value": 40 }],
+    "weight": 4,
+    "text": "You have an idea for a tech startup and a chance to pitch it to investors.",
+    "choices": [
+      {
+        "label": "Go all in and pitch it",
+        "outcomes": [
+          {
+            "weight": 4,
+            "effects": { "money": 5000, "fame": 3, "happiness": 8 },
+            "resultText": "The investors loved it. Your startup got funded, and suddenly you have a real company to run."
+          },
+          {
+            "weight": 8,
+            "effects": { "happiness": -2, "smarts": 2 },
+            "resultText": "The investors passed, but the pitch process taught you more than you expected about your own idea."
+          },
+          {
+            "weight": 2,
+            "effects": { "money": -1000, "happiness": -4 },
+            "resultText": "You sank your own savings into building a prototype before the pitch, and it still fell flat."
+          }
+        ]
+      },
+      {
+        "label": "Play it safe and keep your day job",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided the idea could wait, at least for now."
+      }
+    ]
+  },
+  {
+    "id": "viral_online_moment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 45 },
+    "weight": 5,
+    "text": "Something you posted goes viral for reasons you didn't expect.",
+    "choices": [
+      {
+        "label": "Embrace your fifteen minutes of fame",
+        "outcomes": [
+          { "weight": 6, "effects": { "fame": 4, "happiness": 4 }, "resultText": "You leaned into it, and the attention actually turned into some fun opportunities." },
+          { "weight": 4, "effects": { "fame": 2, "reputation": -2, "happiness": -2 }, "resultText": "The novelty wore off fast, and the comments got meaner than the moment was worth." }
+        ]
+      },
+      {
+        "label": "Try to stay out of the spotlight",
+        "effects": { "happiness": 1 },
+        "resultText": "You didn't engage with any of it, and it blew over within a few days."
+      }
+    ]
+  },
+  {
+    "id": "caught_speeding",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 60 },
+    "weight": 6,
+    "text": "You get pulled over for speeding.",
+    "choices": [
+      {
+        "label": "Accept the ticket",
+        "effects": { "money": -150, "happiness": -1 },
+        "resultText": "You took the ticket without a fight and moved on with your day."
+      },
+      {
+        "label": "Try to talk your way out of it",
+        "outcomes": [
+          { "weight": 4, "effects": { "happiness": 3 }, "resultText": "Somehow it worked, and the officer let you off with a warning." },
+          { "weight": 6, "effects": { "money": -250, "happiness": -3 }, "resultText": "It didn't work, and the officer wrote you up for an even bigger fine." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "charity_opportunity",
+    "trigger": "age_up",
+    "conditions": { "minAge": 25, "maxAge": 60 },
+    "weight": 5,
+    "text": "A local charity asks if you'd like to make a donation.",
+    "choices": [
+      {
+        "requires": [{ "path": "money", "op": ">=", "value": 500 }],
+        "label": "Donate generously",
+        "effects": { "money": -500, "reputation": 4, "happiness": 3 },
+        "resultText": "You made a generous donation, and the charity mentioned your name at their next event."
+      },
+      {
+        "label": "Donate a smaller amount",
+        "requires": [{ "path": "money", "op": ">=", "value": 100 }],
+        "effects": { "money": -100, "reputation": 1 },
+        "resultText": "You gave what you could, which wasn't a fortune but still helped."
+      },
+      {
+        "label": "Politely decline",
+        "effects": {},
+        "resultText": "You politely declined this time around."
+      }
+    ]
+  },
+  {
+    "id": "job_scandal_rumor",
+    "trigger": "age_up",
+    "conditions": { "minAge": 28, "maxAge": 55 },
+    "requires": [{ "path": "job", "op": "truthy" }],
+    "weight": 5,
+    "text": "A rumor starts spreading at work that isn't true, and it's affecting how people see you.",
+    "choices": [
+      {
+        "label": "Address it directly",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 3 }, "resultText": "You addressed it head-on, and most people respected you for it." },
+          { "weight": 4, "effects": { "reputation": -3, "happiness": -2 }, "resultText": "Addressing it directly only seemed to fan the flames further." }
+        ]
+      },
+      {
+        "label": "Ignore it and hope it blows over",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 1 }, "resultText": "It faded away on its own after a week or two." },
+          { "weight": 5, "effects": { "reputation": -4, "happiness": -3 }, "resultText": "It kept spreading, and by the time it died down the damage was done." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unexpected_inheritance",
+    "trigger": "age_up",
+    "conditions": { "minAge": 30, "maxAge": 70 },
+    "weight": 4,
+    "text": "A distant relative you barely knew passes away and leaves you a small inheritance.",
+    "choices": [
+      {
+        "label": "Save it",
+        "effects": { "money": 2000, "happiness": 2 },
+        "resultText": "You put the inheritance straight into savings, feeling a little strange about where it came from."
+      },
+      {
+        "label": "Splurge on something fun",
+        "effects": { "money": 1200, "happiness": 6 },
+        "resultText": "You treated yourself to something you'd been wanting for a while and enjoyed every bit of it."
+      },
+      {
+        "label": "Put it toward something practical",
+        "effects": { "money": 1600, "happiness": 3 },
+        "resultText": "You put it toward something practical you'd been putting off for years."
+      }
+    ]
+  },
+  {
+    "id": "spontaneous_trip",
+    "trigger": "age_up",
+    "conditions": { "minAge": 25, "maxAge": 55 },
+    "weight": 5,
+    "text": "You have some vacation days saved up and money to spare.",
+    "choices": [
+      {
+        "requires": [{ "path": "money", "op": ">=", "value": 300 }],
+        "label": "Book a trip somewhere new",
+        "effects": { "money": -300, "happiness": 6 },
+        "resultText": "You booked a spontaneous trip and came back with a phone full of photos and a much-needed reset."
+      },
+      {
+        "label": "Stay home and relax instead",
+        "effects": { "happiness": 2 },
+        "resultText": "You decided to save the money and just relax at home instead."
+      }
+    ]
+  },
+  {
+    "id": "public_embarrassment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 55 },
+    "weight": 5,
+    "text": "You trip and fall spectacularly in front of a huge crowd.",
+    "choices": [
+      {
+        "label": "Laugh it off",
+        "effects": { "happiness": 3, "reputation": 1 },
+        "resultText": "You laughed it off and took a little bow, which somehow made it charming instead of humiliating."
+      },
+      {
+        "label": "Pretend it didn't happen and walk away quickly",
+        "effects": { "happiness": -1 },
+        "resultText": "You scrambled up and speed-walked away, pretending it never happened."
+      },
+      {
+        "label": "Turn it into a bit",
+        "effects": { "happiness": 5, "reputation": 2, "fame": 1 },
+        "resultText": "You leaned all the way into it, turning the fall into a whole performance. The crowd ate it up."
+      }
+    ]
   }
 ]

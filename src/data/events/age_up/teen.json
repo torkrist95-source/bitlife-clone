@@ -265,5 +265,209 @@
         "resultText": "You figured you'd worry about the future later."
       }
     ]
+  },
+  {
+    "id": "robotics_competition",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "skills.programming", "op": ">=", "value": 30 }],
+    "weight": 5,
+    "text": "Your robotics skills have gotten good enough that your school wants to send you to a regional competition.",
+    "choices": [
+      {
+        "label": "Take it seriously and compete hard",
+        "outcomes": [
+          {
+            "weight": 5,
+            "requires": [{ "path": "skills.programming", "op": ">=", "value": 60 }],
+            "effects": { "smarts": 3, "reputation": 3, "happiness": 6 },
+            "skills": { "programming": 8 },
+            "resultText": "Your team took first place at regionals. Reporters from the school paper wanted a quote and everything."
+          },
+          {
+            "weight": 10,
+            "effects": { "smarts": 2, "happiness": 2 },
+            "skills": { "programming": 6 },
+            "resultText": "You didn't place, but you learned a ton from the teams that beat you and came home fired up to build something better."
+          },
+          {
+            "weight": 4,
+            "effects": { "happiness": -2 },
+            "resultText": "A last-minute bug crashed your robot mid-run. Brutal, but it happens to everyone eventually."
+          }
+        ]
+      },
+      {
+        "label": "Go, but don't stress about winning",
+        "effects": { "happiness": 3, "smarts": 1 },
+        "skills": { "programming": 2 },
+        "resultText": "You went along for the experience without putting too much pressure on yourself."
+      }
+    ]
+  },
+  {
+    "id": "social_media_post_goes_viral",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 6,
+    "text": "A video you posted unexpectedly blows up online.",
+    "choices": [
+      {
+        "label": "Lean into the attention",
+        "outcomes": [
+          {
+            "weight": 6,
+            "effects": { "fame": 5, "happiness": 5 },
+            "resultText": "The attention kept snowballing, and you gained a real following almost overnight."
+          },
+          {
+            "weight": 5,
+            "effects": { "fame": 2, "reputation": -3, "happiness": -2 },
+            "resultText": "The internet turned on you fast, and half your comments section was suddenly making fun of you."
+          }
+        ]
+      },
+      {
+        "label": "Stay low-key about it",
+        "effects": { "fame": 1, "happiness": 1 },
+        "resultText": "You didn't lean into it, and the attention faded within a few days."
+      },
+      {
+        "label": "Delete it, overwhelmed by the attention",
+        "effects": { "happiness": -2, "reputation": 1 },
+        "resultText": "You deleted the post, relieved when things went quiet again."
+      }
+    ]
+  },
+  {
+    "id": "impulse_purchase",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 5,
+    "text": "You see something expensive you really want at the mall.",
+    "choices": [
+      {
+        "label": "Buy it with your own money",
+        "requires": [{ "path": "money", "op": ">=", "value": 100 }],
+        "effects": { "money": -100, "happiness": 5 },
+        "resultText": "You bought it outright, no regrets, at least not yet."
+      },
+      {
+        "label": "Save your money instead",
+        "effects": { "happiness": 1 },
+        "resultText": "You talked yourself out of it and walked away with your money still in your pocket."
+      },
+      {
+        "label": "Ask your parents to cover half",
+        "effects": { "money": -50, "happiness": 3 },
+        "resultText": "Your parents agreed to split the cost with you."
+      }
+    ]
+  },
+  {
+    "id": "caught_cheating_on_test",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 5,
+    "text": "You're tempted to cheat on a big test you didn't study for.",
+    "choices": [
+      {
+        "label": "Cheat anyway",
+        "outcomes": [
+          {
+            "weight": 6,
+            "effects": { "happiness": 2 },
+            "flags": { "hasCheated": true },
+            "resultText": "You got away with it, though the guilt nagged at you more than you expected."
+          },
+          {
+            "weight": 5,
+            "effects": { "reputation": -5, "happiness": -4, "smarts": -1 },
+            "flags": { "hasCheated": true },
+            "resultText": "You got caught red-handed. Word spread around school fast, and it wasn't a good look."
+          }
+        ]
+      },
+      {
+        "label": "Don't cheat, accept a bad grade",
+        "effects": { "smarts": 1, "happiness": -1 },
+        "resultText": "You took the bad grade on the chin rather than risk it."
+      },
+      {
+        "label": "Ask your teacher for help instead",
+        "effects": { "smarts": 2, "happiness": 1 },
+        "resultText": "You swallowed your pride and asked for help before the test. It made more of a difference than you thought."
+      }
+    ]
+  },
+  {
+    "id": "sports_injury",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 5,
+    "text": "You push yourself hard during a big game and land awkwardly.",
+    "choices": [
+      {
+        "label": "Play through the pain",
+        "outcomes": [
+          { "weight": 7, "effects": { "health": -2, "reputation": 1 }, "resultText": "You gritted your teeth and finished the game. It hurt, but you walked it off." },
+          { "weight": 3, "effects": { "health": -8, "happiness": -4 }, "resultText": "You made it worse and ended up on the bench for weeks with a real injury." }
+        ]
+      },
+      {
+        "label": "Sit out the rest of the game",
+        "effects": { "health": -1, "reputation": -1 },
+        "resultText": "You sat out the rest of the game, playing it safe even though it stung to watch from the sideline."
+      }
+    ]
+  },
+  {
+    "id": "fake_id_temptation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 17 },
+    "weight": 4,
+    "text": "An older friend offers to get you a fake ID.",
+    "choices": [
+      {
+        "label": "Take the risk",
+        "outcomes": [
+          {
+            "weight": 7,
+            "effects": { "happiness": 2 },
+            "resultText": "Nothing came of it. You got away with it clean."
+          },
+          {
+            "weight": 3,
+            "effects": { "reputation": -4, "money": -100, "happiness": -3 },
+            "resultText": "You got caught using it, and it cost you a fine and a serious talking-to."
+          }
+        ]
+      },
+      {
+        "label": "Turn it down",
+        "effects": { "happiness": 1, "smarts": 1 },
+        "resultText": "You decided it wasn't worth the risk and turned it down."
+      }
+    ]
+  },
+  {
+    "id": "road_trip_with_friends",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 17 },
+    "weight": 5,
+    "text": "Now that you can drive, your friends want to take a spontaneous road trip.",
+    "choices": [
+      {
+        "requires": [{ "path": "flags.hasLicense", "op": "truthy" }],
+        "label": "Go for it",
+        "effects": { "happiness": 7, "money": -80 },
+        "resultText": "You piled into the car with your friends and made a memory you'd talk about for years."
+      },
+      {
+        "label": "Play it safe and stay home",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided a spontaneous road trip wasn't worth the risk and stayed home instead."
+      }
+    ]
   }
 ]

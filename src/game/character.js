@@ -366,6 +366,8 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
       reputation: 0,
     },
     flags: {},
+    skills: {},
+    hobbies: [],
     pendingEventId: null,
     history: historyLines,
   };

@@ -70,33 +70,171 @@
     "choices": [
       {
         "label": "An ambitious baking-soda volcano",
-        "effects": { "smarts": 3 },
-        "resultText": "You spent weeks building a baking-soda volcano for the science fair.",
-        "next_event": "science_fair_volcano_result"
+        "outcomes": [
+          {
+            "weight": 10,
+            "effects": { "happiness": 3, "reputation": -1 },
+            "resultText": "Your volcano erupted spectacularly during the demonstration -- unfortunately, most of the lava ended up on the judge's table."
+          },
+          {
+            "weight": 8,
+            "effects": { "happiness": 2, "smarts": 1 },
+            "resultText": "Your volcano erupted right on cue. Nothing fancy, but it worked exactly as planned."
+          },
+          {
+            "weight": 5,
+            "effects": { "happiness": -2 },
+            "resultText": "Your volcano barely fizzled instead of erupting. A little anticlimactic, but you still got some points for effort."
+          },
+          {
+            "weight": 3,
+            "effects": { "happiness": 5, "reputation": 2 },
+            "resultText": "Somehow your volcano became the highlight of the entire fair. Kids kept coming back just to watch it erupt again."
+          }
+        ]
       },
       {
-        "label": "A simple poster board",
-        "effects": { "smarts": 1 },
-        "resultText": "You threw together a simple poster board the night before. It was fine."
+        "label": "A plant-growth experiment",
+        "outcomes": [
+          {
+            "weight": 8,
+            "effects": { "smarts": 3, "happiness": 2 },
+            "resultText": "Your plants under the grow light were noticeably taller than the control group. Clean, convincing results."
+          },
+          {
+            "weight": 6,
+            "effects": { "smarts": 1, "happiness": -1 },
+            "resultText": "Your results were kind of a mess -- some plants under the grow light did worse, not better. You explained the data as best you could."
+          },
+          {
+            "weight": 4,
+            "effects": { "happiness": -2 },
+            "resultText": "Most of your plants died a few days before the fair. You presented anyway, mostly on vibes."
+          },
+          {
+            "weight": 3,
+            "effects": { "smarts": 4, "happiness": 3, "reputation": 1 },
+            "resultText": "You noticed something odd in your data that even your teacher couldn't fully explain. She said it was the most interesting question in the whole fair."
+          }
+        ]
+      },
+      {
+        "label": "A solar oven",
+        "requires": [{ "path": "stats.smarts", "op": ">=", "value": 55 }],
+        "outcomes": [
+          {
+            "weight": 6,
+            "effects": { "smarts": 3, "happiness": 4, "reputation": 1 },
+            "resultText": "Your solar oven actually melted the s'mores in under ten minutes. The judges were genuinely impressed."
+          },
+          {
+            "weight": 6,
+            "effects": { "smarts": 2, "happiness": 2 },
+            "resultText": "Your solar oven worked, just slower than you'd hoped. You spent most of the fair waiting for chocolate to melt."
+          },
+          {
+            "weight": 4,
+            "effects": { "smarts": 1, "happiness": -1 },
+            "resultText": "It was cloudy on fair day, so your solar oven barely worked. You explained the science anyway, which counted for something."
+          }
+        ]
+      },
+      {
+        "label": "A robot",
+        "requires": [{ "path": "skills.programming", "op": ">=", "value": 15 }],
+        "outcomes": [
+          {
+            "weight": 5,
+            "requires": [{ "path": "stats.smarts", "op": ">=", "value": 65 }],
+            "effects": { "smarts": 4, "reputation": 3, "happiness": 6 },
+            "skills": { "programming": 5 },
+            "resultText": "Your robot flawlessly navigated the obstacle course in front of the judges. You won first place, and the local paper even snapped a photo."
+          },
+          {
+            "weight": 10,
+            "effects": { "smarts": 2, "happiness": 3, "reputation": 1 },
+            "skills": { "programming": 3 },
+            "resultText": "Your robot mostly worked -- it wobbled through the course and only got stuck once. The judges were impressed anyway."
+          },
+          {
+            "weight": 6,
+            "effects": { "happiness": 2, "reputation": -1 },
+            "resultText": "Your robot short-circuited halfway through its demo and started spinning in circles. The crowd loved it more than if it had worked."
+          },
+          {
+            "weight": 4,
+            "effects": { "happiness": -3, "smarts": 1 },
+            "resultText": "Your robot never quite worked right, and you spent most of the demo apologizing to the judges. At least you learned a lot troubleshooting it."
+          },
+          {
+            "weight": 3,
+            "requires": [{ "path": "stats.smarts", "op": ">=", "value": 50 }],
+            "effects": { "reputation": 2, "happiness": 4 },
+            "flags": { "scienceFairStandout": true },
+            "resultText": "Your science teacher was so impressed she asked you to help her set up the robotics club next year."
+          }
+        ]
+      },
+      {
+        "label": "Your photography project",
+        "requires": [{ "path": "hobbies", "op": "includes", "value": "photography" }],
+        "outcomes": [
+          {
+            "weight": 6,
+            "effects": { "happiness": 5, "looks": 1, "reputation": 2 },
+            "resultText": "Your photo series got its own little corner of the gym, and people kept stopping to look at it."
+          },
+          {
+            "weight": 8,
+            "effects": { "happiness": 3 },
+            "resultText": "Your photos were well received, even if they didn't steal the show from the volcanoes."
+          },
+          {
+            "weight": 3,
+            "effects": { "happiness": -1 },
+            "resultText": "Half your prints came out blurry because of a camera mishap the night before. You made do with what you had."
+          }
+        ]
       }
     ]
   },
   {
-    "id": "science_fair_volcano_result",
+    "id": "coding_club",
     "trigger": "age_up",
-    "conditions": { "minAge": 8, "maxAge": 13 },
-    "weight": 0,
-    "text": "It's time to present the volcano you built for the science fair.",
+    "conditions": { "minAge": 7, "maxAge": 10 },
+    "weight": 6,
+    "text": "Your school starts an after-school coding club. Your parents ask if you want to join.",
     "choices": [
       {
-        "label": "Present it yourself",
-        "effects": { "happiness": 8, "smarts": 2 },
-        "resultText": "You presented confidently and took first place at the science fair!"
+        "label": "Join and give it a real shot",
+        "effects": { "happiness": 3 },
+        "skills": { "programming": 15 },
+        "resultText": "You joined the coding club and actually stuck with it, picking up the basics faster than you expected."
       },
       {
-        "label": "Let a friend help present it",
+        "label": "Not really interested",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided coding club wasn't really your thing and skipped it."
+      }
+    ]
+  },
+  {
+    "id": "gets_first_camera",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 9 },
+    "weight": 6,
+    "text": "You get a hand-me-down camera from a relative and start taking pictures of everything.",
+    "choices": [
+      {
+        "label": "Take it seriously as a hobby",
         "effects": { "happiness": 3 },
-        "resultText": "Your friend helped present it. You placed third, but it was still fun."
+        "hobbies": ["photography"],
+        "resultText": "You started carrying the camera everywhere, and photography quickly became your thing."
+      },
+      {
+        "label": "Play with it a few times and forget about it",
+        "effects": { "happiness": 1 },
+        "resultText": "You took a few pictures, then the camera ended up in a drawer."
       }
     ]
   },
@@ -325,6 +463,125 @@
         "label": "Argue about it",
         "effects": { "happiness": -4 },
         "resultText": "You argued about how unfair it was, which didn't exactly help your case."
+      }
+    ]
+  },
+  {
+    "id": "lost_in_store",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 8 },
+    "weight": 5,
+    "text": "You get separated from your parents in a crowded store.",
+    "choices": [
+      {
+        "label": "Stay calm and find a store employee",
+        "effects": { "smarts": 2, "happiness": -1 },
+        "resultText": "You stayed calm, found someone with a name tag, and were reunited with your parents in minutes."
+      },
+      {
+        "label": "Panic and start crying",
+        "effects": { "happiness": -3 },
+        "resultText": "You burst into tears in the middle of the aisle until your parents came running."
+      },
+      {
+        "label": "Try to find your way back yourself",
+        "effects": { "health": -1, "happiness": -2, "smarts": 1 },
+        "resultText": "You wandered around trying to retrace your steps and ended up more lost before finally finding your way back."
+      }
+    ]
+  },
+  {
+    "id": "best_friend_moving",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 11 },
+    "weight": 5,
+    "text": "Your best friend tells you their family is moving away.",
+    "choices": [
+      {
+        "label": "Promise to stay in touch",
+        "effects": { "happiness": -2 },
+        "resultText": "You promised to stay in touch, even though you both knew it might not be the same."
+      },
+      {
+        "label": "Throw a small goodbye hangout",
+        "effects": { "happiness": 2 },
+        "resultText": "You put together a small goodbye hangout so the last memory wouldn't just be sad."
+      },
+      {
+        "label": "Pull away to avoid the sadness",
+        "effects": { "happiness": -4 },
+        "resultText": "You started pulling away before they even left, figuring it would hurt less that way. It didn't."
+      }
+    ]
+  },
+  {
+    "id": "family_game_night",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 10 },
+    "weight": 5,
+    "text": "Your family has a game night.",
+    "choices": [
+      {
+        "label": "Play to win",
+        "effects": { "happiness": 3 },
+        "resultText": "You played to win and gloated a little more than necessary when you did."
+      },
+      {
+        "label": "Let a younger sibling win",
+        "effects": { "happiness": 2 },
+        "resultText": "You let a younger sibling win, and their reaction made it worth it."
+      }
+    ]
+  },
+  {
+    "id": "caught_a_cold",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 10 },
+    "weight": 5,
+    "text": "You caught a nasty cold and had to stay home from school for a few days.",
+    "effects": { "health": -4, "happiness": -2 },
+    "resultText": "You spent a few miserable days on the couch with a box of tissues before finally feeling better."
+  },
+  {
+    "id": "class_clown_moment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 7, "maxAge": 11 },
+    "weight": 5,
+    "text": "You accidentally let out a huge, echoing burp during a silent reading period.",
+    "choices": [
+      {
+        "label": "Own it and take a bow",
+        "effects": { "happiness": 4, "reputation": 1 },
+        "resultText": "You stood up and took a dramatic bow. The whole class lost it, including the teacher."
+      },
+      {
+        "label": "Turn bright red and hide",
+        "effects": { "happiness": -2 },
+        "resultText": "You turned bright red and tried to disappear into your book for the rest of the period."
+      },
+      {
+        "label": "Blame it on the kid next to you",
+        "effects": { "happiness": 1, "reputation": -2 },
+        "resultText": "You blamed the kid next to you, who was not happy about it and made sure everyone knew the truth by lunch."
+      }
+    ]
+  },
+  {
+    "id": "holiday_gathering",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 12 },
+    "weight": 6,
+    "text": "It's a big holiday, and the whole extended family gets together.",
+    "choices": [
+      {
+        "label": "Help out and spend time with relatives",
+        "effects": { "happiness": 4, "reputation": 1 },
+        "resultText": "You helped set the table and actually enjoyed catching up with relatives you don't see often."
+      },
+      {
+        "label": "Sneak off to be by yourself for a while",
+        "effects": { "happiness": 1 },
+        "resultText": "You slipped away from the crowd for a while, which suited you just fine."
       }
     ]
   }

@@ -10,6 +10,8 @@ function migrateCharacterFields(character) {
   character.stats.fame ??= 0;
   character.stats.reputation ??= 0;
   character.flags ??= {};
+  character.skills ??= {};
+  character.hobbies ??= [];
   character.pendingEventId ??= null;
   character.history ??= [];
   return character;
