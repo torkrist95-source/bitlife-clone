@@ -99,5 +99,233 @@
         "resultText": "Your friend helped present it. You placed third, but it was still fun."
       }
     ]
+  },
+  {
+    "id": "losing_first_tooth",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 7 },
+    "weight": 8,
+    "text": "Your first tooth just fell out!",
+    "choices": [
+      {
+        "label": "Put it under your pillow for the tooth fairy",
+        "effects": { "happiness": 4 },
+        "resultText": "You put it under your pillow and could barely sleep waiting for the tooth fairy."
+      },
+      {
+        "label": "Show it off to everyone at school",
+        "effects": { "happiness": 2 },
+        "resultText": "You showed your gap-toothed grin to anyone who would look."
+      }
+    ]
+  },
+  {
+    "id": "learning_to_ride_bike",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 8 },
+    "weight": 8,
+    "text": "Your parents are teaching you to ride a bike without training wheels.",
+    "choices": [
+      {
+        "label": "Keep trying even after falling",
+        "effects": { "health": -2, "happiness": 5 },
+        "resultText": "You scraped your knees more than once, but you finally got the hang of it."
+      },
+      {
+        "label": "Stick with training wheels a bit longer",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided the training wheels could stay on a little longer."
+      }
+    ]
+  },
+  {
+    "id": "summer_at_grandparents",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 8 },
+    "weight": 6,
+    "text": "You spend a week of summer at your grandparents' house.",
+    "choices": [
+      {
+        "label": "Explore and have adventures",
+        "effects": { "happiness": 5 },
+        "resultText": "You spent the week exploring the yard and nearby woods like it was your own kingdom."
+      },
+      {
+        "label": "Mostly watch TV and relax",
+        "effects": { "happiness": 2 },
+        "resultText": "You mostly lounged around watching TV, and honestly, that was fine too."
+      }
+    ]
+  },
+  {
+    "id": "first_sleepover",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 9 },
+    "weight": 8,
+    "text": "A friend invites you to your first sleepover.",
+    "choices": [
+      {
+        "label": "Go and have fun",
+        "effects": { "happiness": 6 },
+        "resultText": "You stayed up way too late giggling and had an amazing time."
+      },
+      {
+        "label": "Get homesick and call to be picked up",
+        "effects": { "happiness": -2 },
+        "resultText": "You made it a few hours before homesickness got the better of you."
+      }
+    ]
+  },
+  {
+    "id": "class_pet",
+    "trigger": "age_up",
+    "conditions": { "minAge": 6, "maxAge": 9 },
+    "weight": 6,
+    "text": "Your class gets a pet hamster, and you're picked to take it home for the weekend.",
+    "choices": [
+      {
+        "label": "Take great care of it",
+        "effects": { "happiness": 4 },
+        "resultText": "You took excellent care of the class hamster and were very proud of yourself."
+      },
+      {
+        "label": "Accidentally let it escape",
+        "effects": { "happiness": -3 },
+        "resultText": "The hamster got loose in the house and took an hour to track down again."
+      }
+    ]
+  },
+  {
+    "id": "losing_a_game",
+    "trigger": "age_up",
+    "conditions": { "minAge": 7, "maxAge": 10 },
+    "weight": 6,
+    "text": "You lose badly at a board game with your friends.",
+    "choices": [
+      {
+        "label": "Throw a fit about losing",
+        "effects": { "happiness": -3 },
+        "resultText": "You threw a fit about losing, and your friends teased you about it for weeks."
+      },
+      {
+        "label": "Be a good sport",
+        "effects": { "happiness": 2 },
+        "resultText": "You shook it off and asked for a rematch."
+      }
+    ]
+  },
+  {
+    "id": "new_kid_at_school",
+    "trigger": "age_up",
+    "conditions": { "minAge": 7, "maxAge": 11 },
+    "weight": 7,
+    "text": "A new kid joins your class and doesn't know anyone yet.",
+    "choices": [
+      {
+        "label": "Introduce yourself and become friends",
+        "effects": { "happiness": 4 },
+        "resultText": "You introduced yourself right away, and the two of you hit it off."
+      },
+      {
+        "label": "Ignore them",
+        "effects": { "happiness": -1 },
+        "resultText": "You didn't really talk to them, and they mostly kept to themselves."
+      }
+    ]
+  },
+  {
+    "id": "talent_show",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 11 },
+    "weight": 7,
+    "text": "Your school is holding a talent show.",
+    "choices": [
+      {
+        "label": "Sign up and perform",
+        "effects": { "happiness": 6, "looks": 1 },
+        "resultText": "You got up on stage and performed. Nerve-wracking, but worth it."
+      },
+      {
+        "label": "Watch from the audience instead",
+        "effects": { "happiness": 1 },
+        "resultText": "You cheered on your classmates from the audience."
+      }
+    ]
+  },
+  {
+    "id": "summer_camp",
+    "trigger": "age_up",
+    "conditions": { "minAge": 8, "maxAge": 11 },
+    "weight": 6,
+    "text": "Your parents send you to a week of summer camp.",
+    "choices": [
+      {
+        "label": "Make new friends",
+        "effects": { "happiness": 5 },
+        "resultText": "You made a whole new group of friends at camp this year."
+      },
+      {
+        "label": "Feel homesick the whole week",
+        "effects": { "happiness": -3 },
+        "resultText": "You spent most of the week counting down the days until you could go home."
+      }
+    ]
+  },
+  {
+    "id": "report_card",
+    "trigger": "age_up",
+    "conditions": { "minAge": 9, "maxAge": 12 },
+    "weight": 8,
+    "text": "Report cards come out today.",
+    "choices": [
+      {
+        "label": "Proud of good grades",
+        "effects": { "smarts": 3, "happiness": 3 },
+        "resultText": "You brought home a great report card and your parents were proud."
+      },
+      {
+        "label": "Disappointed but shrug it off",
+        "effects": { "smarts": -1, "happiness": -1 },
+        "resultText": "Your grades weren't great this time, but you decided not to dwell on it."
+      }
+    ]
+  },
+  {
+    "id": "school_play",
+    "trigger": "age_up",
+    "conditions": { "minAge": 9, "maxAge": 12 },
+    "weight": 6,
+    "text": "Your school is putting on a play and needs volunteers.",
+    "choices": [
+      {
+        "label": "Audition for a role",
+        "effects": { "happiness": 5, "looks": 1 },
+        "resultText": "You auditioned and landed a role in the school play."
+      },
+      {
+        "label": "Help out backstage instead",
+        "effects": { "smarts": 2, "happiness": 2 },
+        "resultText": "You helped out backstage and learned a lot about how it all comes together."
+      }
+    ]
+  },
+  {
+    "id": "getting_grounded",
+    "trigger": "age_up",
+    "conditions": { "minAge": 10, "maxAge": 12 },
+    "weight": 6,
+    "text": "You broke a house rule and got grounded.",
+    "choices": [
+      {
+        "label": "Accept the punishment",
+        "effects": { "happiness": -2 },
+        "resultText": "You accepted the grounding and stayed out of trouble the rest of the month."
+      },
+      {
+        "label": "Argue about it",
+        "effects": { "happiness": -4 },
+        "resultText": "You argued about how unfair it was, which didn't exactly help your case."
+      }
+    ]
   }
 ]

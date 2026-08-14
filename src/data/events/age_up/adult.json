@@ -94,5 +94,385 @@
         "resultText": "You never checked. Some things are better left unknown."
       }
     ]
+  },
+  {
+    "id": "college_decision",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 19 },
+    "weight": 9,
+    "text": "You have to decide whether to go to college or start working right away.",
+    "choices": [
+      {
+        "label": "Enroll in college",
+        "effects": { "smarts": 5, "money": -1000 },
+        "resultText": "You enrolled in college, ready to start the next chapter."
+      },
+      {
+        "label": "Start working right away",
+        "effects": { "money": 500 },
+        "resultText": "You skipped college and jumped straight into the workforce."
+      }
+    ]
+  },
+  {
+    "id": "first_credit_card",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 25 },
+    "weight": 7,
+    "text": "You're offered your first credit card.",
+    "choices": [
+      {
+        "label": "Sign up for it",
+        "effects": { "money": 200, "happiness": 2 },
+        "resultText": "You signed up and treated yourself to a few things you'd been putting off."
+      },
+      {
+        "label": "Turn it down and stick to cash",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided to play it safe and stick to cash for now."
+      }
+    ]
+  },
+  {
+    "id": "job_interview",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 26 },
+    "weight": 8,
+    "text": "You land an interview for a job you really want.",
+    "choices": [
+      {
+        "label": "Prepare thoroughly",
+        "effects": { "happiness": 5 },
+        "resultText": "You prepared for days and it showed. The interview went great."
+      },
+      {
+        "label": "Wing it and hope for the best",
+        "effects": { "happiness": -2 },
+        "resultText": "You went in underprepared and it showed."
+      }
+    ]
+  },
+  {
+    "id": "roommate_trouble",
+    "trigger": "age_up",
+    "conditions": { "minAge": 19, "maxAge": 27 },
+    "weight": 6,
+    "text": "Your roommate keeps skipping their share of the rent.",
+    "choices": [
+      {
+        "label": "Confront them about it",
+        "effects": { "reputation": 1, "happiness": -1 },
+        "resultText": "You had an awkward but necessary conversation about the rent."
+      },
+      {
+        "label": "Cover it yourself this month",
+        "effects": { "money": -300 },
+        "resultText": "You quietly covered their share again, against your better judgment."
+      }
+    ]
+  },
+  {
+    "id": "first_solo_trip",
+    "trigger": "age_up",
+    "conditions": { "minAge": 20, "maxAge": 29 },
+    "weight": 6,
+    "text": "You decide to take your first solo trip somewhere new.",
+    "choices": [
+      {
+        "label": "Go for it",
+        "effects": { "happiness": 8, "money": -400 },
+        "resultText": "You booked the trip and it turned out to be exactly what you needed."
+      },
+      {
+        "label": "Play it safe and stay home",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided to save the money and stay home instead."
+      }
+    ]
+  },
+  {
+    "id": "side_hustle",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 50 },
+    "weight": 6,
+    "text": "You've been considering starting a small side business.",
+    "choices": [
+      {
+        "label": "Go for it",
+        "effects": { "money": -300, "happiness": 3 },
+        "resultText": "You took the leap and started your side business, for better or worse."
+      },
+      {
+        "label": "Decide it's too risky",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided the risk wasn't worth it right now."
+      }
+    ]
+  },
+  {
+    "id": "career_promotion",
+    "trigger": "age_up",
+    "conditions": { "minAge": 26, "maxAge": 49 },
+    "weight": 8,
+    "text": "You're being considered for a promotion at work.",
+    "choices": [
+      {
+        "label": "Push hard for it",
+        "effects": { "happiness": 5, "fame": 1 },
+        "resultText": "You pushed hard for the promotion and landed it."
+      },
+      {
+        "label": "Stay comfortable where you are",
+        "effects": { "happiness": 2 },
+        "resultText": "You decided to stay right where you were, for now."
+      }
+    ]
+  },
+  {
+    "id": "home_repair",
+    "trigger": "age_up",
+    "conditions": { "minAge": 28, "maxAge": 60 },
+    "weight": 7,
+    "text": "Something breaks in your home and needs urgent repair.",
+    "choices": [
+      {
+        "label": "Hire a professional",
+        "effects": { "money": -500 },
+        "resultText": "You called in a professional and got it fixed properly."
+      },
+      {
+        "label": "Try to fix it yourself",
+        "effects": { "money": -50, "happiness": -2 },
+        "resultText": "You tried to fix it yourself. It mostly worked out."
+      }
+    ]
+  },
+  {
+    "id": "old_friend_reconnect",
+    "trigger": "age_up",
+    "conditions": { "minAge": 28, "maxAge": 60 },
+    "weight": 6,
+    "text": "An old friend you lost touch with years ago reaches out.",
+    "choices": [
+      {
+        "label": "Catch up and reconnect",
+        "effects": { "happiness": 5 },
+        "resultText": "You caught up like no time had passed at all."
+      },
+      {
+        "label": "Let it go unanswered",
+        "effects": { "happiness": -1 },
+        "resultText": "You let the message sit unanswered a little too long."
+      }
+    ]
+  },
+  {
+    "id": "neighborhood_bbq",
+    "trigger": "age_up",
+    "conditions": { "minAge": 28, "maxAge": 64 },
+    "weight": 5,
+    "text": "Your neighbors invite you to a backyard barbecue.",
+    "choices": [
+      {
+        "label": "Go and mingle",
+        "effects": { "happiness": 4, "reputation": 1 },
+        "resultText": "You went and ended up chatting with half the neighborhood."
+      },
+      {
+        "label": "Skip it and stay in",
+        "effects": { "happiness": 1 },
+        "resultText": "You opted for a quiet night in instead."
+      }
+    ]
+  },
+  {
+    "id": "health_checkup",
+    "trigger": "age_up",
+    "conditions": { "minAge": 30, "maxAge": 64 },
+    "weight": 7,
+    "text": "You go in for a routine health checkup.",
+    "choices": [
+      {
+        "label": "Everything checks out fine",
+        "effects": { "health": 3 },
+        "resultText": "Everything checked out fine, and you left feeling reassured."
+      },
+      {
+        "label": "The doctor flags something to watch",
+        "effects": { "health": -2, "happiness": -2 },
+        "resultText": "The doctor flagged something minor to keep an eye on."
+      }
+    ]
+  },
+  {
+    "id": "midlife_hobby",
+    "trigger": "age_up",
+    "conditions": { "minAge": 45, "maxAge": 64 },
+    "weight": 6,
+    "text": "You decide you want to pick up a brand new hobby.",
+    "choices": [
+      {
+        "label": "Commit to learning it properly",
+        "effects": { "happiness": 5, "smarts": 2, "money": -150 },
+        "resultText": "You committed to it and found real joy in learning something new."
+      },
+      {
+        "label": "Try it once and lose interest",
+        "effects": { "happiness": 1 },
+        "resultText": "You gave it one try and decided it wasn't for you after all."
+      }
+    ]
+  },
+  {
+    "id": "career_plateau",
+    "trigger": "age_up",
+    "conditions": { "minAge": 48, "maxAge": 64 },
+    "weight": 6,
+    "text": "Your career has plateaued, and you're not sure what's next.",
+    "choices": [
+      {
+        "label": "Push for a late-career change",
+        "effects": { "happiness": 3, "fame": 1, "money": -200 },
+        "resultText": "You took a leap on a late-career change, unsure exactly where it would lead."
+      },
+      {
+        "label": "Settle into where you are",
+        "effects": { "happiness": 2 },
+        "resultText": "You made peace with settling into where you already were."
+      }
+    ]
+  },
+  {
+    "id": "empty_nest",
+    "trigger": "age_up",
+    "conditions": { "minAge": 50, "maxAge": 64 },
+    "weight": 5,
+    "text": "The house feels quieter these days as life moves into a new phase.",
+    "choices": [
+      {
+        "label": "Embrace the extra free time",
+        "effects": { "happiness": 5 },
+        "resultText": "You leaned into the extra free time and found new things to enjoy."
+      },
+      {
+        "label": "Struggle with the adjustment",
+        "effects": { "happiness": -3 },
+        "resultText": "The quiet took some real getting used to."
+      }
+    ]
+  },
+  {
+    "id": "health_scare",
+    "trigger": "age_up",
+    "conditions": { "minAge": 50, "maxAge": 75 },
+    "weight": 6,
+    "text": "You experience a health scare that sends you to the doctor.",
+    "choices": [
+      {
+        "label": "Take it seriously and change your habits",
+        "effects": { "health": 4, "happiness": -1 },
+        "resultText": "The scare was a wake-up call, and you made real changes because of it."
+      },
+      {
+        "label": "Brush it off",
+        "effects": { "health": -4 },
+        "resultText": "You brushed it off and went right back to your old habits."
+      }
+    ]
+  },
+  {
+    "id": "retirement_day",
+    "trigger": "age_up",
+    "conditions": { "minAge": 62, "maxAge": 68 },
+    "weight": 8,
+    "text": "The day finally comes: you officially retire.",
+    "choices": [
+      {
+        "label": "Celebrate the milestone",
+        "effects": { "happiness": 8 },
+        "resultText": "You celebrated in style, closing out decades of work."
+      },
+      {
+        "label": "Feel unsure what to do with yourself",
+        "effects": { "happiness": -2 },
+        "resultText": "The free time was welcome, but you weren't quite sure what to do with it yet."
+      }
+    ]
+  },
+  {
+    "id": "grandchild_visit",
+    "trigger": "age_up",
+    "conditions": { "minAge": 65, "maxAge": 95 },
+    "weight": 6,
+    "text": "A grandchild comes to visit you.",
+    "choices": [
+      {
+        "label": "Spend the day spoiling them",
+        "effects": { "happiness": 6, "money": -50 },
+        "resultText": "You spent the whole day spoiling them rotten, no regrets."
+      },
+      {
+        "label": "Enjoy a quieter visit together",
+        "effects": { "happiness": 4 },
+        "resultText": "You had a lovely, low-key visit together."
+      }
+    ]
+  },
+  {
+    "id": "reflecting_on_life",
+    "trigger": "age_up",
+    "conditions": { "minAge": 65, "maxAge": 99 },
+    "weight": 5,
+    "text": "You spend an evening reflecting on everything that's happened in your life so far.",
+    "choices": [
+      {
+        "label": "Feel grateful for it all",
+        "effects": { "happiness": 5 },
+        "resultText": "You felt a deep sense of gratitude looking back on it all."
+      },
+      {
+        "label": "Dwell on old regrets",
+        "effects": { "happiness": -4 },
+        "resultText": "A few old regrets crept back in and stuck with you that night."
+      }
+    ]
+  },
+  {
+    "id": "volunteering",
+    "trigger": "age_up",
+    "conditions": { "minAge": 65, "maxAge": 95 },
+    "weight": 5,
+    "text": "A local community center is looking for volunteers.",
+    "choices": [
+      {
+        "label": "Sign up and get involved",
+        "effects": { "happiness": 5, "fame": 1 },
+        "resultText": "You signed up and quickly became a familiar face around the community center."
+      },
+      {
+        "label": "Decide to relax instead",
+        "effects": { "happiness": 2 },
+        "resultText": "You decided your retirement was better spent relaxing."
+      }
+    ]
+  },
+  {
+    "id": "joint_replacement",
+    "trigger": "age_up",
+    "conditions": { "minAge": 68, "maxAge": 95 },
+    "weight": 5,
+    "text": "Your doctor recommends joint replacement surgery.",
+    "choices": [
+      {
+        "label": "Go through with the surgery",
+        "effects": { "health": 5, "money": -800 },
+        "resultText": "You went through with the surgery, and it made a real difference."
+      },
+      {
+        "label": "Manage the pain without surgery",
+        "effects": { "health": -3 },
+        "resultText": "You decided to manage the pain on your own instead."
+      }
+    ]
   }
 ]

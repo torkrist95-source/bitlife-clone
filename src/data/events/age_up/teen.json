@@ -94,5 +94,176 @@
         "resultText": "You went to class like normal."
       }
     ]
+  },
+  {
+    "id": "first_day_high_school",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 14 },
+    "weight": 9,
+    "text": "It's your first day of high school, and everything feels bigger and more overwhelming.",
+    "choices": [
+      {
+        "label": "Try to make new friends right away",
+        "effects": { "happiness": 4 },
+        "resultText": "You put yourself out there and made a few new friends on day one."
+      },
+      {
+        "label": "Keep your head down and observe",
+        "effects": { "smarts": 1 },
+        "resultText": "You spent the day quietly figuring out how everything worked."
+      }
+    ]
+  },
+  {
+    "id": "group_project",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 15 },
+    "weight": 7,
+    "text": "You're assigned a group project, and one teammate isn't doing any work.",
+    "choices": [
+      {
+        "label": "Pick up the slack yourself",
+        "effects": { "smarts": 3, "happiness": -2 },
+        "resultText": "You ended up doing most of the work yourself, but at least the grade was good."
+      },
+      {
+        "label": "Confront them about it",
+        "effects": { "reputation": 1, "happiness": -1 },
+        "resultText": "You called them out in front of the group. Awkward, but it got results."
+      }
+    ]
+  },
+  {
+    "id": "school_dance",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 8,
+    "text": "There's a school dance coming up.",
+    "choices": [
+      {
+        "label": "Ask someone to go with you",
+        "effects": { "happiness": 6, "looks": 1 },
+        "resultText": "You worked up the courage to ask someone, and they said yes."
+      },
+      {
+        "label": "Go with a group of friends instead",
+        "effects": { "happiness": 3 },
+        "resultText": "You went with a big group of friends and had a great time anyway."
+      }
+    ]
+  },
+  {
+    "id": "social_media_drama",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 6,
+    "text": "Something you posted online is suddenly causing drama at school.",
+    "choices": [
+      {
+        "label": "Delete it and apologize",
+        "effects": { "reputation": 1, "happiness": -1 },
+        "resultText": "You deleted the post and apologized, and things blew over fairly quickly."
+      },
+      {
+        "label": "Double down and defend it",
+        "effects": { "reputation": -3, "happiness": 1 },
+        "resultText": "You doubled down, which only made the drama worse."
+      }
+    ]
+  },
+  {
+    "id": "exam_stress",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 8,
+    "text": "Finals are coming up, and you're feeling the pressure.",
+    "choices": [
+      {
+        "label": "Pull an all-nighter studying",
+        "effects": { "smarts": 4, "health": -3 },
+        "resultText": "You crammed all night and walked into the exam exhausted but prepared."
+      },
+      {
+        "label": "Wing it and hope for the best",
+        "effects": { "smarts": -2, "happiness": 2 },
+        "resultText": "You decided not to stress about it and just wing the exam."
+      }
+    ]
+  },
+  {
+    "id": "sports_tryouts",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 16 },
+    "weight": 7,
+    "text": "Tryouts for a school sports team are happening.",
+    "choices": [
+      {
+        "label": "Give it your all",
+        "effects": { "health": 4, "happiness": 3, "reputation": 1 },
+        "resultText": "You gave it everything you had and made the team."
+      },
+      {
+        "label": "Decide it's not for you",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided sports weren't really your thing and skipped tryouts."
+      }
+    ]
+  },
+  {
+    "id": "first_heartbreak",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "weight": 6,
+    "text": "Someone you liked turns you down, and it stings more than you expected.",
+    "choices": [
+      {
+        "label": "Talk to a friend about it",
+        "effects": { "happiness": 2 },
+        "resultText": "You talked it through with a friend, and it helped more than you thought it would."
+      },
+      {
+        "label": "Bottle it up",
+        "effects": { "happiness": -4 },
+        "resultText": "You kept it to yourself and just tried to push through it."
+      }
+    ]
+  },
+  {
+    "id": "curfew_broken",
+    "trigger": "age_up",
+    "conditions": { "minAge": 15, "maxAge": 17 },
+    "weight": 6,
+    "text": "You stayed out way past your curfew last night.",
+    "choices": [
+      {
+        "label": "Come clean about it",
+        "effects": { "happiness": -1 },
+        "resultText": "You owned up to it, and your parents appreciated the honesty, mostly."
+      },
+      {
+        "label": "Try to sneak back in unnoticed",
+        "effects": { "happiness": 1 },
+        "resultText": "You managed to sneak back in without anyone noticing. This time."
+      }
+    ]
+  },
+  {
+    "id": "college_prep_talk",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 17 },
+    "weight": 7,
+    "text": "Your school guidance counselor sits down to talk about your future plans.",
+    "choices": [
+      {
+        "label": "Take it seriously and start planning",
+        "effects": { "smarts": 3 },
+        "resultText": "You left the meeting with an actual plan for after graduation."
+      },
+      {
+        "label": "Brush it off for now",
+        "effects": { "happiness": 1 },
+        "resultText": "You figured you'd worry about the future later."
+      }
+    ]
   }
 ]
