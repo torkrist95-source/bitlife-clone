@@ -1,4 +1,4 @@
-import { getLifeStage, clampStat, randInt } from "./character.js";
+import { getLifeStage, clampStat, randInt, pushHistory, generateRandomName } from "./character.js";
 import { applySchoolYear, getGradeLevelForAge } from "./school.js";
 import { ensureCoworkers, endCoworkerRelationships } from "./npc.js";
 import { pickJobTitle } from "./npcLife.js";
@@ -71,8 +71,11 @@ const PARENT_JOB_GAIN_CHANCE = 10; // percent per year, while unemployed
 // These lines are pushed straight to history from ageUp (see below), not
 // routed through rollAgeUpHappening's own MAX_BACKGROUND_LINES cap -- cap
 // here too so a year where several parents/siblings all develop at once
-// still reads as a short summary rather than a wall of text.
-const MAX_FAMILY_LINES_PER_YEAR = 2;
+// still reads as a short summary rather than a wall of text. Raised
+// alongside MAX_BACKGROUND_LINES to make room for a birth (below) landing
+// the same year as an unrelated parent/sibling development, without either
+// one silently losing its slot.
+const MAX_FAMILY_LINES_PER_YEAR = 3;
 
 // Same convention npc.js's getKnownNpcs already uses for this exact field,
 // so a step-parent reads as "stepfather"/"stepmother" here too instead of
@@ -132,8 +135,61 @@ function applySiblingYear(sibling) {
   return null;
 }
 
-function applyFamilyYear(character, jobsData) {
+// A family can grow mid-game too, not just at character creation -- a
+// small yearly chance per eligible mother (biological, or step -- a
+// step-mother having a child with the character's biological parent is
+// exactly how a "half-sibling" comes about) within a plausible childbearing
+// age range. Everyone in this game's family model shares one surname (see
+// generateSiblings at character creation), so the new sibling's last name is
+// pulled from the mother's own name -- NOT from `character.name`, which for
+// a single-word player-entered name never has a surname appended to it at
+// all (parsePlayerName generates a separate `lastName` used for family
+// members without ever rewriting the player's own `character.name`).
+const PARENT_BIRTH_CHANCE = 3; // percent, per eligible mother, per year
+const CHILDBEARING_MIN_AGE = 20;
+const CHILDBEARING_MAX_AGE = 45;
+
+function applyParentBirthYear(character, namePools, countryId) {
+  const eligibleMothers = (character.family?.parents ?? []).filter(
+    (p) =>
+      p.role === "mother" &&
+      (p.relationshipType === "biological" || p.relationshipType === "step") &&
+      p.age >= CHILDBEARING_MIN_AGE &&
+      p.age <= CHILDBEARING_MAX_AGE
+  );
+  if (eligibleMothers.length === 0) return null;
+  if (randInt(0, 99) >= PARENT_BIRTH_CHANCE) return null;
+
+  const mother = eligibleMothers[randInt(0, eligibleMothers.length - 1)];
+  const gender = Math.random() < 0.5 ? "male" : "female";
+  // mother.name is always "{firstName} {lastName}" (see generateParent at
+  // character creation), so this reliably recovers the shared family
+  // surname regardless of what the player themselves typed.
+  const lastName = mother.name.trim().split(/\s+/).slice(-1)[0];
+  const firstName = generateRandomName(namePools, countryId, gender).split(" ")[0];
+  const name = `${firstName} ${lastName}`;
+
+  character.family.siblings.push({
+    name,
+    age: 0,
+    relationshipType: mother.relationshipType,
+    closeness: 60,
+  });
+
+  const halfPrefix = mother.relationshipType === "step" ? "half-" : "";
+  const relationWord = `${halfPrefix}${gender === "male" ? "brother" : "sister"}`;
+
+  return `Your mother, ${mother.name}, gave birth to your new ${relationWord}, ${name}.`;
+}
+
+function applyFamilyYear(character, jobsData, namePools, countryId) {
   let lines = [];
+  // A new sibling is the most significant family event that can happen in a
+  // year -- checked, and pushed, first so `slice(0, MAX_FAMILY_LINES_PER_YEAR)`
+  // below can never silently drop it in favor of a routine parent job change
+  // or sibling milestone that happened to roll the same year.
+  const birthLine = applyParentBirthYear(character, namePools, countryId);
+  if (birthLine) lines.push(birthLine);
   for (const parent of character.family?.parents ?? []) {
     const line = applyParentYear(parent, jobsData);
     if (line) lines.push(line);
@@ -154,15 +210,15 @@ function ageUp(character, jobsData, namePools, countryId) {
   applyStatDrift(character);
   const currentStage = getLifeStage(character.age);
 
-  let line = `Turned ${character.age}.`;
+  // The feed groups entries under an "Age N" header now, so a bare "Turned
+  // N." line would be redundant with that header -- only worth a line of
+  // its own when the year also crossed into a new life stage.
   if (currentStage.id !== previousStage.id) {
-    line += ` ${character.name} is now a ${currentStage.label}.`;
+    pushHistory(character, `${character.name} is now a ${currentStage.label}.`);
   }
 
-  character.history.push(line);
-
   const jobLine = applyJobYear(character, jobsData);
-  if (jobLine) character.history.push(jobLine);
+  if (jobLine) pushHistory(character, jobLine);
 
   // Coworker turnover/development itself happens in applyNpcLifeYear
   // (called separately from rollAgeUpHappening) alongside every other
@@ -173,12 +229,10 @@ function ageUp(character, jobsData, namePools, countryId) {
   }
 
   const schoolLines = applySchoolYear(character, namePools, countryId);
-  for (const schoolLine of schoolLines) character.history.push(schoolLine);
+  for (const schoolLine of schoolLines) pushHistory(character, schoolLine);
 
-  const familyLines = applyFamilyYear(character, jobsData);
-  for (const familyLine of familyLines) character.history.push(familyLine);
-
-  return line;
+  const familyLines = applyFamilyYear(character, jobsData, namePools, countryId);
+  for (const familyLine of familyLines) pushHistory(character, familyLine);
 }
 
 export { ageUp };

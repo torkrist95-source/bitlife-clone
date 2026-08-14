@@ -1,6 +1,14 @@
-import { clampStat, randInt, weightedPick, applyMoneyDelta } from "./character.js";
+import {
+  clampStat,
+  randInt,
+  weightedPick,
+  applyMoneyDelta,
+  pushHistory,
+  MIN_EARNING_AGE,
+  ENROLLED_EDUCATION_STATUSES,
+} from "./character.js";
 import { ensureSocialCircle, getKnownNpcs, resolveDynamicChoice } from "./npc.js";
-import { applyNpcLifeYear } from "./npcLife.js";
+import { applyNpcLifeYear, NPC_HOBBY_POOL } from "./npcLife.js";
 
 // ---------- Condition engine ----------
 // A `requires` array on an event, choice, or outcome is a list of
@@ -187,7 +195,7 @@ function applyResolved(character, resolved, fallbackText) {
   // a text-comparison guard would wrongly swallow the second, legitimate
   // one along with its differing effects.
   if (resolved.resultText !== null) {
-    character.history.push(resolved.resultText ?? fallbackText ?? resolved.label ?? "");
+    pushHistory(character, resolved.resultText ?? fallbackText ?? resolved.label ?? "");
   }
 
   if (resolved.next_event) {
@@ -265,6 +273,66 @@ function pickWorldUpdateLine(character, worldUpdates, countryName) {
   return fillTemplate(entry.template, { country: countryName ?? "your country" });
 }
 
+// A small side-income roll, independent of the character's main job (or
+// lack of one) -- same MIN_EARNING_AGE gate every other personal-money
+// system already respects, so a young child never turns up with cash from
+// "odd jobs" no other system would let them earn. Routed through the same
+// recent-repetition tracking as NPC/world flavor (via a dedicated
+// `recentOddJobIds` field) so the same odd job can't fire two years running.
+function pickOddJobLine(character, oddJobsData) {
+  if (!oddJobsData || oddJobsData.length === 0) return null;
+  if (character.age < MIN_EARNING_AGE) return null;
+  const candidates = pickRecentAware(character, "recentOddJobIds", oddJobsData);
+  const entry = weightedPick(candidates);
+  rememberUpdate(character, "recentOddJobIds", entry.id);
+  const amount = randInt(entry.moneyMin, entry.moneyMax);
+  applyMoneyDelta(character, amount);
+  return fillTemplate(entry.template, { amount: amount.toLocaleString() });
+}
+
+// A spontaneous personal hobby, independent of anything club/extracurricular
+// membership already grants -- reuses npcLife.js's own hobby pool rather
+// than maintaining a second list, since the concept ("picked up a new
+// hobby") is identical for the player and for NPCs. Age-gated the same way
+// NPCs implicitly are (npc.js's SOCIAL_CIRCLE_MIN_AGE): a toddler shouldn't
+// be able to roll "You became interested in skateboarding."
+const MIN_HOBBY_INTEREST_AGE = 5;
+
+function pickHobbyInterestLine(character, hobbyPool) {
+  if (character.age < MIN_HOBBY_INTEREST_AGE) return null;
+  const available = hobbyPool.filter((h) => !character.hobbies.includes(h));
+  if (available.length === 0) return null;
+  const hobby = available[randInt(0, available.length - 1)];
+  character.hobbies.push(hobby);
+  return `You became interested in ${hobby}.`;
+}
+
+const SCHOOL_ACTIVITY_FLAVOR_TEMPLATES = [
+  "You had a great year with {label}.",
+  "{label} was one of the highlights of your year.",
+  "You kept up with {label} throughout the year.",
+  "You've been really enjoying your time with {label} lately.",
+];
+
+// A single independent per-year roll referencing whichever club/activity the
+// character is actually enrolled in -- never fires with nothing real to
+// reference, and never uses generic "participated in a school activity"
+// wording.
+function pickSchoolActivityFlavorLine(character, clubsData, extracurricularsData) {
+  const edu = character.education;
+  if (!ENROLLED_EDUCATION_STATUSES.has(edu.status)) return null;
+
+  const labels = [
+    ...(edu.clubs ?? []).map((id) => clubsData?.find((c) => c.id === id)?.label),
+    ...(edu.extracurriculars ?? []).map((id) => extracurricularsData?.find((a) => a.id === id)?.label),
+  ].filter(Boolean);
+  if (labels.length === 0) return null;
+
+  const label = labels[randInt(0, labels.length - 1)];
+  const template = SCHOOL_ACTIVITY_FLAVOR_TEMPLATES[randInt(0, SCHOOL_ACTIVITY_FLAVOR_TEMPLATES.length - 1)];
+  return template.replace("{label}", label);
+}
+
 // A year that produced no background developments and no interactive
 // event still needs to feel like a year passed, not a silent no-op.
 const QUIET_YEAR_LINES = [
@@ -274,11 +342,15 @@ const QUIET_YEAR_LINES = [
 ];
 
 // Keeps a year readable even if several independent rolls all hit at
-// once -- a short summary, not a wall of text. Development-tick lines
-// (real, state-changing) are pushed into `lines` before the lighter
-// flavor-only channels below, so slicing to this cap drops the least
-// meaningful lines first.
-const MAX_BACKGROUND_LINES = 4;
+// once -- a sanity ceiling, not a target: the feed now shows a full,
+// scrollable life grouped by Age, so a busy year is expected to genuinely
+// read as busy (the user's own examples run 5-10+ lines) rather than being
+// trimmed down to a handful every time. Development-tick lines (real,
+// state-changing) are pushed into `lines` before the lighter flavor-only
+// channels below, so slicing to this cap drops the least meaningful lines
+// first. Job/family lines (engine.js's ageUp) are pushed separately and are
+// never subject to this cap at all.
+const MAX_BACKGROUND_LINES = 10;
 
 // Each flavor channel gets several independent per-year opportunities
 // rather than one single "pick one from the whole pool" roll -- a year
@@ -292,6 +364,11 @@ const NPC_FLAVOR_SLOTS = 2;
 const NPC_FLAVOR_CHANCE_PER_SLOT = 22; // percent, per independent slot
 const WORLD_FLAVOR_SLOTS = 3;
 const WORLD_FLAVOR_CHANCE_PER_SLOT = 25; // percent, per independent slot
+// Lower-frequency, one-shot concepts (unlike NPC/world flavor above, these
+// aren't worth multiple slots) -- each is its own single independent roll.
+const ODD_JOB_CHANCE = 12; // percent, independent roll
+const HOBBY_INTEREST_CHANCE = 10; // percent, independent roll
+const SCHOOL_ACTIVITY_FLAVOR_CHANCE = 20; // percent, independent roll
 const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
 
 // The Age Up dispatcher: assembles the year as a bundle of independently-
@@ -301,7 +378,8 @@ const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
 // things, just several smaller things, or be quiet. Player-event odds
 // fall back gracefully to nothing when no event is eligible at this age.
 function rollAgeUpHappening(character, pools) {
-  const { ageUpEvents, npcUpdates, worldUpdates, namePools, countryId, countryName, jobsData } = pools;
+  const { ageUpEvents, npcUpdates, worldUpdates, oddJobsData, clubsData, extracurricularsData, namePools, countryId, countryName, jobsData } =
+    pools;
 
   let lines = applyNpcLifeYear(character, namePools, countryId, jobsData);
 
@@ -317,11 +395,23 @@ function rollAgeUpHappening(character, pools) {
       if (line) lines.push(line);
     }
   }
+  if (randInt(0, 99) < ODD_JOB_CHANCE) {
+    const line = pickOddJobLine(character, oddJobsData);
+    if (line) lines.push(line);
+  }
+  if (randInt(0, 99) < HOBBY_INTEREST_CHANCE) {
+    const line = pickHobbyInterestLine(character, NPC_HOBBY_POOL);
+    if (line) lines.push(line);
+  }
+  if (randInt(0, 99) < SCHOOL_ACTIVITY_FLAVOR_CHANCE) {
+    const line = pickSchoolActivityFlavorLine(character, clubsData, extracurricularsData);
+    if (line) lines.push(line);
+  }
 
   if (lines.length > MAX_BACKGROUND_LINES) {
     lines = lines.slice(0, MAX_BACKGROUND_LINES);
   }
-  for (const line of lines) character.history.push(line);
+  for (const line of lines) pushHistory(character, line);
 
   // A forced/chained event (e.g. graduation, set by the yearly school tick
   // before this runs) must fire the year it's set -- checked *after* the
@@ -339,7 +429,7 @@ function rollAgeUpHappening(character, pools) {
   }
 
   if (lines.length === 0) {
-    character.history.push(QUIET_YEAR_LINES[randInt(0, QUIET_YEAR_LINES.length - 1)]);
+    pushHistory(character, QUIET_YEAR_LINES[randInt(0, QUIET_YEAR_LINES.length - 1)]);
   }
 
   return { type: "quiet" };

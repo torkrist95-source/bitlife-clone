@@ -32,6 +32,14 @@ const ZODIAC_BOUNDARIES = [
   { sign: "Capricorn", month: 12, day: 22 },
 ];
 
+// The one shared source of truth for "is this character currently enrolled
+// in school" -- previously copy-pasted independently into app.js, npcLife.js,
+// and events.js (each with a comment pointing at whichever copy came before
+// it). Lives here, a dependency-free leaf module every one of those already
+// imports from, so there's exactly one place to update if the set of
+// enrolled statuses ever changes.
+const ENROLLED_EDUCATION_STATUSES = new Set(["elementary", "middle", "high_school"]);
+
 const LIFE_STAGES = [
   { id: "infant", label: "Infant", minAge: 0, maxAge: 4, emoji: "\u{1F476}" },
   { id: "child", label: "Child", minAge: 5, maxAge: 12, emoji: "\u{1F9D2}" },
@@ -398,7 +406,8 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
       teacher: null,
     },
     pendingEventId: null,
-    history: historyLines,
+    // Birth narrative happens at age 0, before the first Age Up.
+    history: historyLines.map((text) => ({ age: 0, text })),
   };
 }
 
@@ -408,6 +417,18 @@ function rollWealthTier(wealthTiers) {
 
 function clampStat(value) {
   return Math.max(0, Math.min(100, value));
+}
+
+// Every history entry is tagged with the age it happened at so the feed can
+// group entries under an "Age N" header instead of showing a flat list --
+// callers keep building their own line text exactly as before, they just
+// push through this instead of `character.history.push` directly. Returns
+// the text back so `return pushHistory(character, "...")` reads naturally
+// at call sites that previously did `const line = "..."; character.history
+// .push(line); return line;`.
+function pushHistory(character, text) {
+  character.history.push({ age: character.age, text });
+  return text;
 }
 
 // Characters can't personally earn money before this age (the earliest
@@ -454,7 +475,10 @@ export {
   randInt,
   weightedPick,
   applyMoneyDelta,
+  pushHistory,
   MIN_DATING_AGE,
+  MIN_EARNING_AGE,
+  ENROLLED_EDUCATION_STATUSES,
   LIFE_STAGES,
   formatBirthDate,
 };

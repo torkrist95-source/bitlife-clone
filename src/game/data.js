@@ -47,6 +47,10 @@ function loadWorldUpdates() {
   return loadJSON("data/events/world_updates.json");
 }
 
+function loadOddJobs() {
+  return loadJSON("data/events/odd_jobs.json");
+}
+
 function loadClubs() {
   return loadJSON("data/school/clubs.json");
 }
@@ -65,6 +69,7 @@ export {
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
+  loadOddJobs,
   loadClubs,
   loadExtracurriculars,
 };

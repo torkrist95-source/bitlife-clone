@@ -19,6 +19,59 @@ function randomAttractedTo() {
   return [randomGender()];
 }
 
+// Captures any text appended after the marker itself -- old `ageUp` combined
+// the marker and a life-stage-change announcement into one string, e.g.
+// "Turned 18. Bob Smith is now a Young Adult.", so a marker match can carry
+// real content of its own, not just a bare age counter.
+const TURNED_LINE = /^Turned (\d+)\.\s*(.*)$/s;
+
+// Old saves stored `history` as a flat array of plain strings, with a
+// "Turned N." line marking the start of each year (see engine.js's ageUp,
+// pre-history-grouping). The feed now needs every entry tagged with the age
+// it happened at (`{age, text}`) so it can group entries under an "Age N"
+// header -- migrate by walking the old array and tracking age via those
+// markers. The bare marker prefix is dropped (the Age header now plays that
+// role), but any life-stage-change text appended to the same line is kept
+// as its own entry rather than discarded along with the prefix. If a year
+// ends up with nothing at all -- e.g. the save was closed with an
+// interactive event still unresolved -- a single filler line is added so
+// that year's header never renders empty.
+function migrateHistory(history) {
+  if (!Array.isArray(history)) return [];
+  if (history.length === 0 || typeof history[0] !== "string") return history;
+
+  const migrated = [];
+  let age = 0;
+  let sawMarker = false;
+  let sawEntryThisYear = false;
+
+  for (const text of history) {
+    const match = text.match(TURNED_LINE);
+    if (match) {
+      if (sawMarker && !sawEntryThisYear) {
+        migrated.push({ age, text: "You had a relatively quiet year." });
+      }
+      age = Number(match[1]);
+      sawMarker = true;
+      const trailing = match[2].trim();
+      if (trailing) {
+        migrated.push({ age, text: trailing });
+        sawEntryThisYear = true;
+      } else {
+        sawEntryThisYear = false;
+      }
+      continue;
+    }
+    migrated.push({ age, text });
+    sawEntryThisYear = true;
+  }
+  if (sawMarker && !sawEntryThisYear) {
+    migrated.push({ age, text: "You had a relatively quiet year." });
+  }
+
+  return migrated;
+}
+
 function migrateCharacterFields(character) {
   if (!character.stats) character.stats = {};
   character.stats.fame ??= 0;
@@ -43,8 +96,9 @@ function migrateCharacterFields(character) {
   // beyond the default.
   character.recentNpcUpdateIds ??= [];
   character.recentWorldUpdateIds ??= [];
+  character.recentOddJobIds ??= [];
   character.pendingEventId ??= null;
-  character.history ??= [];
+  character.history = migrateHistory(character.history);
 
   for (const parent of character.family?.parents ?? []) {
     parent.closeness ??= 60;

@@ -1,0 +1,14 @@
+[
+  { "id": "odd_job_lawns", "weight": 8, "template": "You earned ${amount} mowing lawns around the neighborhood.", "moneyMin": 40, "moneyMax": 150 },
+  { "id": "odd_job_babysitting", "weight": 8, "template": "You earned ${amount} babysitting for a family down the street.", "moneyMin": 40, "moneyMax": 150 },
+  { "id": "odd_job_garage_sale", "weight": 6, "template": "You cleared out your old stuff at a garage sale and made ${amount}.", "moneyMin": 30, "moneyMax": 120 },
+  { "id": "odd_job_dog_walking", "weight": 7, "template": "You earned ${amount} walking dogs for people in your neighborhood.", "moneyMin": 30, "moneyMax": 100 },
+  { "id": "odd_job_shoveling_snow", "weight": 6, "template": "You earned ${amount} shoveling snow for neighbors.", "moneyMin": 30, "moneyMax": 100 },
+  { "id": "odd_job_tutoring", "weight": 6, "template": "You earned ${amount} tutoring another student.", "moneyMin": 50, "moneyMax": 180 },
+  { "id": "odd_job_online_sale", "weight": 6, "template": "You sold some handmade crafts online and made ${amount}.", "moneyMin": 40, "moneyMax": 160 },
+  { "id": "odd_job_car_wash", "weight": 6, "template": "You washed cars for a weekend and earned ${amount}.", "moneyMin": 30, "moneyMax": 110 },
+  { "id": "odd_job_odd_gig", "weight": 5, "template": "You picked up some odd jobs around town and earned ${amount}.", "moneyMin": 40, "moneyMax": 140 },
+  { "id": "odd_job_found_cash", "weight": 3, "template": "You found ${amount} you'd forgotten about in an old jacket pocket.", "moneyMin": 10, "moneyMax": 60 },
+  { "id": "odd_job_gift_money", "weight": 5, "template": "A relative slipped you ${amount} as a gift.", "moneyMin": 20, "moneyMax": 100 },
+  { "id": "odd_job_freelance", "weight": 5, "template": "You picked up some freelance work online and earned ${amount}.", "moneyMin": 60, "moneyMax": 220 }
+]

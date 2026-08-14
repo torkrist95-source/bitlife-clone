@@ -1,4 +1,4 @@
-import { randInt, clampStat, weightedPick } from "./character.js";
+import { randInt, clampStat, weightedPick, ENROLLED_EDUCATION_STATUSES } from "./character.js";
 import { createSocialNpc, coworkerAge } from "./npc.js";
 
 // ---------- Acquaintance-tier roster churn ----------
@@ -30,15 +30,10 @@ function churnAcquaintanceRoster(roster, { namePools, countryId, newcomerAge, le
   return joinTemplate(newcomer);
 }
 
-// Mirrors the exact status set app.js's ENROLLED_STATUSES uses (duplicated
-// rather than imported from school.js -- school.js already imports from
-// events.js, which imports applyNpcLifeYear from this file, so importing
-// school.js here would create a cycle). Only rolled while actually
-// enrolled -- an adult with old school friends still in their socialCircle
-// (now just "friends", post-graduation) shouldn't keep getting "transferred
-// to another school" flavor for the rest of the game.
-const ENROLLED_EDUCATION_STATUSES = new Set(["elementary", "middle", "high_school"]);
-
+// Only rolled while actually enrolled -- an adult with old school friends
+// still in their socialCircle (now just "friends", post-graduation)
+// shouldn't keep getting "transferred to another school" flavor for the
+// rest of the game.
 function maybeChurnClassmates(character, namePools, countryId) {
   if (!ENROLLED_EDUCATION_STATUSES.has(character.education?.status)) return null;
   return churnAcquaintanceRoster(character.socialCircle ?? [], {
@@ -225,4 +220,4 @@ function applyNpcLifeYear(character, namePools, countryId, jobsData) {
   return lines;
 }
 
-export { applyNpcLifeYear, pickJobTitle };
+export { applyNpcLifeYear, pickJobTitle, NPC_HOBBY_POOL };

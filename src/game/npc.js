@@ -1,4 +1,4 @@
-import { generateRandomName, randInt, clampStat, weightedPick, applyMoneyDelta, MIN_DATING_AGE } from "./character.js";
+import { generateRandomName, randInt, clampStat, weightedPick, applyMoneyDelta, pushHistory, MIN_DATING_AGE } from "./character.js";
 
 const SOCIAL_CIRCLE_MIN_AGE = 6;
 const SOCIAL_CIRCLE_MIN_SIZE = 3;
@@ -227,7 +227,7 @@ function talk(character, npc) {
   character.stats.happiness = clampStat(character.stats.happiness + 1);
   let line = `You talked with ${npc.name} for a while.`;
   line += maybeTierUpFriendship(npc);
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -238,7 +238,7 @@ function getToKnow(character, npc) {
   character.stats.happiness = clampStat(character.stats.happiness + 1);
   let line = `You spent some time getting to know ${npc.name}.`;
   line += maybeTierUpFriendship(npc);
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -255,7 +255,7 @@ function hangOut(character, npc) {
     npc.romance = clampStat((npc.romance ?? 0) + randInt(3, 8));
     line += maybeTierUpRomance(npc);
   }
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -266,7 +266,7 @@ function confide(character, npc) {
   character.stats.happiness = clampStat(character.stats.happiness + 4);
   let line = `You confided in ${npc.name} about something that's been on your mind. It brought you closer.`;
   line += maybeTierUpFriendship(npc);
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -276,14 +276,14 @@ function giveGift(character, npc) {
   const paid = applyMoneyDelta(character, -GIFT_COST);
   if (!paid) {
     const line = `You wanted to get ${npc.name} a gift, but you don't have enough money right now.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return line;
   }
   npc.closeness = clampStat(npc.closeness + randInt(8, 15));
   character.stats.happiness = clampStat(character.stats.happiness + 3);
   let line = `You gave ${npc.name} a small gift. They seemed to really appreciate it.`;
   line += maybeTierUpFriendship(npc);
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -300,7 +300,7 @@ function askToBecomeFriends(character, npc) {
     npc.friendLevel = "friend";
     npc.closeness = clampStat(npc.closeness + randInt(20, 30));
     const line = `${npc.name} agreed to become friends with you.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return line;
   }
 
@@ -310,7 +310,7 @@ function askToBecomeFriends(character, npc) {
     `${npc.name} wasn't ready to call it a friendship just yet.`,
   ];
   const line = declineLines[randInt(0, declineLines.length - 1)];
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -322,14 +322,14 @@ function askToBecomeFriends(character, npc) {
 function developRomance(character, npc) {
   if (npc.friendLevel === "acquaintance" || character.age < MIN_DATING_AGE || !canRomanticallyMatch(character, npc)) {
     const line = `You don't feel that way about ${npc.name}.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return line;
   }
   npc.romanceStatus = "crush";
   npc.romance = clampStat((npc.romance ?? 0) + 15);
   character.stats.happiness = clampStat(character.stats.happiness + 5);
   const line = `You started developing feelings for ${npc.name}.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -344,7 +344,7 @@ function rollAskOutSuccess(npc) {
 function askOut(character, npc) {
   if (npc.romanceStatus !== "crush" || character.age < MIN_DATING_AGE || !canRomanticallyMatch(character, npc)) {
     const line = `Now isn't the right time to ask ${npc.name} out.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { succeeded: false, resultText: line };
   }
 
@@ -357,14 +357,14 @@ function askOut(character, npc) {
     character.stats.happiness = clampStat(character.stats.happiness + 8);
     let line = `You asked ${npc.name} out, and they said yes!`;
     line += maybeTierUpRomance(npc);
-    character.history.push(line);
+    pushHistory(character, line);
     return { succeeded: true, resultText: line };
   }
 
   npc.closeness = clampStat(npc.closeness - 5);
   character.stats.happiness = clampStat(character.stats.happiness - 3);
   const line = `You asked ${npc.name} out, but they turned you down.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return { succeeded: false, resultText: line };
 }
 
@@ -375,11 +375,11 @@ function askForHelp(character, teacher) {
     character.stats.smarts = clampStat(character.stats.smarts + randInt(2, 4));
     teacher.closeness = clampStat(teacher.closeness + 3);
     const line = `${teacher.name} took some extra time to help you understand the material.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return line;
   }
   const line = `${teacher.name} was too busy to help today, but suggested you try again another time.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -387,7 +387,7 @@ function thankTeacher(character, teacher) {
   teacher.closeness = clampStat(teacher.closeness + randInt(3, 7));
   character.stats.happiness = clampStat(character.stats.happiness + 1);
   const line = `You thanked ${teacher.name} for their help this year.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 

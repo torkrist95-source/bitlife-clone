@@ -1,4 +1,13 @@
-import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate, MIN_DATING_AGE } from "./character.js";
+import {
+  createCharacter,
+  generateRandomName,
+  getLifeStage,
+  randInt,
+  formatBirthDate,
+  pushHistory,
+  MIN_DATING_AGE,
+  ENROLLED_EDUCATION_STATUSES as ENROLLED_STATUSES,
+} from "./character.js";
 import { ageUp } from "./engine.js";
 import { applyChoice, getEligibleChoices, rollAgeUpHappening } from "./events.js";
 import {
@@ -38,12 +47,11 @@ import {
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
+  loadOddJobs,
   loadClubs,
   loadExtracurriculars,
 } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
-
-const MAX_FEED_ENTRIES = 6;
 
 // Bottom-nav hierarchy: category -> the full roadmap of systems under it.
 // Each system expands (accordion-style) to reveal its content inline --
@@ -105,6 +113,7 @@ let jobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
+let oddJobsData = [];
 let clubsData = [];
 let extracurricularsData = [];
 let selectedGender = null;
@@ -543,14 +552,42 @@ function renderGame() {
 
   renderStatBars(character.stats, game.bars);
 
+  // The full life, grouped under an "Age N" header per year -- history is
+  // already strictly chronological (nothing ever reorders it), so a single
+  // forward pass grouping consecutive same-age entries is all that's
+  // needed, no re-sort. Rendering everything (rather than only the most
+  // recent few) is what makes the feed read as a scrollable biography
+  // instead of a rolling window onto only the current year.
   game.feed.innerHTML = "";
-  const recentHistory = character.history.slice(-MAX_FEED_ENTRIES);
-  for (const line of recentHistory) {
-    const entry = document.createElement("div");
-    entry.className = "feed-entry";
-    entry.textContent = line;
-    game.feed.appendChild(entry);
+  for (const { age, entries } of groupHistoryByAge(character.history)) {
+    const header = document.createElement("div");
+    header.className = "feed-age-header";
+    header.textContent = age === 0 ? "Birth" : `Age ${age}`;
+    game.feed.appendChild(header);
+
+    for (const text of entries) {
+      const entry = document.createElement("div");
+      entry.className = "feed-entry";
+      entry.textContent = text;
+      game.feed.appendChild(entry);
+    }
   }
+  // Land on the newest year automatically rather than leaving the player
+  // scrolled wherever they were on the previous, shorter render.
+  game.feed.scrollTop = game.feed.scrollHeight;
+}
+
+function groupHistoryByAge(history) {
+  const groups = [];
+  for (const { age, text } of history) {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.age === age) {
+      lastGroup.entries.push(text);
+    } else {
+      groups.push({ age, entries: [text] });
+    }
+  }
+  return groups;
 }
 
 function showEventModal(event) {
@@ -615,6 +652,9 @@ game.ageBtn.addEventListener("click", () => {
     ageUpEvents,
     npcUpdates,
     worldUpdates,
+    oddJobsData,
+    clubsData,
+    extracurricularsData,
     namePools,
     countryId: character.country,
     countryName: character.countryName,
@@ -771,7 +811,7 @@ function renderOccupationModal() {
 function applyForJob(jobId) {
   character.job = { jobId, levelIndex: 0, yearsInRole: 0 };
   const level = getJobLevel(jobId, 0);
-  character.history.push(`You got a job as ${level.title}.`);
+  pushHistory(character, `You got a job as ${level.title}.`);
   ensureCoworkers(character, namePools, character.country);
   renderOccupationModal();
   renderGame();
@@ -794,7 +834,7 @@ function requestQuitJob() {
     onConfirm: () => {
       character.job = null;
       endCoworkerRelationships(character);
-      character.history.push(`You quit your job as ${level.title}.`);
+      pushHistory(character, `You quit your job as ${level.title}.`);
       renderOccupationModal();
       renderGame();
       autosave();
@@ -835,8 +875,6 @@ const SCHOOL_STATUS_MESSAGES = {
   workforce: "You skipped college and went straight into the workforce.",
   graduated_college: "You graduated college.",
 };
-
-const ENROLLED_STATUSES = new Set(["elementary", "middle", "high_school"]);
 
 function buildSchoolActionBtn(label, onClick) {
   const btn = document.createElement("button");
@@ -1455,20 +1493,33 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents, npcUpdates, worldUpdates, clubsData, extracurricularsData] =
-    await Promise.all([
-      loadCountries(),
-      loadWealthTiers(),
-      loadBirthCircumstances(),
-      loadFamilyStructures(),
-      loadNamePools(),
-      loadJobs(),
-      loadAgeUpEvents(),
-      loadNpcUpdates(),
-      loadWorldUpdates(),
-      loadClubs(),
-      loadExtracurriculars(),
-    ]);
+  [
+    countries,
+    wealthTiers,
+    birthCircumstances,
+    familyStructures,
+    namePools,
+    jobsData,
+    ageUpEvents,
+    npcUpdates,
+    worldUpdates,
+    oddJobsData,
+    clubsData,
+    extracurricularsData,
+  ] = await Promise.all([
+    loadCountries(),
+    loadWealthTiers(),
+    loadBirthCircumstances(),
+    loadFamilyStructures(),
+    loadNamePools(),
+    loadJobs(),
+    loadAgeUpEvents(),
+    loadNpcUpdates(),
+    loadWorldUpdates(),
+    loadOddJobs(),
+    loadClubs(),
+    loadExtracurriculars(),
+  ]);
 
   populateCountrySelect();
   wireCreationScreen();

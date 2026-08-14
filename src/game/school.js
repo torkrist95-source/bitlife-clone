@@ -1,4 +1,4 @@
-import { randInt, clampStat, generateRandomName, applyMoneyDelta } from "./character.js";
+import { randInt, clampStat, generateRandomName, applyMoneyDelta, pushHistory } from "./character.js";
 import { createSocialNpc, registerDynamicGenerators, askForHelp, ensureSocialCircle } from "./npc.js";
 import { conditionsPass } from "./events.js";
 
@@ -155,13 +155,13 @@ function studyHarder(character) {
     character.education.gpa = Math.max(0, Math.min(4, Number(((character.education.gpa ?? 3) + gpaGain).toFixed(2))));
     character.stats.smarts = clampStat(character.stats.smarts + randInt(1, 3));
     const line = "You put in some real effort studying, and it showed -- your grades improved.";
-    character.history.push(line);
+    pushHistory(character, line);
     return line;
   }
 
   character.stats.smarts = clampStat(character.stats.smarts + 1);
   const line = "You studied hard, but it didn't translate into better grades this time. At least the material is starting to sink in.";
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -200,7 +200,7 @@ function joinClub(character, club, namePools, countryId) {
     resultText += ` You bonded with ${friend.name} over it.`;
   }
 
-  character.history.push(resultText);
+  pushHistory(character, resultText);
   return resultText;
 }
 
@@ -208,7 +208,7 @@ function leaveClub(character, clubId, clubsData) {
   character.education.clubs = (character.education.clubs ?? []).filter((id) => id !== clubId);
   const club = clubsData.find((c) => c.id === clubId);
   const line = `You left ${club?.label ?? "the club"}.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -238,7 +238,7 @@ function attemptExtracurricular(character, activity) {
     character.education.extracurriculars.push(activity.id);
     applyExtracurricularRewards(character, activity);
     const line = `You joined ${activity.label}.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { succeeded: true, resultText: line };
   }
 
@@ -250,13 +250,13 @@ function attemptExtracurricular(character, activity) {
     character.education.extracurriculars.push(activity.id);
     applyExtracurricularRewards(character, activity);
     const line = `You made the ${activity.label} team after impressing the coach with your ability.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { succeeded: true, resultText: line };
   }
 
   character.stats.happiness = clampStat(character.stats.happiness - 3);
   const line = `You didn't make the ${activity.label} team. The coach felt you needed more experience.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return { succeeded: false, resultText: line };
 }
 
@@ -264,7 +264,7 @@ function leaveExtracurricular(character, activityId, activitiesData) {
   character.education.extracurriculars = (character.education.extracurriculars ?? []).filter((id) => id !== activityId);
   const activity = activitiesData.find((a) => a.id === activityId);
   const line = `You left ${activity?.label ?? "the activity"}.`;
-  character.history.push(line);
+  pushHistory(character, line);
   return line;
 }
 
@@ -284,7 +284,7 @@ registerDynamicGenerators({
     const circle = character.socialCircle ?? [];
     if (circle.length === 0) {
       const line = "You didn't have anyone in mind to ask, so you muddled through on your own.";
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: { smarts: -1 }, resultText: null };
     }
 
@@ -296,12 +296,12 @@ registerDynamicGenerators({
       classmate.closeness = clampStat(classmate.closeness + 5);
       character.stats.smarts = clampStat(character.stats.smarts + 2);
       const line = `${classmate.name} walked you through the parts you were stuck on, and it really helped.`;
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: { happiness: 2 }, resultText: null };
     }
 
     const line = `${classmate.name} tried to help, but honestly seemed just as confused as you were.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: {}, resultText: null };
   },
 
@@ -309,7 +309,7 @@ registerDynamicGenerators({
     const teacher = character.education.teacher;
     if (!teacher) {
       const line = "You didn't have a teacher available to ask, so you did your best on your own.";
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: {}, resultText: null };
     }
     askForHelp(character, teacher);
@@ -324,7 +324,7 @@ registerDynamicGenerators({
     teacher.closeness = clampStat(teacher.closeness + randInt(4, 8));
     character.stats.reputation = clampStat(character.stats.reputation + 2);
     const line = `${teacher.name} told you that you've been doing excellent work lately and encouraged you to keep it up.`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: { happiness: 5 }, resultText: null };
   },
 
@@ -367,14 +367,14 @@ registerDynamicGenerators({
   hs_graduation_workforce(character) {
     character.education.status = "workforce";
     const line = "You decided to skip college for now and jump straight into the workforce. Time to start your career.";
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: { happiness: 3 }, resultText: null };
   },
 
   hs_graduation_no_college(character) {
     character.education.status = "graduated_hs";
     const line = "You decided not to go to college, at least for now. There's no rush -- you can always change your mind later.";
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: {}, resultText: null };
   },
 
@@ -387,7 +387,7 @@ registerDynamicGenerators({
     const chance = Math.max(10, Math.min(85, 35 + (avgCloseness - 50) / 2 + (employedParent ? 15 : -10)));
     if (randInt(0, 99) < chance) {
       const line = "Your parents agreed to pay your college tuition.";
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: { happiness: 6 }, resultText: null };
     }
 
@@ -398,7 +398,7 @@ registerDynamicGenerators({
       reason = "your relationship with them has been strained lately.";
     }
     const line = `Your parents declined to pay your tuition. Unfortunately, ${reason}`;
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: { happiness: -4 }, resultText: null };
   },
 
@@ -408,11 +408,11 @@ registerDynamicGenerators({
       const amount = randInt(15, 42) * 1000;
       applyMoneyDelta(character, amount);
       const line = `Your student loan application was approved. You were approved for $${amount.toLocaleString()} in student loans.`;
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: {}, resultText: null };
     }
     const line = "Your student loan application was rejected because you did not meet the lender's eligibility requirements.";
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: { happiness: -2 }, resultText: null };
   },
 
@@ -421,7 +421,7 @@ registerDynamicGenerators({
     const minGpa = 3.0;
     if (gpa < minGpa) {
       const line = `Your scholarship application was rejected because the minimum GPA requirement was ${minGpa.toFixed(1)} and your GPA was ${gpa.toFixed(1)}.`;
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: { happiness: -2 }, resultText: null };
     }
 
@@ -433,12 +433,12 @@ registerDynamicGenerators({
       applyMoneyDelta(character, amount);
       const note = hasParticipation ? " Your academic record and extracurricular involvement helped your application stand out." : "";
       const line = `You were awarded a $${amount.toLocaleString()} scholarship.${note}`;
-      character.history.push(line);
+      pushHistory(character, line);
       return { type: "resolve", effects: { happiness: 5, reputation: 2 }, resultText: null };
     }
 
     const line = "You met the scholarship's requirements, but the award was given to another applicant.";
-    character.history.push(line);
+    pushHistory(character, line);
     return { type: "resolve", effects: { happiness: -1 }, resultText: null };
   },
 });
