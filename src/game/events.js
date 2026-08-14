@@ -1,5 +1,30 @@
 import { clampStat } from "./character.js";
 
+// Characters can't personally earn money before this age (the earliest
+// income event is the age-14 part-time job offer). Below that, normal
+// childhood expenses -- birthday parties, school costs, etc. -- are paid
+// by the household/parents rather than the character's own cash.
+const MIN_EARNING_AGE = 14;
+
+function applyMoneyDelta(character, delta) {
+  if (delta >= 0) {
+    character.money += delta;
+    return;
+  }
+
+  if (character.age < MIN_EARNING_AGE) {
+    // Household/parents absorb the cost; personal money is untouched.
+    return;
+  }
+
+  if (character.money + delta < 0) {
+    // Can't personally afford it -- skip rather than go negative.
+    return;
+  }
+
+  character.money += delta;
+}
+
 function weightedPick(events) {
   const totalWeight = events.reduce((sum, event) => sum + (event.weight ?? 10), 0);
   let roll = Math.random() * totalWeight;
@@ -33,7 +58,7 @@ function pickEvent(character, pool) {
 function applyChoice(character, choice) {
   for (const [stat, delta] of Object.entries(choice.effects ?? {})) {
     if (stat === "money") {
-      character.money += delta;
+      applyMoneyDelta(character, delta);
     } else if (stat in character.stats) {
       character.stats[stat] = clampStat(character.stats[stat] + delta);
     }
