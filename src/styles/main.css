@@ -763,6 +763,67 @@ body {
   text-align: center;
 }
 
+.category-menu-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.category-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.category-menu-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.category-menu-btn:active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.category-menu-btn-arrow {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.category-menu-btn:active .category-menu-btn-arrow {
+  color: #fff;
+}
+
+.category-menu-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 20px 0;
+}
+
+.nav-modal-footer {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-modal-footer .event-choice-btn {
+  flex: 1;
+}
+
 .occupation-employed-view {
   text-align: center;
 }

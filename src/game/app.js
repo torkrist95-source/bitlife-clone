@@ -16,6 +16,24 @@ import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLif
 
 const MAX_FEED_ENTRIES = 6;
 
+// Bottom-nav hierarchy: category -> systems available under it. A system
+// with `id: "jobs"` opens the real Jobs page; anything else opens a
+// generic "Coming soon" placeholder. Categories not listed here (or with
+// an empty array) show an empty category menu -- the shell is in place
+// for every category even before its systems exist.
+const NAV_CATEGORIES = {
+  Occupation: [
+    { id: "school", label: "School" },
+    { id: "jobs", label: "Jobs" },
+    { id: "special_careers", label: "Special Careers" },
+    { id: "career_history", label: "Career History" },
+  ],
+  Relationships: [],
+  Activities: [],
+  Social: [],
+  Finance: [],
+};
+
 let character = null;
 let activeLifeId = null;
 let countries = [];
@@ -99,7 +117,24 @@ const occupationModal = {
   jobSalary: document.getElementById("occupation-job-salary"),
   jobList: document.getElementById("occupation-job-list"),
   quitBtn: document.getElementById("occupation-quit-btn"),
+  backBtn: document.getElementById("occupation-modal-back"),
   closeBtn: document.getElementById("occupation-modal-close"),
+};
+
+const categoryMenu = {
+  overlay: document.getElementById("category-menu-overlay"),
+  title: document.getElementById("category-menu-title"),
+  list: document.getElementById("category-menu-list"),
+  empty: document.getElementById("category-menu-empty"),
+  backBtn: document.getElementById("category-menu-back"),
+  closeBtn: document.getElementById("category-menu-close"),
+};
+
+const systemPlaceholder = {
+  overlay: document.getElementById("system-placeholder-overlay"),
+  title: document.getElementById("system-placeholder-title"),
+  backBtn: document.getElementById("system-placeholder-back"),
+  closeBtn: document.getElementById("system-placeholder-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -449,13 +484,70 @@ game.ageBtn.addEventListener("click", () => {
 });
 
 game.navBtns.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    if (btn.dataset.label === "Occupation") {
-      openOccupationModal();
-    } else {
-      alert(`${btn.dataset.label} is coming soon.`);
-    }
-  });
+  btn.addEventListener("click", () => openCategoryMenu(btn.dataset.label));
+});
+
+// ---------- Bottom-nav hierarchy: category menu -> system page ----------
+//
+// Gameplay -> [Category Menu] -> [System Page] -> actions
+// The category menu stays open underneath a system page (same stacking
+// pattern the confirm modal already uses over other modals), so a system
+// page's Back button just hides itself -- the menu is still there -- and
+// Close hides both, returning straight to gameplay.
+
+function openCategoryMenu(categoryLabel) {
+  const systems = NAV_CATEGORIES[categoryLabel] ?? [];
+  categoryMenu.title.textContent = categoryLabel;
+  categoryMenu.list.innerHTML = "";
+  categoryMenu.empty.classList.toggle("hidden", systems.length > 0);
+
+  for (const system of systems) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "category-menu-btn";
+
+    const label = document.createElement("span");
+    label.textContent = system.label;
+    const arrow = document.createElement("span");
+    arrow.className = "category-menu-btn-arrow";
+    arrow.textContent = "›";
+
+    btn.appendChild(label);
+    btn.appendChild(arrow);
+    btn.addEventListener("click", () => openSystemPage(system));
+    categoryMenu.list.appendChild(btn);
+  }
+
+  categoryMenu.overlay.classList.remove("hidden");
+}
+
+function hideCategoryMenu() {
+  categoryMenu.overlay.classList.add("hidden");
+}
+
+function openSystemPage(system) {
+  if (system.id === "jobs") {
+    openOccupationModal();
+  } else {
+    openSystemPlaceholder(system.label);
+  }
+}
+
+function openSystemPlaceholder(label) {
+  systemPlaceholder.title.textContent = label;
+  systemPlaceholder.overlay.classList.remove("hidden");
+}
+
+function hideSystemPlaceholder() {
+  systemPlaceholder.overlay.classList.add("hidden");
+}
+
+categoryMenu.backBtn.addEventListener("click", hideCategoryMenu);
+categoryMenu.closeBtn.addEventListener("click", hideCategoryMenu);
+systemPlaceholder.backBtn.addEventListener("click", hideSystemPlaceholder);
+systemPlaceholder.closeBtn.addEventListener("click", () => {
+  hideSystemPlaceholder();
+  hideCategoryMenu();
 });
 
 // ---------- Occupation ----------
@@ -558,7 +650,11 @@ function hideOccupationModal() {
 }
 
 occupationModal.quitBtn.addEventListener("click", requestQuitJob);
-occupationModal.closeBtn.addEventListener("click", hideOccupationModal);
+occupationModal.backBtn.addEventListener("click", hideOccupationModal);
+occupationModal.closeBtn.addEventListener("click", () => {
+  hideOccupationModal();
+  hideCategoryMenu();
+});
 
 function openProfile() {
   if (!character) return;

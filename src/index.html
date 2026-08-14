@@ -146,9 +146,35 @@
       </div>
     </div>
 
+    <div id="category-menu-overlay" class="modal-overlay hidden">
+      <div class="event-modal category-menu-modal">
+        <h2 id="category-menu-title" class="category-menu-title"></h2>
+
+        <div id="category-menu-list" class="category-menu-list"></div>
+        <p id="category-menu-empty" class="category-menu-empty hidden">Nothing here yet.</p>
+
+        <div class="nav-modal-footer">
+          <button type="button" id="category-menu-back" class="event-choice-btn nav-back-btn">← Back</button>
+          <button type="button" id="category-menu-close" class="event-choice-btn nav-close-btn">✕ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="system-placeholder-overlay" class="modal-overlay hidden">
+      <div class="event-modal category-menu-modal">
+        <h2 id="system-placeholder-title" class="category-menu-title"></h2>
+        <p class="category-menu-empty">Coming soon.</p>
+
+        <div class="nav-modal-footer">
+          <button type="button" id="system-placeholder-back" class="event-choice-btn nav-back-btn">← Back</button>
+          <button type="button" id="system-placeholder-close" class="event-choice-btn nav-close-btn">✕ Close</button>
+        </div>
+      </div>
+    </div>
+
     <div id="occupation-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal occupation-modal">
-        <h2 class="occupation-modal-title">Occupation</h2>
+        <h2 class="occupation-modal-title">Jobs</h2>
 
         <div id="occupation-employed-view" class="occupation-employed-view hidden">
           <p id="occupation-job-title" class="occupation-job-title"></p>
@@ -161,7 +187,10 @@
           <div id="occupation-job-list" class="occupation-job-list"></div>
         </div>
 
-        <button type="button" id="occupation-modal-close" class="event-choice-btn">Close</button>
+        <div class="nav-modal-footer">
+          <button type="button" id="occupation-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
+          <button type="button" id="occupation-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
+        </div>
       </div>
     </div>
 
