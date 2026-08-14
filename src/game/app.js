@@ -57,7 +57,7 @@ const MAX_FEED_ENTRIES = 6;
 // safe, since none of this is called until the player expands a system.
 const NAV_CATEGORIES = {
   Occupation: [
-    { id: "school", label: "School", actions: [{ label: "View School", handler: () => openSchoolModal() }] },
+    { id: "school", label: "School", render: (container) => renderSchoolInto(container) },
     { id: "jobs", label: "Jobs", actions: [{ label: "Manage Jobs", handler: () => openOccupationModal() }] },
     { id: "coworkers", label: "Coworkers", actions: [{ label: "View Coworkers", handler: () => openCoworkersModal() }] },
     { id: "special_careers", label: "Special Careers", render: renderComingSoon },
@@ -202,20 +202,6 @@ const financeModal = {
   incomeTitle: document.getElementById("finance-income-title"),
   incomeSalary: document.getElementById("finance-income-salary"),
   closeBtn: document.getElementById("finance-modal-close"),
-};
-
-const schoolModal = {
-  overlay: document.getElementById("school-modal-overlay"),
-  name: document.getElementById("school-name"),
-  gradeGpa: document.getElementById("school-grade-gpa"),
-  emptyText: document.getElementById("school-empty-text"),
-  contentView: document.getElementById("school-content-view"),
-  studyBtn: document.getElementById("school-study-btn"),
-  clubsBtn: document.getElementById("school-clubs-btn"),
-  activitiesBtn: document.getElementById("school-activities-btn"),
-  classmatesBtn: document.getElementById("school-classmates-btn"),
-  teacherBtn: document.getElementById("school-teacher-btn"),
-  closeBtn: document.getElementById("school-modal-close"),
 };
 
 const clubsModal = {
@@ -834,12 +820,13 @@ occupationModal.closeBtn.addEventListener("click", () => {
 
 // ---------- Occupation: School ----------
 //
-// Overview -> Things To Do (Study/Clubs/Activities) + People (Classmates/
-// Teacher). Clubs/Activities/Classmates open on top of the overview;
-// the NPC Profile modal opens on top of either Classmates or the overview
-// directly (for the teacher), reusing the exact same profile+interactions
-// UI in both cases so classmates and the teacher aren't two parallel
-// person-detail systems.
+// Renders directly into the accordion's expanded area, same as Family/
+// Friends below, instead of a separate "View School" click-through modal
+// -- the status/grade overview and Study/Clubs/Activities/Classmates/
+// Teacher actions are all right there the moment School expands. Clubs/
+// Activities/Classmates open their own modals on top (same stacking
+// pattern as before); the NPC Profile modal opens on top for the teacher,
+// reusing the exact same profile+interactions UI classmates already use.
 
 const SCHOOL_STATUS_MESSAGES = {
   not_started: "You're not old enough for school yet.",
@@ -851,48 +838,75 @@ const SCHOOL_STATUS_MESSAGES = {
 
 const ENROLLED_STATUSES = new Set(["elementary", "middle", "high_school"]);
 
-function renderSchoolModal() {
+function buildSchoolActionBtn(label, onClick) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "nav-action-btn";
+  btn.textContent = label;
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
+function renderSchoolInto(container) {
+  container.innerHTML = "";
   const edu = character.education;
   const enrolled = ENROLLED_STATUSES.has(edu.status);
 
-  schoolModal.name.textContent = enrolled ? edu.schoolName : getStatusLabel(edu.status);
-  schoolModal.gradeGpa.textContent =
-    enrolled && edu.gradeLevel != null && edu.gpa != null ? `${getGradeLabel(edu.gradeLevel)} · GPA ${edu.gpa.toFixed(2)}` : "";
-
-  schoolModal.contentView.classList.toggle("hidden", !enrolled);
-  schoolModal.emptyText.classList.toggle("hidden", enrolled);
-  if (!enrolled) {
-    schoolModal.emptyText.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
+  const header = document.createElement("div");
+  header.className = "school-header";
+  const name = document.createElement("h3");
+  name.className = "occupation-modal-title";
+  name.textContent = enrolled ? edu.schoolName : getStatusLabel(edu.status);
+  header.appendChild(name);
+  if (enrolled && edu.gradeLevel != null && edu.gpa != null) {
+    const gradeGpa = document.createElement("p");
+    gradeGpa.className = "occupation-job-salary";
+    gradeGpa.textContent = `${getGradeLabel(edu.gradeLevel)} · GPA ${edu.gpa.toFixed(2)}`;
+    header.appendChild(gradeGpa);
   }
+  container.appendChild(header);
+
+  if (!enrolled) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const thingsTitle = document.createElement("p");
+  thingsTitle.className = "school-section-title";
+  thingsTitle.textContent = "Things To Do";
+  container.appendChild(thingsTitle);
+
+  const thingsList = document.createElement("div");
+  thingsList.className = "school-action-list";
+  thingsList.appendChild(buildSchoolActionBtn("Study Harder", () => doStudyHarder(container)));
+  thingsList.appendChild(buildSchoolActionBtn("Join a Club", openClubsModal));
+  thingsList.appendChild(buildSchoolActionBtn("Join an After-School Activity", openActivitiesModal));
+  container.appendChild(thingsList);
+
+  const peopleTitle = document.createElement("p");
+  peopleTitle.className = "school-section-title";
+  peopleTitle.textContent = "People";
+  container.appendChild(peopleTitle);
+
+  const peopleList = document.createElement("div");
+  peopleList.className = "school-action-list";
+  peopleList.appendChild(buildSchoolActionBtn("View Classmates", openClassmatesModal));
+  peopleList.appendChild(
+    buildSchoolActionBtn("View Current Teacher", () => openNpcProfile(character.education.teacher, "teacher"))
+  );
+  container.appendChild(peopleList);
 }
 
-function openSchoolModal() {
-  if (!character) return;
-  renderSchoolModal();
-  schoolModal.overlay.classList.remove("hidden");
-}
-
-function hideSchoolModal() {
-  schoolModal.overlay.classList.add("hidden");
-}
-
-function doStudyHarder() {
+function doStudyHarder(container) {
   const line = studyHarder(character);
   renderGame();
-  renderSchoolModal();
+  renderSchoolInto(container);
   autosave();
   showToast(line);
 }
-
-schoolModal.studyBtn.addEventListener("click", doStudyHarder);
-schoolModal.clubsBtn.addEventListener("click", openClubsModal);
-schoolModal.activitiesBtn.addEventListener("click", openActivitiesModal);
-schoolModal.classmatesBtn.addEventListener("click", openClassmatesModal);
-schoolModal.teacherBtn.addEventListener("click", () => openNpcProfile(character.education.teacher, "teacher"));
-schoolModal.closeBtn.addEventListener("click", () => {
-  hideSchoolModal();
-  hideNavDrawer();
-});
 
 function buildActionCard({ name, meta, actionLabel, onAction }) {
   const btn = document.createElement("button");
