@@ -162,12 +162,18 @@ body {
   background: var(--color-reputation);
 }
 
-#char-money {
-  text-align: center;
+.money-badge {
+  position: absolute;
+  top: calc(4px + env(safe-area-inset-top));
+  right: 4px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 6px 12px;
   font-weight: 700;
-  font-size: 16px;
-  margin: 4px 0 12px;
-  flex-shrink: 0;
+  font-size: 13px;
+  box-shadow: 0 2px 6px var(--color-shadow);
+  z-index: 5;
 }
 
 #event-feed {
@@ -175,7 +181,8 @@ body {
   background: var(--color-card);
   border-radius: var(--radius);
   padding: 12px 14px;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   min-height: 0;
   margin-bottom: 14px;
 }
@@ -184,6 +191,9 @@ body {
   font-size: 14px;
   padding: 6px 0;
   border-bottom: 1px solid var(--color-border);
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .feed-entry:last-child {
@@ -253,6 +263,10 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+#game-screen {
+  position: relative;
 }
 
 .lives-list {

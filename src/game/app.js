@@ -1,4 +1,4 @@
-import { createCharacter, generateRandomName, getLifeStage, randInt } from "./character.js";
+import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
 import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents } from "./data.js";
@@ -96,7 +96,7 @@ function showToast(message) {
 
 function autosave() {
   const ok = saveCharacter(activeLifeId, character);
-  showToast(ok ? "Saved" : "Couldn't save your progress");
+  if (!ok) showToast("Couldn't save your progress");
 }
 
 function manualSave() {
@@ -319,7 +319,7 @@ function renderGame() {
   game.portrait.textContent = stage.emoji;
   game.name.textContent = character.name;
   game.age.textContent = `Age ${character.age} · ${stage.label} ›`;
-  game.money.textContent = `$${character.money.toLocaleString()}`;
+  game.money.textContent = `💰 $${character.money.toLocaleString()}`;
 
   for (const [stat, value] of Object.entries(character.stats)) {
     const bar = game.bars[stat];
@@ -381,8 +381,9 @@ game.navBtns.forEach((btn) => {
 });
 
 function openProfile() {
-  const zodiacLine = character?.zodiacSign ? `\n\nZodiac: ${character.zodiacSign}` : "";
-  alert(`Character Profile is coming soon.${zodiacLine}`);
+  const birthDateLine = character?.birthDate ? `\n\nBirth Date: ${formatBirthDate(character.birthDate)}` : "";
+  const zodiacLine = character?.zodiacSign ? `\nZodiac: ${character.zodiacSign}` : "";
+  alert(`Character Profile is coming soon.${birthDateLine}${zodiacLine}`);
 }
 
 game.profileEntry.addEventListener("click", openProfile);

@@ -336,4 +336,4 @@ function clampStat(value) {
   return Math.max(0, Math.min(100, value));
 }
 
-export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, LIFE_STAGES };
+export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, LIFE_STAGES, formatBirthDate };
