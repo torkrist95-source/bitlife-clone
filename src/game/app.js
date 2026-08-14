@@ -1,4 +1,4 @@
-import { createCharacter, getLifeStage } from "./character.js";
+import { createCharacter, generateRandomName, getLifeStage, randInt } from "./character.js";
 import { ageUp } from "./engine.js";
 import { pickEvent, applyChoice } from "./events.js";
 import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadAgeUpEvents } from "./data.js";
@@ -17,6 +17,9 @@ let selectedGender = null;
 
 const creation = {
   screen: document.getElementById("creation-screen"),
+  nameInput: document.getElementById("name-input"),
+  randomizeNameBtn: document.getElementById("randomize-name-btn"),
+  randomizeCharacterBtn: document.getElementById("randomize-character-btn"),
   countrySelect: document.getElementById("country-select"),
   countryFlavor: document.getElementById("country-flavor"),
   genderBtns: document.querySelectorAll(".gender-btn"),
@@ -218,7 +221,13 @@ function requestDeleteLife(lifeId, name) {
         character = null;
         activeLifeId = null;
       }
-      renderHomeScreen();
+      if (listLives().length === 0) {
+        resetCreationForm();
+        showScreen("creation");
+        settings.panel.classList.remove("open");
+      } else {
+        renderHomeScreen();
+      }
     },
   });
 }
@@ -237,7 +246,7 @@ function updateCountryFlavor() {
 }
 
 function updateStartButton() {
-  creation.startBtn.disabled = !selectedGender;
+  creation.startBtn.disabled = !selectedGender || !creation.nameInput.value.trim();
 }
 
 function populateCountrySelect() {
@@ -251,21 +260,42 @@ function populateCountrySelect() {
   updateCountryFlavor();
 }
 
+function selectGender(gender) {
+  selectedGender = gender;
+  creation.genderBtns.forEach((b) => b.classList.toggle("selected", b.dataset.gender === gender));
+  updateStartButton();
+}
+
+function randomizeCharacter() {
+  creation.nameInput.value = generateRandomName();
+  selectGender(Math.random() < 0.5 ? "male" : "female");
+  if (countries.length > 0) {
+    creation.countrySelect.value = countries[randInt(0, countries.length - 1)].id;
+    updateCountryFlavor();
+  }
+  updateStartButton();
+}
+
 function wireCreationScreen() {
   creation.countrySelect.addEventListener("change", updateCountryFlavor);
+  creation.nameInput.addEventListener("input", updateStartButton);
+
+  creation.randomizeNameBtn.addEventListener("click", () => {
+    creation.nameInput.value = generateRandomName();
+    updateStartButton();
+  });
+
+  creation.randomizeCharacterBtn.addEventListener("click", randomizeCharacter);
 
   creation.genderBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      selectedGender = btn.dataset.gender;
-      creation.genderBtns.forEach((b) => b.classList.toggle("selected", b === btn));
-      updateStartButton();
-    });
+    btn.addEventListener("click", () => selectGender(btn.dataset.gender));
   });
 
   creation.startBtn.addEventListener("click", startLife);
 }
 
 function resetCreationForm() {
+  creation.nameInput.value = "";
   selectedGender = null;
   creation.genderBtns.forEach((b) => b.classList.remove("selected"));
   updateStartButton();
@@ -273,7 +303,8 @@ function resetCreationForm() {
 
 function startLife() {
   const country = countries.find((c) => c.id === creation.countrySelect.value);
-  character = createCharacter({ country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures });
+  const name = creation.nameInput.value.trim();
+  character = createCharacter({ name, country, gender: selectedGender, wealthTiers, birthCircumstances, familyStructures });
   activeLifeId = createLife(character);
 
   showScreen("game");
@@ -418,12 +449,19 @@ async function init() {
   if (corrupted) showToast("Your previous save couldn't be loaded. Starting fresh.");
 
   if (savedCharacter) {
+    // Returning player with an active life: go straight into gameplay.
     character = savedCharacter;
     activeLifeId = lifeId;
     showScreen("game");
     renderGame();
-  } else {
+  } else if (listLives().length > 0) {
+    // Lives exist but none is active (e.g. the active life was deleted last
+    // session) -- let the player pick one instead of guessing.
     showHomeScreen();
+  } else {
+    // First-time player: no saved lives at all, so skip My Lives entirely.
+    resetCreationForm();
+    showScreen("creation");
   }
 }
 

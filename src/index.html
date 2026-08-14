@@ -39,12 +39,14 @@
     </div>
 
     <div id="creation-screen" class="screen hidden">
-      <h1 class="creation-title">Start a New Life</h1>
+      <h1 class="creation-title">Create Your Character</h1>
 
       <div class="creation-field">
-        <label for="country-select">Country of Birth</label>
-        <select id="country-select"></select>
-        <p id="country-flavor" class="flavor-text"></p>
+        <label for="name-input">Name</label>
+        <div class="name-input-row">
+          <input type="text" id="name-input" placeholder="Enter a name" maxlength="40" autocomplete="off" />
+          <button type="button" id="randomize-name-btn" class="dice-btn" aria-label="Randomize name">🎲</button>
+        </div>
       </div>
 
       <div class="creation-field">
@@ -54,6 +56,14 @@
           <button type="button" class="gender-btn" data-gender="female">Female</button>
         </div>
       </div>
+
+      <div class="creation-field">
+        <label for="country-select">Country of Birth</label>
+        <select id="country-select"></select>
+        <p id="country-flavor" class="flavor-text"></p>
+      </div>
+
+      <button type="button" id="randomize-character-btn" class="randomize-character-btn">🎲 Randomize Character</button>
 
       <button id="start-life-btn" disabled>Start Life</button>
     </div>

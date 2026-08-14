@@ -388,6 +388,55 @@ body {
   color: var(--color-text);
 }
 
+.name-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+#name-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.dice-btn {
+  flex-shrink: 0;
+  width: 42px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.dice-btn:active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.randomize-character-btn {
+  width: 100%;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.randomize-character-btn:active {
+  background: var(--color-bg);
+}
+
 .flavor-text {
   margin: 8px 2px 0;
   font-size: 13px;

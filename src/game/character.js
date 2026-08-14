@@ -252,10 +252,22 @@ function buildBirthHistoryLines({ formattedDate, country, tier, structureId, par
   return lines;
 }
 
-function createCharacter({ country, gender, wealthTiers, birthCircumstances, familyStructures }) {
-  const lastName = randChoice(LAST_NAMES);
-  const firstName = randChoice(FIRST_NAMES);
-  const name = `${firstName} ${lastName}`;
+function generateRandomName() {
+  return `${randChoice(FIRST_NAMES)} ${randChoice(LAST_NAMES)}`;
+}
+
+function parsePlayerName(fullName) {
+  const trimmed = (fullName ?? "").trim().replace(/\s+/g, " ");
+  if (!trimmed) return parsePlayerName(generateRandomName());
+
+  const parts = trimmed.split(" ");
+  const firstName = parts[0];
+  const lastName = parts.length > 1 ? parts[parts.length - 1] : randChoice(LAST_NAMES);
+  return { name: trimmed, firstName, lastName };
+}
+
+function createCharacter({ name, country, gender, wealthTiers, birthCircumstances, familyStructures }) {
+  const { name: playerName, firstName, lastName } = parsePlayerName(name);
   const tier = rollWealthTier(wealthTiers);
 
   const circumstance = rollWeighted(birthCircumstances);
@@ -283,7 +295,7 @@ function createCharacter({ country, gender, wealthTiers, birthCircumstances, fam
   });
 
   return {
-    name,
+    name: playerName,
     gender,
     country: country.id,
     countryName: country.name,
@@ -324,4 +336,4 @@ function clampStat(value) {
   return Math.max(0, Math.min(100, value));
 }
 
-export { createCharacter, getLifeStage, clampStat, randInt, LIFE_STAGES };
+export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, LIFE_STAGES };
