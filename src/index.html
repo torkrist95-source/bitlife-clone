@@ -194,6 +194,32 @@
       </div>
     </div>
 
+    <div id="finance-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal occupation-modal">
+        <h2 class="occupation-modal-title">Overview</h2>
+
+        <div class="finance-balance-block">
+          <p class="finance-balance-label">Current Balance</p>
+          <p id="finance-balance-amount" class="finance-balance-amount"></p>
+        </div>
+
+        <div id="finance-income-employed" class="finance-income-block hidden">
+          <p class="finance-income-label">Income</p>
+          <p id="finance-income-title" class="occupation-job-title"></p>
+          <p id="finance-income-salary" class="occupation-job-salary"></p>
+        </div>
+
+        <div id="finance-income-unemployed" class="finance-income-block hidden">
+          <p class="occupation-unemployed-label">No current source of income.</p>
+        </div>
+
+        <div class="nav-modal-footer">
+          <button type="button" id="finance-modal-back" class="event-choice-btn nav-back-btn">← Back</button>
+          <button type="button" id="finance-modal-close" class="event-choice-btn nav-close-btn">✕ Close</button>
+        </div>
+      </div>
+    </div>
+
     <div id="confirm-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal">
         <p id="confirm-modal-title" class="confirm-modal-title"></p>

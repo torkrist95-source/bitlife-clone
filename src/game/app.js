@@ -31,7 +31,12 @@ const NAV_CATEGORIES = {
   Relationships: [],
   Activities: [],
   Social: [],
-  Finance: [],
+  Finance: [
+    { id: "finance_overview", label: "Overview" },
+    { id: "savings", label: "Savings" },
+    { id: "investments", label: "Investments" },
+    { id: "loans", label: "Loans" },
+  ],
 };
 
 let character = null;
@@ -135,6 +140,17 @@ const systemPlaceholder = {
   title: document.getElementById("system-placeholder-title"),
   backBtn: document.getElementById("system-placeholder-back"),
   closeBtn: document.getElementById("system-placeholder-close"),
+};
+
+const financeModal = {
+  overlay: document.getElementById("finance-modal-overlay"),
+  balanceAmount: document.getElementById("finance-balance-amount"),
+  employedView: document.getElementById("finance-income-employed"),
+  unemployedView: document.getElementById("finance-income-unemployed"),
+  incomeTitle: document.getElementById("finance-income-title"),
+  incomeSalary: document.getElementById("finance-income-salary"),
+  backBtn: document.getElementById("finance-modal-back"),
+  closeBtn: document.getElementById("finance-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -528,6 +544,8 @@ function hideCategoryMenu() {
 function openSystemPage(system) {
   if (system.id === "jobs") {
     openOccupationModal();
+  } else if (system.id === "finance_overview") {
+    openFinanceOverview();
   } else {
     openSystemPlaceholder(system.label);
   }
@@ -653,6 +671,39 @@ occupationModal.quitBtn.addEventListener("click", requestQuitJob);
 occupationModal.backBtn.addEventListener("click", hideOccupationModal);
 occupationModal.closeBtn.addEventListener("click", () => {
   hideOccupationModal();
+  hideCategoryMenu();
+});
+
+// ---------- Finance ----------
+
+function renderFinanceOverview() {
+  financeModal.balanceAmount.textContent = `$${character.money.toLocaleString()}`;
+
+  const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
+  if (level) {
+    financeModal.incomeTitle.textContent = level.title;
+    financeModal.incomeSalary.textContent = `$${level.salary.toLocaleString()} / year`;
+    financeModal.employedView.classList.remove("hidden");
+    financeModal.unemployedView.classList.add("hidden");
+  } else {
+    financeModal.employedView.classList.add("hidden");
+    financeModal.unemployedView.classList.remove("hidden");
+  }
+}
+
+function openFinanceOverview() {
+  if (!character) return;
+  renderFinanceOverview();
+  financeModal.overlay.classList.remove("hidden");
+}
+
+function hideFinanceOverview() {
+  financeModal.overlay.classList.add("hidden");
+}
+
+financeModal.backBtn.addEventListener("click", hideFinanceOverview);
+financeModal.closeBtn.addEventListener("click", () => {
+  hideFinanceOverview();
   hideCategoryMenu();
 });
 
