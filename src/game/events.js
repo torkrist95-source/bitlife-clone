@@ -86,9 +86,11 @@ function rememberEvent(character, eventId) {
 // Same degrading-window shape as recentEventIds/RECENT_EVENT_MEMORY above,
 // generalized for any small keyed memory (NPC-update and world-update
 // template ids, which previously had zero repetition tracking and could
-// fire back-to-back). Memory is smaller than the player-event one since
-// these pools are much smaller (a dozen-ish entries vs. dozens of events).
-const RECENT_UPDATE_MEMORY = 3;
+// fire back-to-back). Since a single year can now roll multiple NPC/world
+// flavor slots (see NPC_FLAVOR_SLOTS/WORLD_FLAVOR_SLOTS below), this also
+// needs enough headroom that one busy year doesn't consume the entire
+// window and leave the following year with no repetition protection at all.
+const RECENT_UPDATE_MEMORY = 5;
 
 function rememberUpdate(character, field, id) {
   const recent = character[field] ?? [];
@@ -278,8 +280,18 @@ const QUIET_YEAR_LINES = [
 // meaningful lines first.
 const MAX_BACKGROUND_LINES = 4;
 
-const NPC_FLAVOR_CHANCE = 30; // percent, independent roll
-const WORLD_FLAVOR_CHANCE = 30; // percent, independent roll
+// Each flavor channel gets several independent per-year opportunities
+// rather than one single "pick one from the whole pool" roll -- a year
+// can genuinely surface more than one NPC tidbit or more than one world
+// headline, same as applyNpcLifeYear already evaluates every eligible NPC
+// independently and applyFamilyYear already evaluates every family member
+// independently. The MAX_BACKGROUND_LINES cap below is what keeps a year
+// readable; it must never be the thing limiting how many candidates get
+// *evaluated* in the first place.
+const NPC_FLAVOR_SLOTS = 2;
+const NPC_FLAVOR_CHANCE_PER_SLOT = 22; // percent, per independent slot
+const WORLD_FLAVOR_SLOTS = 3;
+const WORLD_FLAVOR_CHANCE_PER_SLOT = 25; // percent, per independent slot
 const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
 
 // The Age Up dispatcher: assembles the year as a bundle of independently-
@@ -293,13 +305,17 @@ function rollAgeUpHappening(character, pools) {
 
   let lines = applyNpcLifeYear(character, namePools, countryId, jobsData);
 
-  if (randInt(0, 99) < NPC_FLAVOR_CHANCE) {
-    const line = pickNpcUpdateLine(character, npcUpdates, namePools, countryId);
-    if (line) lines.push(line);
+  for (let i = 0; i < NPC_FLAVOR_SLOTS; i++) {
+    if (randInt(0, 99) < NPC_FLAVOR_CHANCE_PER_SLOT) {
+      const line = pickNpcUpdateLine(character, npcUpdates, namePools, countryId);
+      if (line) lines.push(line);
+    }
   }
-  if (randInt(0, 99) < WORLD_FLAVOR_CHANCE) {
-    const line = pickWorldUpdateLine(character, worldUpdates, countryName);
-    if (line) lines.push(line);
+  for (let i = 0; i < WORLD_FLAVOR_SLOTS; i++) {
+    if (randInt(0, 99) < WORLD_FLAVOR_CHANCE_PER_SLOT) {
+      const line = pickWorldUpdateLine(character, worldUpdates, countryName);
+      if (line) lines.push(line);
+    }
   }
 
   if (lines.length > MAX_BACKGROUND_LINES) {
