@@ -1,6 +1,7 @@
-import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
+import { createCharacter, generateRandomName, getLifeStage, randInt, clampStat, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
 import { applyChoice, getEligibleChoices, rollAgeUpHappening } from "./events.js";
+import { ensureSocialCircle } from "./npc.js";
 import {
   loadCountries,
   loadWealthTiers,
@@ -28,7 +29,12 @@ const NAV_CATEGORIES = {
     { id: "special_careers", label: "Special Careers" },
     { id: "career_history", label: "Career History" },
   ],
-  Relationships: [],
+  Relationships: [
+    { id: "friends", label: "Friends" },
+    { id: "family", label: "Family" },
+    { id: "dating", label: "Dating" },
+    { id: "marriage", label: "Marriage" },
+  ],
   Activities: [],
   Social: [],
   Finance: [
@@ -151,6 +157,21 @@ const financeModal = {
   incomeSalary: document.getElementById("finance-income-salary"),
   backBtn: document.getElementById("finance-modal-back"),
   closeBtn: document.getElementById("finance-modal-close"),
+};
+
+const friendsModal = {
+  overlay: document.getElementById("friends-modal-overlay"),
+  list: document.getElementById("friends-list"),
+  empty: document.getElementById("friends-empty"),
+  backBtn: document.getElementById("friends-modal-back"),
+  closeBtn: document.getElementById("friends-modal-close"),
+};
+
+const familyModal = {
+  overlay: document.getElementById("family-modal-overlay"),
+  list: document.getElementById("family-list"),
+  backBtn: document.getElementById("family-modal-back"),
+  closeBtn: document.getElementById("family-modal-close"),
 };
 
 const toast = document.getElementById("toast");
@@ -546,6 +567,10 @@ function openSystemPage(system) {
     openOccupationModal();
   } else if (system.id === "finance_overview") {
     openFinanceOverview();
+  } else if (system.id === "friends") {
+    openFriendsModal();
+  } else if (system.id === "family") {
+    openFamilyModal();
   } else {
     openSystemPlaceholder(system.label);
   }
@@ -704,6 +729,113 @@ function hideFinanceOverview() {
 financeModal.backBtn.addEventListener("click", hideFinanceOverview);
 financeModal.closeBtn.addEventListener("click", () => {
   hideFinanceOverview();
+  hideCategoryMenu();
+});
+
+// ---------- Relationships: Friends & Family ----------
+
+const SOCIAL_TYPE_LABELS = { friend: "Friend", crush: "Crush", romantic_interest: "Romantic Interest" };
+
+function buildPersonCard({ name, meta, action }) {
+  const card = document.createElement("div");
+  card.className = "friend-card";
+
+  const info = document.createElement("div");
+  const nameEl = document.createElement("p");
+  nameEl.className = "friend-card-name";
+  nameEl.textContent = name;
+  const metaEl = document.createElement("p");
+  metaEl.className = "friend-card-meta";
+  metaEl.textContent = meta;
+  info.appendChild(nameEl);
+  info.appendChild(metaEl);
+  card.appendChild(info);
+
+  if (action) card.appendChild(action);
+  return card;
+}
+
+function renderFriendsList() {
+  ensureSocialCircle(character, namePools, character.country);
+  friendsModal.list.innerHTML = "";
+  const circle = character.socialCircle ?? [];
+  friendsModal.empty.classList.toggle("hidden", circle.length > 0);
+
+  for (const npc of circle) {
+    const hangoutBtn = document.createElement("button");
+    hangoutBtn.type = "button";
+    hangoutBtn.className = "friend-hangout-btn";
+    hangoutBtn.textContent = "Hang Out";
+    hangoutBtn.addEventListener("click", () => hangOutWith(npc.id));
+
+    const meta = `${SOCIAL_TYPE_LABELS[npc.type] ?? npc.type} · Closeness ${npc.closeness}`;
+    friendsModal.list.appendChild(buildPersonCard({ name: npc.name, meta, action: hangoutBtn }));
+  }
+}
+
+function hangOutWith(npcId) {
+  const npc = (character.socialCircle ?? []).find((n) => n.id === npcId);
+  if (!npc) return;
+  npc.closeness = clampStat(npc.closeness + randInt(3, 8));
+  character.stats.happiness = clampStat(character.stats.happiness + 2);
+  character.history.push(`You hung out with ${npc.name}.`);
+  renderFriendsList();
+  renderGame();
+  autosave();
+}
+
+function openFriendsModal() {
+  if (!character) return;
+  renderFriendsList();
+  friendsModal.overlay.classList.remove("hidden");
+}
+
+function hideFriendsModal() {
+  friendsModal.overlay.classList.add("hidden");
+}
+
+friendsModal.backBtn.addEventListener("click", hideFriendsModal);
+friendsModal.closeBtn.addEventListener("click", () => {
+  hideFriendsModal();
+  hideCategoryMenu();
+});
+
+function parentRelationLabel(parent) {
+  if (parent.role === "guardian") {
+    const relation = parent.guardianRelation ?? "guardian";
+    return relation.charAt(0).toUpperCase() + relation.slice(1);
+  }
+  const base = parent.role.charAt(0).toUpperCase() + parent.role.slice(1);
+  return parent.relationshipType === "step" ? `Step${parent.role}` : base;
+}
+
+function renderFamilyList() {
+  familyModal.list.innerHTML = "";
+
+  for (const parent of character.family?.parents ?? []) {
+    const jobText = parent.employed ? `works as ${parent.job}` : "unemployed";
+    const meta = `${parentRelationLabel(parent)} · Age ${parent.age} · ${jobText}`;
+    familyModal.list.appendChild(buildPersonCard({ name: parent.name, meta }));
+  }
+
+  for (const sibling of character.family?.siblings ?? []) {
+    familyModal.list.appendChild(buildPersonCard({ name: sibling.name, meta: `Sibling · Age ${sibling.age}` }));
+  }
+}
+
+function openFamilyModal() {
+  if (!character) return;
+  renderFamilyList();
+  familyModal.overlay.classList.remove("hidden");
+}
+
+function hideFamilyModal() {
+  familyModal.overlay.classList.add("hidden");
+}
+
+familyModal.backBtn.addEventListener("click", hideFamilyModal);
+familyModal.closeBtn.addEventListener("click", () => {
+  hideFamilyModal();
   hideCategoryMenu();
 });
 

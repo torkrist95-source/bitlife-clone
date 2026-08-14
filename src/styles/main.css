@@ -884,6 +884,54 @@ body {
   letter-spacing: 0.04em;
 }
 
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 18px;
+}
+
+.friend-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.friend-card-name {
+  margin: 0 0 2px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.friend-card-meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.friend-hangout-btn {
+  flex-shrink: 0;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.friend-hangout-btn:active {
+  opacity: 0.8;
+}
+
 .occupation-job-list {
   display: flex;
   flex-direction: column;
