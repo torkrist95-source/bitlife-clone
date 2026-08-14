@@ -12,6 +12,8 @@ function migrateCharacterFields(character) {
   character.flags ??= {};
   character.skills ??= {};
   character.hobbies ??= [];
+  character.socialCircle ??= [];
+  character.recentEventIds ??= [];
   character.pendingEventId ??= null;
   character.history ??= [];
   return character;

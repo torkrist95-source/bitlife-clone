@@ -8,13 +8,11 @@
     "choices": [
       {
         "label": "Ask them to hang out",
-        "effects": { "happiness": 8, "looks": 1 },
-        "resultText": "They said yes! You hung out after school and had a great time."
+        "dynamic": "develop_crush_pursue"
       },
       {
         "label": "Keep your feelings to yourself",
-        "effects": { "happiness": -2 },
-        "resultText": "You kept quiet about it. Maybe next time."
+        "dynamic": "develop_crush_quiet"
       }
     ]
   },
@@ -141,14 +139,16 @@
     "text": "There's a school dance coming up.",
     "choices": [
       {
-        "label": "Ask someone to go with you",
-        "effects": { "happiness": 6, "looks": 1 },
-        "resultText": "You worked up the courage to ask someone, and they said yes."
+        "label": "Ask someone out",
+        "dynamic": "ask_to_dance"
       },
       {
-        "label": "Go with a group of friends instead",
-        "effects": { "happiness": 3 },
-        "resultText": "You went with a big group of friends and had a great time anyway."
+        "label": "Go with friends",
+        "dynamic": "dance_with_friends"
+      },
+      {
+        "label": "Skip the dance",
+        "dynamic": "skip_dance_alternative"
       }
     ]
   },

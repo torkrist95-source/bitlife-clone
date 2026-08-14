@@ -1,0 +1,18 @@
+[
+  { "id": "npc_hobby_start", "appliesTo": ["sibling", "friend"], "weight": 10, "template": "{name} started getting really into {hobby} this year." },
+  { "id": "npc_hobby_talk", "appliesTo": ["sibling", "friend", "crush"], "weight": 8, "template": "{name} has been talking nonstop about {hobby} lately." },
+  { "id": "npc_parent_job_change", "appliesTo": ["mother", "father", "guardian"], "weight": 8, "template": "Your {relation}, {name}, changed jobs this year." },
+  { "id": "npc_parent_promotion", "appliesTo": ["mother", "father"], "weight": 6, "template": "Your {relation}, {name}, got a promotion at work." },
+  { "id": "npc_sibling_trouble", "appliesTo": ["sibling"], "weight": 6, "template": "{name} got in trouble for something at school." },
+  { "id": "npc_sibling_achievement", "appliesTo": ["sibling"], "weight": 6, "template": "{name} won an award at school and wouldn't stop talking about it." },
+  { "id": "npc_friend_honor_roll", "appliesTo": ["friend"], "weight": 6, "template": "{name} made the honor roll this year." },
+  { "id": "npc_moved_school", "appliesTo": ["friend", "crush"], "weight": 5, "template": "{name} moved to another school." },
+  { "id": "npc_friend_new_pet", "appliesTo": ["friend", "sibling"], "weight": 7, "template": "{name} got a new pet and wouldn't stop showing everyone pictures of it." },
+  { "id": "npc_friend_haircut", "appliesTo": ["friend", "crush", "sibling"], "weight": 7, "template": "{name} showed up with a completely different haircut and everyone had opinions." },
+  { "id": "npc_parent_health_scare", "appliesTo": ["mother", "father"], "weight": 4, "template": "Your {relation}, {name}, had a minor health scare, but recovered just fine." },
+  { "id": "npc_friend_part_time_job", "appliesTo": ["friend"], "weight": 6, "template": "{name} got their first part-time job." },
+  { "id": "npc_romantic_interest_checkin", "appliesTo": ["romantic_interest"], "weight": 8, "template": "You and {name} spent a lot more time together this year." },
+  { "id": "npc_crush_notices", "appliesTo": ["crush"], "weight": 7, "template": "You caught {name} looking your way more than once this year." },
+  { "id": "npc_sibling_moved_out", "appliesTo": ["sibling"], "weight": 3, "template": "{name} moved out on their own this year." },
+  { "id": "npc_friend_travel", "appliesTo": ["friend", "sibling"], "weight": 5, "template": "{name} went on a big trip and came back with way too many stories about it." }
+]

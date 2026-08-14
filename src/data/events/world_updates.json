@@ -1,0 +1,18 @@
+[
+  { "id": "world_pop_album", "weight": 8, "template": "A pop star named Nova Sinclair topped the charts with a surprise album drop." },
+  { "id": "world_tech_gadget", "weight": 8, "template": "The tech company Verdant Systems unveiled a new gadget that everyone seemed to be talking about." },
+  { "id": "world_blockbuster", "weight": 8, "template": "A blockbuster movie swept the box office and became the year's biggest cultural moment." },
+  { "id": "world_local_festival", "weight": 7, "template": "There was a huge citywide festival in {country} that drew massive crowds." },
+  { "id": "world_dance_trend", "weight": 7, "template": "A viral dance trend took over social media for a few weeks straight." },
+  { "id": "world_movie_sequel", "weight": 6, "template": "Meridian Studios announced a surprise sequel to one of the decade's biggest films." },
+  { "id": "world_celebrity_restaurant", "weight": 5, "template": "A celebrity chef named Elena Voss opened a new restaurant that people waited months to get into." },
+  { "id": "world_harsh_winter", "weight": 5, "template": "An unusually harsh winter swept through {country} this year." },
+  { "id": "world_championship_upset", "weight": 7, "template": "A championship game ended in a stunning upset that people talked about for weeks." },
+  { "id": "world_band_reunion", "weight": 6, "template": "The band Glass Horizon reunited after years apart, and tickets for their tour sold out in minutes." },
+  { "id": "world_app_fad", "weight": 6, "template": "A new social media app briefly became everyone's obsession before fading almost as fast." },
+  { "id": "world_science_discovery", "weight": 6, "template": "Scientists announced a surprising discovery that made headlines for a few days." },
+  { "id": "world_actor_hiatus", "weight": 5, "template": "A beloved actor named Julian Cole surprised fans by stepping away from the spotlight for a while." },
+  { "id": "world_national_holiday", "weight": 7, "template": "{country} celebrated a major national holiday with festivities across the country." },
+  { "id": "world_heatwave", "weight": 5, "template": "An unexpected heatwave broke records across {country} this summer." },
+  { "id": "world_streamer_milestone", "weight": 6, "template": "A massive online creator known as MotionByMara hit a huge subscriber milestone." }
+]

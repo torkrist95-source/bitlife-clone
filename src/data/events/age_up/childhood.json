@@ -195,6 +195,47 @@
             "resultText": "Half your prints came out blurry because of a camera mishap the night before. You made do with what you had."
           }
         ]
+      },
+      {
+        "label": "A homemade water filter",
+        "outcomes": [
+          {
+            "weight": 8,
+            "effects": { "smarts": 3, "happiness": 3 },
+            "resultText": "You presented your homemade water filter to the judges. The first test didn't go as planned, but you quickly figured out what went wrong and fixed it before the final demonstration."
+          },
+          {
+            "weight": 6,
+            "effects": { "smarts": 1, "happiness": -1 },
+            "resultText": "Your water filter never quite got the water clear enough, and you spent most of your presentation explaining what you'd try differently next time."
+          },
+          {
+            "weight": 3,
+            "effects": { "smarts": 4, "reputation": 2, "happiness": 4 },
+            "resultText": "Your filter worked better than anyone expected, including you. A judge asked if you'd thought about entering the regional science fair."
+          }
+        ]
+      },
+      {
+        "label": "A renewable-energy model",
+        "requires": [{ "path": "stats.smarts", "op": ">=", "value": 60 }],
+        "outcomes": [
+          {
+            "weight": 6,
+            "effects": { "smarts": 4, "happiness": 4, "reputation": 2 },
+            "resultText": "Your little wind-and-solar model actually powered a light bulb, and the judges spent a long time asking you how it worked."
+          },
+          {
+            "weight": 7,
+            "effects": { "smarts": 2, "happiness": 1 },
+            "resultText": "Your model mostly worked, though you had to explain away a couple of parts that didn't quite behave as planned."
+          },
+          {
+            "weight": 3,
+            "effects": { "happiness": -2, "smarts": 1 },
+            "resultText": "Your model was too ambitious for the time you had, and it barely worked by the time judging came around."
+          }
+        ]
       }
     ]
   },

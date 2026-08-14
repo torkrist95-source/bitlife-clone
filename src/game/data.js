@@ -38,4 +38,22 @@ async function loadAgeUpEvents() {
   return pools.flat();
 }
 
-export { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadJobs, loadAgeUpEvents };
+function loadNpcUpdates() {
+  return loadJSON("data/events/npc_updates.json");
+}
+
+function loadWorldUpdates() {
+  return loadJSON("data/events/world_updates.json");
+}
+
+export {
+  loadCountries,
+  loadWealthTiers,
+  loadBirthCircumstances,
+  loadFamilyStructures,
+  loadNamePools,
+  loadJobs,
+  loadAgeUpEvents,
+  loadNpcUpdates,
+  loadWorldUpdates,
+};

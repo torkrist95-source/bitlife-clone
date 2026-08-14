@@ -1,7 +1,17 @@
 import { createCharacter, generateRandomName, getLifeStage, randInt, formatBirthDate } from "./character.js";
 import { ageUp } from "./engine.js";
-import { pickEvent, applyChoice, getEligibleChoices } from "./events.js";
-import { loadCountries, loadWealthTiers, loadBirthCircumstances, loadFamilyStructures, loadNamePools, loadJobs, loadAgeUpEvents } from "./data.js";
+import { applyChoice, getEligibleChoices, rollAgeUpHappening } from "./events.js";
+import {
+  loadCountries,
+  loadWealthTiers,
+  loadBirthCircumstances,
+  loadFamilyStructures,
+  loadNamePools,
+  loadJobs,
+  loadAgeUpEvents,
+  loadNpcUpdates,
+  loadWorldUpdates,
+} from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
 
 const MAX_FEED_ENTRIES = 6;
@@ -15,6 +25,8 @@ let familyStructures = [];
 let namePools = {};
 let jobsData = [];
 let ageUpEvents = [];
+let npcUpdates = [];
+let worldUpdates = [];
 let selectedGender = null;
 
 const creation = {
@@ -381,6 +393,8 @@ function showEventModal(event) {
             hobbies: event.hobbies,
             resultText: event.resultText,
             next_event: event.next_event,
+            dynamic: event.dynamic,
+            dynamicArgs: event.dynamicArgs,
           },
         ];
 
@@ -390,11 +404,18 @@ function showEventModal(event) {
     btn.className = "event-choice-btn";
     btn.textContent = choice.label;
     btn.addEventListener("click", () => {
-      applyChoice(character, choice);
-      hideEventModal();
+      const { followUpEvent } = applyChoice(character, choice, { namePools, countryId: character.country });
       renderGame();
       autosave();
-      game.ageBtn.disabled = false;
+      if (followUpEvent) {
+        // A dynamic choice opened another event (e.g. "who do you want to
+        // ask?") -- show it immediately in the same modal instead of
+        // closing; Age Up stays disabled until a choice fully resolves.
+        showEventModal(followUpEvent);
+      } else {
+        hideEventModal();
+        game.ageBtn.disabled = false;
+      }
     });
     eventModal.choices.appendChild(btn);
   }
@@ -408,13 +429,22 @@ function hideEventModal() {
 
 game.ageBtn.addEventListener("click", () => {
   ageUp(character, jobsData);
+
+  const happening = rollAgeUpHappening(character, {
+    ageUpEvents,
+    npcUpdates,
+    worldUpdates,
+    namePools,
+    countryId: character.country,
+    countryName: character.countryName,
+  });
+
   renderGame();
   autosave();
 
-  const event = pickEvent(character, ageUpEvents);
-  if (event) {
+  if (happening.type === "player_event") {
     game.ageBtn.disabled = true;
-    showEventModal(event);
+    showEventModal(happening.event);
   }
 });
 
@@ -595,15 +625,18 @@ document.getElementById("my-lives-btn").addEventListener("click", showHomeScreen
 // ---------- Startup ----------
 
 async function init() {
-  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents] = await Promise.all([
-    loadCountries(),
-    loadWealthTiers(),
-    loadBirthCircumstances(),
-    loadFamilyStructures(),
-    loadNamePools(),
-    loadJobs(),
-    loadAgeUpEvents(),
-  ]);
+  [countries, wealthTiers, birthCircumstances, familyStructures, namePools, jobsData, ageUpEvents, npcUpdates, worldUpdates] =
+    await Promise.all([
+      loadCountries(),
+      loadWealthTiers(),
+      loadBirthCircumstances(),
+      loadFamilyStructures(),
+      loadNamePools(),
+      loadJobs(),
+      loadAgeUpEvents(),
+      loadNpcUpdates(),
+      loadWorldUpdates(),
+    ]);
 
   populateCountrySelect();
   wireCreationScreen();

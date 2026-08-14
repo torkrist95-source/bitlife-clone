@@ -50,6 +50,19 @@ function randChoice(list) {
   return list[randInt(0, list.length - 1)];
 }
 
+// Shared weighted-random selection: picks one item from a list, where each
+// item's `weight` (default 10) is its relative chance of being picked.
+function weightedPick(items) {
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 10), 0);
+  let roll = Math.random() * totalWeight;
+  for (const item of items) {
+    const weight = item.weight ?? 10;
+    if (roll < weight) return item;
+    roll -= weight;
+  }
+  return items[items.length - 1];
+}
+
 function getLifeStage(age) {
   return LIFE_STAGES.find((stage) => age >= stage.minAge && age <= stage.maxAge) ?? LIFE_STAGES[LIFE_STAGES.length - 1];
 }
@@ -368,6 +381,8 @@ function createCharacter({ name, country, gender, wealthTiers, birthCircumstance
     flags: {},
     skills: {},
     hobbies: [],
+    socialCircle: [],
+    recentEventIds: [],
     pendingEventId: null,
     history: historyLines,
   };
@@ -381,4 +396,4 @@ function clampStat(value) {
   return Math.max(0, Math.min(100, value));
 }
 
-export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, LIFE_STAGES, formatBirthDate };
+export { createCharacter, generateRandomName, getLifeStage, clampStat, randInt, weightedPick, LIFE_STAGES, formatBirthDate };
