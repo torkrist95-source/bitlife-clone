@@ -9,6 +9,7 @@ import {
   ensureBirthLocation,
   pushHistory,
   MIN_DATING_AGE,
+  MIN_EARNING_AGE,
   ENROLLED_EDUCATION_STATUSES as ENROLLED_STATUSES,
 } from "./character.js";
 import { ageUp } from "./engine.js";
@@ -28,7 +29,10 @@ import {
   askOut,
   askForHelp,
   thankTeacher,
+  askFamilyForHelp,
+  borrowMoney,
 } from "./npc.js";
+import { getEligibleJobs, applyForJob, getOddJobsSummary, getEligibleOneTimeJobs, resolveOneTimeJob } from "./careers.js";
 import {
   getGradeLabel,
   getStatusLabel,
@@ -47,6 +51,7 @@ import {
   loadFamilyStructures,
   loadNamePools,
   loadJobs,
+  loadOneTimeJobs,
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
@@ -70,16 +75,14 @@ import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLif
 const NAV_CATEGORIES = {
   Occupation: [
     { id: "school", label: "School", render: (container) => renderSchoolInto(container) },
-    { id: "jobs", label: "Jobs", actions: [{ label: "Manage Jobs", handler: () => openOccupationModal() }] },
-    { id: "coworkers", label: "Coworkers", actions: [{ label: "View Coworkers", handler: () => openCoworkersModal() }] },
+    { id: "jobs", label: "Jobs", render: (container) => renderJobsInto(container) },
     { id: "special_careers", label: "Special Careers", render: renderComingSoon },
     { id: "career_history", label: "Career History", render: renderComingSoon },
   ],
   Relationships: [
     { id: "family", label: "Family", render: (container) => renderFamilyListInto(container) },
-    { id: "friends", label: "Friends", render: (container) => renderFriendsListInto(container) },
+    { id: "friends", label: "Friends", render: (container) => renderFriendsInto(container) },
     { id: "partner", label: "Partner", render: renderComingSoon },
-    { id: "children", label: "Children", render: renderComingSoon },
   ],
   Activities: [
     { id: "hobbies", label: "Hobbies", render: renderComingSoon },
@@ -114,6 +117,7 @@ let birthCircumstances = [];
 let familyStructures = [];
 let namePools = {};
 let jobsData = [];
+let oneTimeJobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
@@ -189,17 +193,6 @@ const profileModal = {
   closeBtn: document.getElementById("profile-modal-close"),
 };
 
-const occupationModal = {
-  overlay: document.getElementById("occupation-modal-overlay"),
-  employedView: document.getElementById("occupation-employed-view"),
-  unemployedView: document.getElementById("occupation-unemployed-view"),
-  jobTitle: document.getElementById("occupation-job-title"),
-  jobSalary: document.getElementById("occupation-job-salary"),
-  jobList: document.getElementById("occupation-job-list"),
-  quitBtn: document.getElementById("occupation-quit-btn"),
-  closeBtn: document.getElementById("occupation-modal-close"),
-};
-
 const navDrawer = {
   overlay: document.getElementById("nav-drawer-overlay"),
   title: document.getElementById("nav-drawer-title"),
@@ -248,6 +241,7 @@ const npcProfileModal = {
   portrait: document.getElementById("npc-profile-portrait"),
   name: document.getElementById("npc-profile-name"),
   meta: document.getElementById("npc-profile-meta"),
+  barsWrap: document.getElementById("npc-profile-bars-wrap"),
   bars: {
     health: document.getElementById("npc-profile-bar-health"),
     happiness: document.getElementById("npc-profile-bar-happiness"),
@@ -256,6 +250,10 @@ const npcProfileModal = {
     fame: document.getElementById("npc-profile-bar-fame"),
     reputation: document.getElementById("npc-profile-bar-reputation"),
   },
+  occupationRow: document.getElementById("npc-profile-occupation-row"),
+  occupationValue: document.getElementById("npc-profile-occupation-value"),
+  friendshipRow: document.getElementById("npc-profile-friendship-row"),
+  friendshipLabel: document.getElementById("npc-profile-friendship-label"),
   friendshipValue: document.getElementById("npc-profile-friendship-value"),
   romanceRow: document.getElementById("npc-profile-romance-row"),
   romanceValue: document.getElementById("npc-profile-romance-value"),
@@ -771,75 +769,113 @@ function getJobLevel(jobId, levelIndex) {
   return jobDef ? jobDef.levels[levelIndex] : null;
 }
 
-function renderJobList() {
-  occupationModal.jobList.innerHTML = "";
-  const eligible = jobsData.filter(
-    (j) => character.age >= j.minAge && (!j.minSmarts || character.stats.smarts >= j.minSmarts)
-  );
+// ---------- Occupation: Jobs ----------
+//
+// Main Job/Career -> Odd Jobs (automatic, summary only) -> One-Time Jobs
+// (browsable, complete once) -> People (Coworkers), all inline in one
+// accordion panel, mirroring renderSchoolInto's shape/section pattern
+// exactly -- no separate "Manage Jobs"/"View Coworkers" modal anymore.
 
+function renderJobsInto(container) {
+  container.innerHTML = "";
+
+  const header = document.createElement("h3");
+  header.className = "occupation-modal-title";
+  header.textContent = "Jobs";
+  container.appendChild(header);
+
+  renderMainJobSection(container);
+  renderOddJobsSection(container);
+  renderOneTimeJobsSection(container);
+
+  const peopleTitle = document.createElement("p");
+  peopleTitle.className = "school-section-title";
+  peopleTitle.textContent = "People";
+  container.appendChild(peopleTitle);
+
+  const peopleList = document.createElement("div");
+  peopleList.className = "school-action-list";
+  peopleList.appendChild(buildSchoolActionBtn("View Coworkers", openCoworkersModal));
+  container.appendChild(peopleList);
+}
+
+function renderMainJobSection(container) {
+  const title = document.createElement("p");
+  title.className = "school-section-title";
+  title.textContent = "Main Job / Career";
+  container.appendChild(title);
+
+  const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
+  if (character.job && !level) {
+    // character.job refers to a job/level that no longer exists in
+    // jobsData -- treat that the same as unemployed rather than crashing
+    // on a stale reference (matches the old modal's existing safety net).
+    endCoworkerRelationships(character);
+    character.job = null;
+  }
+
+  if (character.job && level) {
+    const jobTitle = document.createElement("p");
+    jobTitle.className = "occupation-job-title";
+    jobTitle.textContent = level.title;
+    const jobSalary = document.createElement("p");
+    jobSalary.className = "occupation-job-salary";
+    jobSalary.textContent = `${formatMoney(level.salary, character.currencyCode)} / year`;
+    container.appendChild(jobTitle);
+    container.appendChild(jobSalary);
+
+    const actionList = document.createElement("div");
+    actionList.className = "school-action-list";
+    actionList.appendChild(buildSchoolActionBtn("Quit Job", () => requestQuitJob(container)));
+    container.appendChild(actionList);
+    return;
+  }
+
+  const eligible = getEligibleJobs(character, jobsData);
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = character.age < 16 ? "You're not old enough to work yet." : "No jobs available to you right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const jobList = document.createElement("div");
+  jobList.className = "occupation-job-list";
   for (const job of eligible) {
     const entryLevel = job.levels[0];
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "occupation-job-btn";
 
-    const title = document.createElement("span");
-    title.textContent = entryLevel.title;
-    const salary = document.createElement("span");
-    salary.className = "occupation-job-btn-salary";
-    salary.textContent = `${formatMoney(entryLevel.salary, character.currencyCode)}/yr`;
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = entryLevel.title;
+    const salarySpan = document.createElement("span");
+    salarySpan.className = "occupation-job-btn-salary";
+    salarySpan.textContent = `${formatMoney(entryLevel.salary, character.currencyCode)}/yr`;
 
-    btn.appendChild(title);
-    btn.appendChild(salary);
-    btn.addEventListener("click", () => applyForJob(job.id));
-    occupationModal.jobList.appendChild(btn);
+    btn.appendChild(titleSpan);
+    btn.appendChild(salarySpan);
+    btn.addEventListener("click", () => doApplyForJob(job, container));
+    jobList.appendChild(btn);
   }
-
-  if (eligible.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "occupation-empty";
-    empty.textContent = character.age < 16 ? "You're not old enough to work yet." : "No jobs available to you right now.";
-    occupationModal.jobList.appendChild(empty);
-  }
+  container.appendChild(jobList);
 }
 
-function renderOccupationModal() {
-  const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
-  if (!level) {
-    // Either unemployed, or character.job refers to a job/level that no
-    // longer exists in jobsData -- treat that the same as unemployed
-    // rather than crashing on a stale reference.
-    if (character.job) endCoworkerRelationships(character);
-    character.job = null;
-    occupationModal.employedView.classList.add("hidden");
-    occupationModal.unemployedView.classList.remove("hidden");
-    renderJobList();
-    return;
-  }
-
-  occupationModal.jobTitle.textContent = level.title;
-  occupationModal.jobSalary.textContent = `${formatMoney(level.salary, character.currencyCode)} / year`;
-  occupationModal.employedView.classList.remove("hidden");
-  occupationModal.unemployedView.classList.add("hidden");
-}
-
-function applyForJob(jobId) {
-  character.job = { jobId, levelIndex: 0, yearsInRole: 0 };
-  const level = getJobLevel(jobId, 0);
-  pushHistory(character, `You got a job as ${level.title}.`);
-  ensureCoworkers(character, namePools, character.country);
-  renderOccupationModal();
+function doApplyForJob(job, container) {
+  const { succeeded, resultText } = applyForJob(character, job, namePools, character.country);
   renderGame();
+  renderJobsInto(container);
   autosave();
-  showToast(`Hired as ${level.title}!`);
+  showToast(succeeded ? `Hired as ${job.levels[0].title}!` : resultText);
 }
 
-function requestQuitJob() {
+function requestQuitJob(container) {
   const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
   if (!level) {
     if (character.job) endCoworkerRelationships(character);
     character.job = null;
-    renderOccupationModal();
+    renderJobsInto(container);
     return;
   }
   showConfirm({
@@ -850,28 +886,70 @@ function requestQuitJob() {
       character.job = null;
       endCoworkerRelationships(character);
       pushHistory(character, `You quit your job as ${level.title}.`);
-      renderOccupationModal();
+      renderJobsInto(container);
       renderGame();
       autosave();
     },
   });
 }
 
-function openOccupationModal() {
-  if (!character) return;
-  renderOccupationModal();
-  occupationModal.overlay.classList.remove("hidden");
+// Odd Jobs stays a fully automatic background roll (events.js's
+// pickOddJobLine, unchanged) -- this section is read-only, no buttons,
+// just the running total/log that roll now maintains.
+function renderOddJobsSection(container) {
+  const title = document.createElement("p");
+  title.className = "school-section-title";
+  title.textContent = "Odd Jobs";
+  container.appendChild(title);
+
+  const { total, recent } = getOddJobsSummary(character);
+  const totalLine = document.createElement("p");
+  totalLine.className = "occupation-job-salary";
+  totalLine.textContent =
+    total > 0 ? `Lifetime earnings: ${formatMoney(total, character.currencyCode)}` : "No odd-job income yet.";
+  container.appendChild(totalLine);
+
+  for (const entry of recent) {
+    const line = document.createElement("p");
+    line.className = "occupation-unemployed-label";
+    line.textContent = `Age ${entry.age}: ${entry.text}`;
+    container.appendChild(line);
+  }
 }
 
-function hideOccupationModal() {
-  occupationModal.overlay.classList.add("hidden");
+// A browsable pool of gigs, each completable once -- resolves immediately
+// for a payout (no pass/fail roll, unlike Main Job applications) and never
+// reappears for this character once done.
+function renderOneTimeJobsSection(container) {
+  const title = document.createElement("p");
+  title.className = "school-section-title";
+  title.textContent = "One-Time Jobs";
+  container.appendChild(title);
+
+  const eligible = getEligibleOneTimeJobs(character, oneTimeJobsData);
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "No one-time opportunities available right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "school-action-list";
+  for (const job of eligible) {
+    list.appendChild(buildSchoolActionBtn(job.label, () => doResolveOneTimeJob(job, container)));
+  }
+  container.appendChild(list);
 }
 
-occupationModal.quitBtn.addEventListener("click", requestQuitJob);
-occupationModal.closeBtn.addEventListener("click", () => {
-  hideOccupationModal();
-  hideNavDrawer();
-});
+function doResolveOneTimeJob(job, container) {
+  const line = resolveOneTimeJob(character, job);
+  renderGame();
+  renderJobsInto(container);
+  autosave();
+  showToast(line);
+}
 
 // ---------- Occupation: School ----------
 //
@@ -1130,7 +1208,7 @@ function renderClassmatesList() {
   for (const npc of circle) {
     const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc, "Student") });
     card.classList.add("classmate-card");
-    card.addEventListener("click", () => openNpcProfile(npc, "classmate"));
+    card.addEventListener("click", () => openNpcProfile(npc, "classmate", renderClassmatesList));
     classmatesModal.list.appendChild(card);
   }
 }
@@ -1164,7 +1242,7 @@ function renderCoworkersList() {
   for (const npc of coworkers) {
     const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc, "Coworker") });
     card.classList.add("classmate-card");
-    card.addEventListener("click", () => openNpcProfile(npc, "coworker"));
+    card.addEventListener("click", () => openNpcProfile(npc, "coworker", renderCoworkersList));
     coworkersModal.list.appendChild(card);
   }
 }
@@ -1200,6 +1278,26 @@ function getNpcInteractions(npc, kind) {
       { label: "Ask for Help", run: () => askForHelp(character, npc) },
       { label: "Thank Teacher", run: () => thankTeacher(character, npc) },
     ];
+  }
+
+  // Family keeps its own closeness-based relationship model, never the
+  // Acquaintance -> Friend hierarchy below -- so this never falls through
+  // to the friendLevel-driven branch, and never offers Ask to Become
+  // Friends / Develop Romance / Ask Out.
+  if (kind === "family") {
+    const familyInteractions = [
+      { label: "Talk", run: () => talk(character, npc) },
+      { label: "Hang Out", run: () => hangOut(character, npc) },
+      { label: "Give Gift", run: () => giveGift(character, npc) },
+      { label: "Ask for Help", run: () => askFamilyForHelp(character, npc) },
+    ];
+    // Borrowing real money follows the same MIN_EARNING_AGE convention every
+    // other personal-money system in the game respects (see character.js) --
+    // a young child shouldn't be able to pocket cash this way.
+    if (character.age >= MIN_EARNING_AGE) {
+      familyInteractions.push({ label: "Borrow Money", run: () => borrowMoney(character, npc) });
+    }
+    return familyInteractions;
   }
 
   const interactions = [{ label: "Talk", run: () => talk(character, npc) }];
@@ -1245,18 +1343,43 @@ const ROMANCE_STATUS_LABELS = {
 function renderNpcProfile() {
   if (!currentNpcProfile) return;
   const { npc, kind } = currentNpcProfile;
+  const isFamily = kind === "family";
   const stage = getLifeStage(npc.age);
   npcProfileModal.portrait.textContent = kind === "teacher" ? "🧑‍🏫" : stage.emoji;
   npcProfileModal.name.textContent = npc.name;
-  const roleLabel = kind === "teacher" ? `${npc.subject} Teacher` : kind === "coworker" ? "Coworker" : "Student";
-  const tierSuffix = kind === "teacher" ? "" : ` · ${FRIEND_LEVEL_LABELS[npc.friendLevel] ?? npc.friendLevel}`;
-  npcProfileModal.meta.textContent = `Age ${npc.age} · ${roleLabel}${tierSuffix}`;
+  const roleLabel = kind === "teacher" ? `${npc.subject} Teacher` : kind === "coworker" ? "Coworker" : kind === "classmate" ? "Student" : isFamily ? familyRoleLabel(npc) : "";
+  const tierSuffix = kind === "teacher" || isFamily ? "" : ` · ${FRIEND_LEVEL_LABELS[npc.friendLevel] ?? npc.friendLevel}`;
+  const metaLine = [`Age ${npc.age}`, roleLabel].filter(Boolean).join(" · ") + tierSuffix;
+  npcProfileModal.meta.textContent = metaLine;
 
-  renderStatBars(npc.stats, npcProfileModal.bars);
+  // Family members don't carry a stats block (a lighter shape than
+  // social-circle NPCs, by design -- see character.js) -- hide the whole
+  // section rather than rendering broken/empty bars for it.
+  npcProfileModal.barsWrap.classList.toggle("hidden", isFamily);
+  if (!isFamily) renderStatBars(npc.stats, npcProfileModal.bars);
 
+  // Occupation only makes sense for a parent (siblings/guardians' siblings
+  // have no employed/job fields at all).
+  const showOccupation = isFamily && "role" in npc;
+  npcProfileModal.occupationRow.classList.toggle("hidden", !showOccupation);
+  if (showOccupation) {
+    npcProfileModal.occupationValue.textContent = npc.employed ? `Works as ${npc.job}` : "Unemployed";
+  }
+
+  // Family's closeness already reads correctly through this same field --
+  // just relabel it since "Friendship" doesn't quite fit a parent/sibling.
+  npcProfileModal.friendshipLabel.textContent = isFamily ? "Closeness" : "Friendship";
   npcProfileModal.friendshipValue.textContent = npc.closeness;
 
-  const showRomance = (kind === "classmate" || kind === "coworker") && character.age >= MIN_DATING_AGE;
+  // Mirrors the exact gate getNpcInteractions uses to decide whether
+  // Develop Romance/Ask Out are even offered -- acquaintances and orientation
+  // mismatches never reach that romance branch, so the row shouldn't claim a
+  // "Romance: 0" that no interaction could ever move.
+  const showRomance =
+    (kind === "classmate" || kind === "coworker" || kind === "friend") &&
+    npc.friendLevel !== "acquaintance" &&
+    character.age >= MIN_DATING_AGE &&
+    canRomanticallyMatch(character, npc);
   npcProfileModal.romanceRow.classList.toggle("hidden", !showRomance);
   if (showRomance) {
     npcProfileModal.romanceValue.textContent =
@@ -1275,12 +1398,7 @@ function renderNpcProfile() {
       const line = interaction.run();
       renderGame();
       renderNpcProfile();
-      if (kind === "classmate" && !classmatesModal.overlay.classList.contains("hidden")) {
-        renderClassmatesList();
-      }
-      if (kind === "coworker" && !coworkersModal.overlay.classList.contains("hidden")) {
-        renderCoworkersList();
-      }
+      currentNpcProfile?.onUpdate?.();
       autosave();
       showToast(line);
     });
@@ -1288,9 +1406,14 @@ function renderNpcProfile() {
   }
 }
 
-function openNpcProfile(npc, kind) {
+// Family lists (and Friends' 4-way split) are inline accordion content with
+// no persistent container reference the way classmatesModal.list/
+// coworkersModal.list have -- onUpdate lets the caller supply its own
+// "re-render whatever list is showing this NPC" callback so a closeness
+// change made from inside the profile is reflected there too.
+function openNpcProfile(npc, kind, onUpdate) {
   if (!npc) return;
-  currentNpcProfile = { npc, kind };
+  currentNpcProfile = { npc, kind, onUpdate };
   renderNpcProfile();
   npcProfileModal.overlay.classList.remove("hidden");
 }
@@ -1367,16 +1490,18 @@ function buildPersonCard({ name, meta, action }) {
   return card;
 }
 
-function renderFriendsListInto(container) {
+// Friends is one unified list of the whole social circle -- Acquaintance /
+// Friend / Close Friend / Best Friend / Romantic Interest are all shown as
+// the NPC's own relationship level (via buildRelationshipMeta), not split
+// into separate nav sections. No quick-action button on the card itself;
+// every interaction (including Hang Out) lives inside the NPC profile so
+// there's exactly one place bonding actions happen.
+function renderFriendsInto(container) {
   ensureSocialCircle(character, namePools, character.country);
   container.innerHTML = "";
-  // Acquaintances don't show here -- being in the character's orbit isn't
-  // the same as being their friend. They're still visible in whichever
-  // list they came from (Classmates, Coworkers) until the player actually
-  // develops the relationship via Ask to Become Friends.
-  const friends = (character.socialCircle ?? []).filter((npc) => npc.friendLevel !== "acquaintance");
+  const npcs = character.socialCircle ?? [];
 
-  if (friends.length === 0) {
+  if (npcs.length === 0) {
     const empty = document.createElement("p");
     empty.className = "occupation-unemployed-label";
     empty.textContent = "You don't have any friends yet.";
@@ -1384,24 +1509,12 @@ function renderFriendsListInto(container) {
     return;
   }
 
-  for (const npc of friends) {
-    const hangoutBtn = document.createElement("button");
-    hangoutBtn.type = "button";
-    hangoutBtn.className = "friend-hangout-btn";
-    hangoutBtn.textContent = "Hang Out";
-    hangoutBtn.addEventListener("click", () => hangOutWithFriend(npc.id, container));
-
-    container.appendChild(buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc), action: hangoutBtn }));
+  for (const npc of npcs) {
+    const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc) });
+    card.classList.add("classmate-card");
+    card.addEventListener("click", () => openNpcProfile(npc, "friend", () => renderFriendsInto(container)));
+    container.appendChild(card);
   }
-}
-
-function hangOutWithFriend(npcId, container) {
-  const npc = (character.socialCircle ?? []).find((n) => n.id === npcId);
-  if (!npc) return;
-  hangOut(character, npc);
-  renderFriendsListInto(container);
-  renderGame();
-  autosave();
 }
 
 function parentRelationLabel(parent) {
@@ -1413,34 +1526,68 @@ function parentRelationLabel(parent) {
   return parent.relationshipType === "step" ? `Step${parent.role}` : base;
 }
 
+// Shared by the NPC profile modal (renderNpcProfile) and the Family list
+// itself -- "role" in npc distinguishes a parent/guardian record (which
+// has one) from a sibling record (which doesn't).
+function familyRoleLabel(npc) {
+  return "role" in npc ? parentRelationLabel(npc) : "Sibling";
+}
+
 function renderFamilyListInto(container) {
   container.innerHTML = "";
-  const members = [...(character.family?.parents ?? []), ...(character.family?.siblings ?? [])];
+  const parents = character.family?.parents ?? [];
+  const siblings = character.family?.siblings ?? [];
 
-  for (const member of members) {
-    const isParent = "role" in member;
-    const jobText = isParent ? (member.employed ? `works as ${member.job}` : "unemployed") : null;
-    const relationLabel = isParent ? parentRelationLabel(member) : "Sibling";
-    const meta = isParent
-      ? `${relationLabel} · Age ${member.age} · Closeness ${member.closeness} · ${jobText}`
-      : `${relationLabel} · Age ${member.age} · Closeness ${member.closeness}`;
+  if (parents.length === 0 && siblings.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "You don't have any family on record.";
+    container.appendChild(empty);
+    return;
+  }
 
-    const hangoutBtn = document.createElement("button");
-    hangoutBtn.type = "button";
-    hangoutBtn.className = "friend-hangout-btn";
-    hangoutBtn.textContent = "Hang Out";
-    hangoutBtn.addEventListener("click", () => hangOutWithFamilyMember(member, container));
+  if (parents.length > 0) {
+    const title = document.createElement("p");
+    title.className = "school-section-title";
+    title.textContent = "Parents";
+    container.appendChild(title);
+    for (const member of parents) appendFamilyCard(container, member);
+  }
 
-    container.appendChild(buildPersonCard({ name: member.name, meta, action: hangoutBtn }));
+  if (siblings.length > 0) {
+    const title = document.createElement("p");
+    title.className = "school-section-title";
+    title.textContent = "Siblings";
+    container.appendChild(title);
+    for (const member of siblings) appendFamilyCard(container, member);
   }
 }
 
-function hangOutWithFamilyMember(member, container) {
+function appendFamilyCard(container, member) {
   member.closeness ??= 60;
-  hangOut(character, member);
-  renderFamilyListInto(container);
-  renderGame();
-  autosave();
+  const isParent = "role" in member;
+  const relationLabel = familyRoleLabel(member);
+  const jobText = isParent ? (member.employed ? `works as ${member.job}` : "unemployed") : null;
+  const meta = isParent
+    ? `${relationLabel} · Age ${member.age} · Closeness ${member.closeness} · ${jobText}`
+    : `${relationLabel} · Age ${member.age} · Closeness ${member.closeness}`;
+
+  const hangoutBtn = document.createElement("button");
+  hangoutBtn.type = "button";
+  hangoutBtn.className = "friend-hangout-btn";
+  hangoutBtn.textContent = "Hang Out";
+  hangoutBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    hangOut(character, member);
+    renderFamilyListInto(container);
+    renderGame();
+    autosave();
+  });
+
+  const card = buildPersonCard({ name: member.name, meta, action: hangoutBtn });
+  card.classList.add("classmate-card");
+  card.addEventListener("click", () => openNpcProfile(member, "family", () => renderFamilyListInto(container)));
+  container.appendChild(card);
 }
 
 function openProfile() {
@@ -1515,6 +1662,7 @@ async function init() {
     familyStructures,
     namePools,
     jobsData,
+    oneTimeJobsData,
     ageUpEvents,
     npcUpdates,
     worldUpdates,
@@ -1529,6 +1677,7 @@ async function init() {
     loadFamilyStructures(),
     loadNamePools(),
     loadJobs(),
+    loadOneTimeJobs(),
     loadAgeUpEvents(),
     loadNpcUpdates(),
     loadWorldUpdates(),

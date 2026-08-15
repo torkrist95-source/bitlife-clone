@@ -167,25 +167,6 @@
       </div>
     </div>
 
-    <div id="occupation-modal-overlay" class="modal-overlay hidden">
-      <div class="event-modal occupation-modal">
-        <h2 class="occupation-modal-title">Jobs</h2>
-
-        <div id="occupation-employed-view" class="occupation-employed-view hidden">
-          <p id="occupation-job-title" class="occupation-job-title"></p>
-          <p id="occupation-job-salary" class="occupation-job-salary"></p>
-          <button type="button" id="occupation-quit-btn" class="event-choice-btn danger">Quit Job</button>
-        </div>
-
-        <div id="occupation-unemployed-view" class="occupation-unemployed-view hidden">
-          <p class="occupation-unemployed-label">You're currently unemployed.</p>
-          <div id="occupation-job-list" class="occupation-job-list"></div>
-        </div>
-
-        <button type="button" id="occupation-modal-close" class="event-choice-btn">Close</button>
-      </div>
-    </div>
-
     <div id="finance-modal-overlay" class="modal-overlay hidden">
       <div class="event-modal occupation-modal">
         <h2 class="occupation-modal-title">Bank</h2>
@@ -248,7 +229,7 @@
         <h2 id="npc-profile-name" class="profile-modal-name"></h2>
         <p id="npc-profile-meta" class="profile-modal-stage"></p>
 
-        <div class="stat-bars npc-profile-bars">
+        <div id="npc-profile-bars-wrap" class="stat-bars npc-profile-bars">
           <div class="stat-row">
             <span class="stat-label">Health</span>
             <div class="stat-track"><div class="stat-fill" id="npc-profile-bar-health"></div></div>
@@ -275,8 +256,12 @@
           </div>
         </div>
 
+        <div id="npc-profile-occupation-row" class="profile-detail-row">
+          <span class="profile-detail-label">Occupation</span>
+          <span id="npc-profile-occupation-value" class="profile-detail-value"></span>
+        </div>
         <div id="npc-profile-friendship-row" class="profile-detail-row">
-          <span class="profile-detail-label">Friendship</span>
+          <span id="npc-profile-friendship-label" class="profile-detail-label">Friendship</span>
           <span id="npc-profile-friendship-value" class="profile-detail-value"></span>
         </div>
         <div id="npc-profile-romance-row" class="profile-detail-row">

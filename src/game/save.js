@@ -1,4 +1,5 @@
 import { randInt, clampStat } from "./character.js";
+import { coworkerAge } from "./npc.js";
 
 const SAVE_KEY = "onemoreyear:save";
 const SAVE_VERSION = 2;
@@ -105,6 +106,13 @@ function migrateCharacterFields(character) {
   // then), so these just get placeholder-initialized here.
   character.birthCity ??= null;
   character.currencyCode ??= null;
+  // Odd Jobs' running total/log and the One-Time Jobs completed-ids list are
+  // both new tracking added on top of existing systems -- prior odd-job
+  // earnings already baked into free-text history can't be retroactively
+  // reconstructed, so the lifetime counter simply starts at 0 going forward.
+  character.oddJobsTotalEarned ??= 0;
+  character.oddJobLog ??= [];
+  character.completedOneTimeJobs ??= [];
   character.pendingEventId ??= null;
   character.history = migrateHistory(character.history);
 
@@ -199,6 +207,25 @@ function migrateCharacterFields(character) {
   for (const npc of character.coworkers ?? []) {
     npc.job ??= null;
     npc.hobbies ??= [];
+  }
+
+  // One-time correction for saves from before NPCs aged up alongside the
+  // player (see npcLife.js's applyNpcLifeYear) -- every existing roster
+  // member's age was frozen at whatever it rolled at creation, so it could
+  // be arbitrarily stale (e.g. classmates still reading 5-7 while the
+  // character reached 11). Snap each roster to a plausible age relative to
+  // the character's CURRENT age, using the same formulas they'd have been
+  // created with, then never touch it again -- the yearly tick keeps them
+  // in sync from here on, and re-rolling on every load would make ages
+  // visibly jump around each time the game reopens.
+  if (!character.socialCircleAgesFixed) {
+    for (const npc of character.socialCircle ?? []) {
+      npc.age = clampStat(character.age + randInt(-1, 1));
+    }
+    for (const npc of character.coworkers ?? []) {
+      npc.age = coworkerAge(character);
+    }
+    character.socialCircleAgesFixed = true;
   }
 
   return character;

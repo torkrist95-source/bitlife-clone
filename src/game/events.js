@@ -352,7 +352,13 @@ function pickOddJobLine(character, oddJobsData) {
   rememberUpdate(character, "recentOddJobIds", entry.id);
   const amount = randInt(entry.moneyMin, entry.moneyMax);
   applyMoneyDelta(character, amount);
-  return fillTemplate(entry.template, { amount: formatMoney(amount, character.currencyCode) });
+  const line = fillTemplate(entry.template, { amount: formatMoney(amount, character.currencyCode) });
+  // Odd Jobs stays a fully automatic background roll (no player-triggered
+  // action) -- this just keeps a running total/log so Occupation > Jobs >
+  // Odd Jobs has something to actually show, per the summary-only design.
+  character.oddJobsTotalEarned = (character.oddJobsTotalEarned ?? 0) + amount;
+  character.oddJobLog = [{ age: character.age, amount, text: line }, ...(character.oddJobLog ?? [])].slice(0, 20);
+  return line;
 }
 
 // A spontaneous personal hobby, independent of anything club/extracurricular

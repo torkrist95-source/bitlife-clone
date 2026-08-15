@@ -120,6 +120,7 @@
     "id": "accountant",
     "minAge": 18,
     "minSmarts": 55,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Junior Accountant", "salary": 45000 },
       { "title": "Accountant", "salary": 58000 },
@@ -130,6 +131,8 @@
     "id": "software_developer",
     "minAge": 18,
     "minSmarts": 60,
+    "minEducationStatus": "graduated_hs",
+    "minSkill": { "skill": "programming", "value": 10 },
     "levels": [
       { "title": "Junior Developer", "salary": 55000 },
       { "title": "Software Developer", "salary": 75000 },
@@ -140,6 +143,7 @@
     "id": "nurse",
     "minAge": 18,
     "minSmarts": 55,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Registered Nurse", "salary": 50000 },
       { "title": "Charge Nurse", "salary": 65000 },

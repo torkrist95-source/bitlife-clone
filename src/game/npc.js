@@ -1,4 +1,4 @@
-import { generateRandomName, randInt, clampStat, weightedPick, applyMoneyDelta, pushHistory, MIN_DATING_AGE } from "./character.js";
+import { generateRandomName, randInt, clampStat, weightedPick, applyMoneyDelta, formatMoney, pushHistory, MIN_DATING_AGE } from "./character.js";
 
 const SOCIAL_CIRCLE_MIN_AGE = 6;
 const SOCIAL_CIRCLE_MIN_SIZE = 3;
@@ -391,6 +391,49 @@ function thankTeacher(character, teacher) {
   return line;
 }
 
+// Family-appropriate sibling to askForHelp above -- that one is deliberately
+// teacher-specific ("helped you understand the material", a smarts payoff),
+// which doesn't fit a parent or sibling. Same closeness-driven chance shape,
+// generic emotional-support flavor and a happiness payoff instead.
+function askFamilyForHelp(character, member) {
+  const closenessBonus = Math.floor((member.closeness - 50) / 5);
+  const succeeded = randInt(0, 99) < 55 + closenessBonus;
+  if (succeeded) {
+    character.stats.happiness = clampStat(character.stats.happiness + randInt(3, 6));
+    member.closeness = clampStat(member.closeness + 3);
+    const line = `${member.name} was there for you when you needed to lean on someone.`;
+    pushHistory(character, line);
+    return line;
+  }
+  const line = `${member.name} was going through their own stuff and couldn't really be there for you right now.`;
+  pushHistory(character, line);
+  return line;
+}
+
+// A one-off informal favor, not a tracked loan -- matches this game's
+// existing convention of never persisting debt/repayment for any
+// money-granting interaction (even the "student loan" financial-aid outcome
+// in school.js has no repayment tracking anywhere). Asking costs a little
+// goodwill even when granted; getting turned down costs more.
+const BORROW_MONEY_MIN = 50;
+const BORROW_MONEY_MAX = 250;
+
+function borrowMoney(character, npc) {
+  const chance = Math.max(20, Math.min(80, 30 + (npc.closeness - 50) / 3));
+  if (randInt(0, 99) < chance) {
+    const amount = randInt(BORROW_MONEY_MIN, BORROW_MONEY_MAX);
+    applyMoneyDelta(character, amount);
+    npc.closeness = clampStat(npc.closeness - 2);
+    const line = `${npc.name} lent you ${formatMoney(amount, character.currencyCode)} without asking too many questions.`;
+    pushHistory(character, line);
+    return line;
+  }
+  npc.closeness = clampStat(npc.closeness - 4);
+  const line = `${npc.name} said they couldn't lend you any money right now.`;
+  pushHistory(character, line);
+  return line;
+}
+
 // ---------- Dynamic choice generators ----------
 // A choice with `dynamic: "<id>"` resolves through one of these instead of
 // static effects/outcomes, because the right options (which NPCs exist,
@@ -570,5 +613,7 @@ export {
   askOut,
   askForHelp,
   thankTeacher,
+  askFamilyForHelp,
+  borrowMoney,
   GIFT_COST,
 };

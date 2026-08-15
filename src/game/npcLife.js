@@ -180,6 +180,15 @@ function buildDevelopmentPool(character, npc, roster, jobsData) {
 function applyNpcLifeYear(character, namePools, countryId, jobsData) {
   const lines = [];
 
+  // Classmates/friends/coworkers previously never aged at all once created,
+  // so a character who kept aging up while their social circle sat frozen
+  // would drift further out of sync every year (e.g. classmates rolled at
+  // age 5-7 still reading as 5-7 once the character reached 11). Everyone in
+  // both rosters ages alongside the player now, unconditionally, before any
+  // of the tier-gated development below runs.
+  for (const npc of character.socialCircle ?? []) npc.age += 1;
+  for (const npc of character.coworkers ?? []) npc.age += 1;
+
   const candidates = [
     ...(character.socialCircle ?? []).map((npc) => ({ npc, roster: character.socialCircle })),
     ...(character.coworkers ?? []).map((npc) => ({ npc, roster: character.coworkers })),

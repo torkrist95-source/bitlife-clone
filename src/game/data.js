@@ -28,6 +28,10 @@ function loadJobs() {
   return loadJSON("data/careers/jobs.json");
 }
 
+function loadOneTimeJobs() {
+  return loadJSON("data/careers/one_time_jobs.json");
+}
+
 async function loadAgeUpEvents() {
   const pools = await Promise.all([
     loadJSON("data/events/age_up/infant.json"),
@@ -70,6 +74,7 @@ export {
   loadFamilyStructures,
   loadNamePools,
   loadJobs,
+  loadOneTimeJobs,
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
