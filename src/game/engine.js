@@ -51,9 +51,9 @@ function applyJobYear(character, jobsData) {
   if (hasNextLevel && character.job.yearsInRole >= MIN_YEARS_BEFORE_PROMOTION && randInt(0, 99) < PROMOTION_CHANCE) {
     character.job.levelIndex += 1;
     character.job.yearsInRole = 0;
-    const newTitle = jobDef.levels[character.job.levelIndex].title;
-    pushCareerEvent(character, { title: newTitle, event: "promoted" });
-    return `You got promoted to ${newTitle}!`;
+    const newLevel = jobDef.levels[character.job.levelIndex];
+    pushCareerEvent(character, { title: newLevel.title, event: "promoted", salary: newLevel.salary });
+    return `You got promoted to ${newLevel.title}!`;
   }
 
   return null;

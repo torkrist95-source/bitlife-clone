@@ -71,7 +71,7 @@ function applyForJob(character, job, namePools, countryId) {
   character.job = { jobId: job.id, levelIndex: 0, yearsInRole: 0 };
   const line = `You got a job as ${level.title}.`;
   pushHistory(character, line);
-  pushCareerEvent(character, { title: level.title, event: "hired" });
+  pushCareerEvent(character, { title: level.title, event: "hired", salary: level.salary });
   ensureCoworkers(character, namePools, countryId);
   return { succeeded: true, resultText: line };
 }

@@ -781,11 +781,6 @@ function getJobLevel(jobId, levelIndex) {
 function renderJobsInto(container) {
   container.innerHTML = "";
 
-  const header = document.createElement("h3");
-  header.className = "occupation-modal-title";
-  header.textContent = "Jobs";
-  container.appendChild(header);
-
   renderMainJobSection(container);
   renderOddJobsSection(container);
   renderOneTimeJobsSection(container);
@@ -963,13 +958,6 @@ function doResolveOneTimeJob(job, container) {
 // from the free-text history feed so this view doesn't need to pattern-match
 // sentences to find job events.
 
-const CAREER_EVENT_LABELS = {
-  hired: "Hired as",
-  promoted: "Promoted to",
-  quit: "Quit as",
-  laid_off: "Laid off from",
-};
-
 // Jobs and Career History are sibling accordion panels, each rendered once
 // when the Occupation drawer opens (see openNavDrawer) -- a hire/quit inside
 // the already-open Jobs panel has no other way to reach Career History's
@@ -982,15 +970,36 @@ function refreshCareerHistoryPanel() {
   if (panel) renderCareerHistoryInto(panel);
 }
 
+// Turns the flat hired/promoted/quit/laid_off event log into one card per
+// stint at a given title/salary -- "hired" and "promoted" each start a new
+// stint, and whatever event comes right after it (of any kind) marks when
+// that stint ended; a stint with nothing after it is still ongoing, so it
+// runs through to the character's current age instead. "quit"/"laid_off"
+// never start a stint of their own -- they're only ever an end boundary for
+// the one before them.
+function buildCareerStints(character) {
+  const events = character.careerHistory ?? [];
+  const stints = [];
+  for (let i = 0; i < events.length; i++) {
+    const entry = events[i];
+    if (entry.event !== "hired" && entry.event !== "promoted") continue;
+    const next = events[i + 1];
+    const endAge = next ? next.age : character.age;
+    stints.push({ title: entry.title, salary: entry.salary, startAge: entry.age, endAge });
+  }
+  return stints.reverse();
+}
+
+function formatDuration(years) {
+  if (years <= 0) return "Less than a year";
+  return `${years} year${years === 1 ? "" : "s"}`;
+}
+
 function renderCareerHistoryInto(container) {
   container.innerHTML = "";
-  const header = document.createElement("h3");
-  header.className = "occupation-modal-title";
-  header.textContent = "Career History";
-  container.appendChild(header);
+  const stints = buildCareerStints(character);
 
-  const events = character.careerHistory ?? [];
-  if (events.length === 0) {
+  if (stints.length === 0) {
     const empty = document.createElement("p");
     empty.className = "occupation-empty";
     empty.textContent = "No career history yet.";
@@ -998,11 +1007,13 @@ function renderCareerHistoryInto(container) {
     return;
   }
 
-  for (const entry of [...events].reverse()) {
-    const line = document.createElement("p");
-    line.className = "occupation-unemployed-label";
-    line.textContent = `Age ${entry.age}: ${CAREER_EVENT_LABELS[entry.event] ?? entry.event} ${entry.title}.`;
-    container.appendChild(line);
+  for (const stint of stints) {
+    // Entries logged before salary was added to pushCareerEvent's call sites
+    // won't have one -- fall back to omitting it rather than formatMoney
+    // throwing on an undefined amount.
+    const salaryText = stint.salary != null ? `${formatMoney(stint.salary, character.currencyCode)}/year` : "salary not recorded";
+    const meta = `${formatDuration(stint.endAge - stint.startAge)} · ${salaryText}`;
+    container.appendChild(buildPersonCard({ name: stint.title, meta }));
   }
 }
 
