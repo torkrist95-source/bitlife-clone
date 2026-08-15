@@ -34,6 +34,7 @@ import {
   borrowMoney,
 } from "./npc.js";
 import { getEligibleJobs, applyForJob, getOddJobsSummary, getEligibleOneTimeJobs, resolveOneTimeJob } from "./careers.js";
+import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
 import {
   getGradeLabel,
   getStatusLabel,
@@ -191,6 +192,7 @@ const profileModal = {
   stage: document.getElementById("profile-modal-stage"),
   birthDate: document.getElementById("profile-modal-birthdate"),
   zodiac: document.getElementById("profile-modal-zodiac"),
+  personality: document.getElementById("profile-modal-personality"),
   closeBtn: document.getElementById("profile-modal-close"),
 };
 
@@ -406,7 +408,9 @@ function continueLife(lifeId) {
   activeLifeId = life.id;
   setActiveLife(lifeId);
 
-  if (ensureBirthLocation(character, countries)) {
+  const locationChanged = ensureBirthLocation(character, countries);
+  const personalityChanged = ensurePersonality(character);
+  if (locationChanged || personalityChanged) {
     saveCharacter(activeLifeId, character);
   }
 
@@ -540,6 +544,7 @@ function startLife() {
     familyStructures,
     namePools,
   });
+  character.personality = generatePersonality();
   activeLifeId = createLife(character);
 
   showScreen("game");
@@ -1664,6 +1669,8 @@ function openProfile() {
   profileModal.stage.textContent = `Age ${character.age} · ${stage.label}`;
   profileModal.birthDate.textContent = character.birthDate ? formatBirthDate(character.birthDate) : "Unknown";
   profileModal.zodiac.textContent = character.zodiacSign ?? "Unknown";
+  const dominantTraits = getDominantTraits(character);
+  profileModal.personality.textContent = dominantTraits.length ? dominantTraits.join(", ") : "Unknown";
   profileModal.overlay.classList.remove("hidden");
 }
 
@@ -1764,7 +1771,9 @@ async function init() {
     // Returning player with an active life: go straight into gameplay.
     character = savedCharacter;
     activeLifeId = lifeId;
-    if (ensureBirthLocation(character, countries)) {
+    const locationChanged = ensureBirthLocation(character, countries);
+    const personalityChanged = ensurePersonality(character);
+    if (locationChanged || personalityChanged) {
       saveCharacter(activeLifeId, character);
     }
     showScreen("game");
