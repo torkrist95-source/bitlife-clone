@@ -3,6 +3,7 @@ import {
   randInt,
   weightedPick,
   applyMoneyDelta,
+  formatMoney,
   pushHistory,
   MIN_EARNING_AGE,
   ENROLLED_EDUCATION_STATUSES,
@@ -351,7 +352,7 @@ function pickOddJobLine(character, oddJobsData) {
   rememberUpdate(character, "recentOddJobIds", entry.id);
   const amount = randInt(entry.moneyMin, entry.moneyMax);
   applyMoneyDelta(character, amount);
-  return fillTemplate(entry.template, { amount: amount.toLocaleString() });
+  return fillTemplate(entry.template, { amount: formatMoney(amount, character.currencyCode) });
 }
 
 // A spontaneous personal hobby, independent of anything club/extracurricular

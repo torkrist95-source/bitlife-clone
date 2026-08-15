@@ -58,6 +58,14 @@ function randChoice(list) {
   return list[randInt(0, list.length - 1)];
 }
 
+// Shared by createCharacter (new characters) and ensureBirthLocation
+// (backfilling old saves) so city selection follows identical rules in
+// both places -- returns null rather than picking something implausible if
+// a country entry is ever missing its curated city pool.
+function pickCity(country) {
+  return country?.cities?.length ? randChoice(country.cities) : null;
+}
+
 // Shared weighted-random selection: picks one item from a list, where each
 // item's `weight` (default 10) is its relative chance of being picked.
 function weightedPick(items) {
@@ -252,16 +260,17 @@ function maybeGeneratePet() {
   return { name: randChoice(PET_NAMES), type: randChoice(PET_TYPES) };
 }
 
-function buildBirthHistoryLines({ formattedDate, country, tier, structureId, parents, siblings, pet }) {
+function buildBirthHistoryLines({ formattedDate, country, city, tier, structureId, parents, siblings, pet }) {
   const lines = [];
   const tierLabel = tier.name.toLowerCase();
+  const birthplace = city ? `${city}, ${country.name}` : country.name;
   const employment = (p) => (p.employed ? `works as ${p.job}` : "is currently unemployed");
   const employmentParenthetical = (p) => (p.employed ? `works as ${p.job}` : "currently unemployed");
 
   if (structureId === "adopted") {
     const [p1, p2] = parents;
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You were adopted into a ${tierLabel} family. ` +
+      `You were born on ${formattedDate} in ${birthplace}. You were adopted into a ${tierLabel} family. ` +
         `Your ${p1.role}, ${p1.name}, is ${p1.age} and ${employment(p1)}. ` +
         `Your ${p2.role}, ${p2.name}, is ${p2.age} and ${employment(p2)}.`
     );
@@ -269,31 +278,31 @@ function buildBirthHistoryLines({ formattedDate, country, tier, structureId, par
     const bio = parents.find((p) => p.relationshipType === "biological");
     const step = parents.find((p) => p.relationshipType === "step");
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family. ` +
+      `You were born on ${formattedDate} in ${birthplace}. You were born into a ${tierLabel} family. ` +
         `Your ${bio.role}, ${bio.name} (${bio.age}, ${employmentParenthetical(bio)}), raised you alongside your step${step.role}, ` +
         `${step.name} (${step.age}, ${employmentParenthetical(step)}).`
     );
   } else if (structureId === "single_biological_parent") {
     const p = parents[0];
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family, raised by your ${p.role}, ` +
+      `You were born on ${formattedDate} in ${birthplace}. You were born into a ${tierLabel} family, raised by your ${p.role}, ` +
         `${p.name}, who is ${p.age} and ${employment(p)}.`
     );
   } else if (structureId === "guardian") {
     const g = parents[0];
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You were raised by your ${g.guardianRelation}, ${g.name}, ` +
+      `You were born on ${formattedDate} in ${birthplace}. You were raised by your ${g.guardianRelation}, ${g.name}, ` +
         `who is ${g.age} and ${employment(g)}.`
     );
   } else if (structureId === "foster_care") {
     const g = parents[0];
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You entered foster care as an infant and were raised by ${g.name}.`
+      `You were born on ${formattedDate} in ${birthplace}. You entered foster care as an infant and were raised by ${g.name}.`
     );
   } else {
     const [p1, p2] = parents;
     lines.push(
-      `You were born on ${formattedDate} in ${country.name}. You were born into a ${tierLabel} family. ` +
+      `You were born on ${formattedDate} in ${birthplace}. You were born into a ${tierLabel} family. ` +
         `Your ${p1.role}, ${p1.name}, is ${p1.age} and ${employment(p1)}. ` +
         `Your ${p2.role}, ${p2.name}, is ${p2.age} and ${employment(p2)}.`
     );
@@ -350,9 +359,16 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
   const formattedDate = formatBirthDate(birthDate);
   const zodiacSign = getZodiacSign(birthDate.month, birthDate.day);
 
+  // The player only chooses the country; the game picks a specific city from
+  // its curated pool, once, at creation -- resolved and stored here (never
+  // re-rolled) the same way countryName is, so the birth narrative and the
+  // rest of the character's life consistently reference the same place.
+  const city = pickCity(country);
+
   const historyLines = buildBirthHistoryLines({
     formattedDate,
     country,
+    city,
     tier,
     structureId: structure.id,
     parents,
@@ -366,6 +382,11 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     attractedTo: attractedTo?.length ? attractedTo : ["male", "female"],
     country: country.id,
     countryName: country.name,
+    birthCity: city,
+    // Resolved once here from the country's own currency, never a live
+    // exchange rate -- every financial display formats character.money
+    // through this code via formatMoney below.
+    currencyCode: country?.currency?.code ?? "USD",
     birthDate,
     zodiacSign,
     birthCircumstances: circumstance.id,
@@ -467,6 +488,124 @@ function applyMoneyDelta(character, delta) {
   return true;
 }
 
+// Intl.NumberFormat resolves a currency's symbol/grouping/decimal
+// conventions correctly on its own -- EXCEPT that under a generic locale
+// (the browser's own UI language) many currencies fall back to printing
+// their bare ISO code instead of a real symbol (e.g. "ZAR 1,234" instead of
+// "R 1 234"). Keyed by currency code (not country) since a code has one
+// canonical display locale regardless of which of the 46 countries uses it.
+// -u-nu-latn forces Latin digits for locales that would otherwise use a
+// native digit system (Arabic, Bengali), so amounts stay readable.
+const CURRENCY_LOCALES = {
+  THB: "th-TH",
+  ZAR: "en-ZA",
+  NOK: "nb-NO",
+  NGN: "en-NG",
+  ARS: "es-AR",
+  CLP: "es-CL",
+  COP: "es-CO",
+  PEN: "es-PE",
+  RUB: "ru-RU",
+  PLN: "pl-PL",
+  SEK: "sv-SE",
+  CHF: "de-CH",
+  TRY: "tr-TR",
+  IDR: "id-ID",
+  PKR: "ur-PK",
+  BDT: "bn-BD-u-nu-latn",
+  KES: "en-KE",
+  SGD: "en-SG",
+  MYR: "ms-MY",
+};
+
+// EGP/SAR/MAD only have a real "authentic" Intl currency representation in
+// native Arabic script (e.g. SAR -> "ر.س."), which would inject RTL Arabic
+// text into this otherwise all-English game -- an English-region locale for
+// these falls back to the bare ISO code instead (the exact problem
+// CURRENCY_LOCALES exists to avoid). ISK is here for a different reason:
+// empirically, no locale reliably resolves it to "kr" rather than the bare
+// code (verified directly against the browser this game actually runs in --
+// ICU/CLDR data differs by JS engine, so Node behavior alone isn't
+// trustworthy here). This is a currency-level workaround (keyed by code, not
+// by country) for these specific Intl gaps -- the values happen to match
+// countries.json's own `currency.symbol` for these currencies today, but
+// aren't derived from it; the two are independent and would need updating
+// together if either changes. (AED deliberately isn't listed here: unlike
+// the others, its default Intl output is already "AED 1,234" with no
+// locale override needed.)
+const MANUAL_CURRENCY_SYMBOLS = {
+  EGP: "E£",
+  SAR: "SR",
+  MAD: "DH",
+  ISK: "kr",
+};
+
+// The single place money ever gets turned into displayed text -- every
+// screen in the game (header, jobs, banking, loans, gifts, odd jobs) routes
+// through this instead of hardcoding "$", so a character's own currency
+// (set once at creation from their country, see createCharacter above)
+// actually determines what they see. No live exchange rate: `amount` is
+// always the character's own raw money value, just relabeled/formatted in
+// its own currency, never converted. `maximumFractionDigits: 0` because
+// every money value in this game (salaries, gifts, odd-job earnings, loans)
+// is already a whole number -- this game has no concept of cents.
+function formatMoney(amount, currencyCode) {
+  const code = currencyCode ?? "USD";
+  if (MANUAL_CURRENCY_SYMBOLS[code]) {
+    return `${MANUAL_CURRENCY_SYMBOLS[code]} ${amount.toLocaleString("en-US")}`;
+  }
+  const locale = CURRENCY_LOCALES[code] ?? "en-US";
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency: code, maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    return `$${amount.toLocaleString()}`;
+  }
+}
+
+// Shared by ensureBirthLocation and app.js's home-screen life-card display,
+// so "which country does this character belong to" is resolved identically
+// (and in one place) everywhere it's needed, rather than each call site
+// re-implementing the same countries.find(...) lookup.
+function resolveCountry(character, countries) {
+  return countries?.find((c) => c.id === character.country);
+}
+
+// Backfills birthCity/currencyCode for characters saved before this feature
+// existed (save.js's migration can only set them to `null` placeholders --
+// it has no synchronous access to countries.json's data). Called from the
+// choke points where a character becomes the one actively being played and
+// `countries` is expected to already be loaded, so the assignment can
+// happen once and be saved permanently rather than re-rolling every load.
+//
+// Deliberately does NOT fall back to a default (e.g. "USD") when a real
+// value can't be resolved -- if `countries` hasn't finished loading yet, or
+// the character's country id doesn't match any entry, this leaves the field
+// untouched (formatMoney's own `?? "USD"` already covers display in the
+// meantime) and reports no change, so a bad/missing lookup here can never
+// get permanently written to the save, and the real value can still be
+// backfilled correctly on a later call once real data is available.
+function ensureBirthLocation(character, countries) {
+  if (character.birthCity && character.currencyCode) return false;
+  if (!countries || countries.length === 0) return false;
+
+  const country = resolveCountry(character, countries);
+  let changed = false;
+
+  if (!character.birthCity) {
+    const city = pickCity(country);
+    if (city) {
+      character.birthCity = city;
+      changed = true;
+    }
+  }
+  if (!character.currencyCode && country?.currency?.code) {
+    character.currencyCode = country.currency.code;
+    changed = true;
+  }
+
+  return changed;
+}
+
 export {
   createCharacter,
   generateRandomName,
@@ -475,6 +614,9 @@ export {
   randInt,
   weightedPick,
   applyMoneyDelta,
+  formatMoney,
+  resolveCountry,
+  ensureBirthLocation,
   pushHistory,
   MIN_DATING_AGE,
   MIN_EARNING_AGE,

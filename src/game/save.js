@@ -98,6 +98,13 @@ function migrateCharacterFields(character) {
   character.recentWorldUpdateIds ??= [];
   character.recentOddJobIds ??= [];
   character.recentCelebrityIds ??= [];
+  // Real values get resolved lazily by character.js's ensureBirthLocation
+  // once the character actually becomes the active one being played (see
+  // app.js) -- this file has no synchronous access to countries.json's
+  // city/currency data (it's loaded async, only guaranteed resolved by
+  // then), so these just get placeholder-initialized here.
+  character.birthCity ??= null;
+  character.currencyCode ??= null;
   character.pendingEventId ??= null;
   character.history = migrateHistory(character.history);
 

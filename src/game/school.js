@@ -1,4 +1,4 @@
-import { randInt, clampStat, generateRandomName, applyMoneyDelta, pushHistory } from "./character.js";
+import { randInt, clampStat, generateRandomName, applyMoneyDelta, formatMoney, pushHistory } from "./character.js";
 import { createSocialNpc, registerDynamicGenerators, askForHelp, ensureSocialCircle } from "./npc.js";
 import { conditionsPass } from "./events.js";
 
@@ -407,7 +407,7 @@ registerDynamicGenerators({
     if (randInt(0, 99) < chance) {
       const amount = randInt(15, 42) * 1000;
       applyMoneyDelta(character, amount);
-      const line = `Your student loan application was approved. You were approved for $${amount.toLocaleString()} in student loans.`;
+      const line = `Your student loan application was approved. You were approved for ${formatMoney(amount, character.currencyCode)} in student loans.`;
       pushHistory(character, line);
       return { type: "resolve", effects: {}, resultText: null };
     }
@@ -432,7 +432,7 @@ registerDynamicGenerators({
       const amount = randInt(3, 15) * 1000;
       applyMoneyDelta(character, amount);
       const note = hasParticipation ? " Your academic record and extracurricular involvement helped your application stand out." : "";
-      const line = `You were awarded a $${amount.toLocaleString()} scholarship.${note}`;
+      const line = `You were awarded a ${formatMoney(amount, character.currencyCode)} scholarship.${note}`;
       pushHistory(character, line);
       return { type: "resolve", effects: { happiness: 5, reputation: 2 }, resultText: null };
     }

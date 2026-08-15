@@ -4,6 +4,9 @@ import {
   getLifeStage,
   randInt,
   formatBirthDate,
+  formatMoney,
+  resolveCountry,
+  ensureBirthLocation,
   pushHistory,
   MIN_DATING_AGE,
   ENROLLED_EDUCATION_STATUSES as ENROLLED_STATUSES,
@@ -344,7 +347,12 @@ function renderHomeScreen() {
     `;
     info.querySelector(".life-card-name").textContent = life.character.name;
     info.querySelector(".life-card-meta").textContent = `Age ${life.character.age} · ${stage.label}`;
-    info.querySelector(".life-card-money").textContent = `$${life.character.money.toLocaleString()}`;
+    // Not-yet-opened lives may still carry the migration placeholder
+    // (currencyCode: null) -- resolve it for display here rather than
+    // turning listLives() into a write path; ensureBirthLocation persists
+    // the real value permanently the first time the life is actually opened.
+    const displayCurrency = life.character.currencyCode ?? resolveCountry(life.character, countries)?.currency?.code;
+    info.querySelector(".life-card-money").textContent = formatMoney(life.character.money, displayCurrency);
 
     if (isCurrent) {
       const badge = document.createElement("span");
@@ -398,6 +406,10 @@ function continueLife(lifeId) {
   character = life.character;
   activeLifeId = life.id;
   setActiveLife(lifeId);
+
+  if (ensureBirthLocation(character, countries)) {
+    saveCharacter(activeLifeId, character);
+  }
 
   showScreen("game");
   renderGame();
@@ -550,7 +562,7 @@ function renderGame() {
   game.portrait.textContent = stage.emoji;
   game.name.textContent = character.name;
   game.age.textContent = `Age ${character.age} · ${stage.label} ›`;
-  game.money.textContent = `$${character.money.toLocaleString()}`;
+  game.money.textContent = formatMoney(character.money, character.currencyCode);
 
   renderStatBars(character.stats, game.bars);
 
@@ -775,7 +787,7 @@ function renderJobList() {
     title.textContent = entryLevel.title;
     const salary = document.createElement("span");
     salary.className = "occupation-job-btn-salary";
-    salary.textContent = `$${entryLevel.salary.toLocaleString()}/yr`;
+    salary.textContent = `${formatMoney(entryLevel.salary, character.currencyCode)}/yr`;
 
     btn.appendChild(title);
     btn.appendChild(salary);
@@ -806,7 +818,7 @@ function renderOccupationModal() {
   }
 
   occupationModal.jobTitle.textContent = level.title;
-  occupationModal.jobSalary.textContent = `$${level.salary.toLocaleString()} / year`;
+  occupationModal.jobSalary.textContent = `${formatMoney(level.salary, character.currencyCode)} / year`;
   occupationModal.employedView.classList.remove("hidden");
   occupationModal.unemployedView.classList.add("hidden");
 }
@@ -1293,12 +1305,12 @@ npcProfileModal.closeBtn.addEventListener("click", hideNpcProfileModal);
 // ---------- Finance ----------
 
 function renderFinanceOverview() {
-  financeModal.balanceAmount.textContent = `$${character.money.toLocaleString()}`;
+  financeModal.balanceAmount.textContent = formatMoney(character.money, character.currencyCode);
 
   const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
   if (level) {
     financeModal.incomeTitle.textContent = level.title;
-    financeModal.incomeSalary.textContent = `$${level.salary.toLocaleString()} / year`;
+    financeModal.incomeSalary.textContent = `${formatMoney(level.salary, character.currencyCode)} / year`;
     financeModal.employedView.classList.remove("hidden");
     financeModal.unemployedView.classList.add("hidden");
   } else {
@@ -1537,6 +1549,9 @@ async function init() {
     // Returning player with an active life: go straight into gameplay.
     character = savedCharacter;
     activeLifeId = lifeId;
+    if (ensureBirthLocation(character, countries)) {
+      saveCharacter(activeLifeId, character);
+    }
     showScreen("game");
     renderGame();
   } else if (listLives().length > 0) {

@@ -86,7 +86,7 @@
       {
         "label": "Check your numbers",
         "effects": { "money": 50, "happiness": 3 },
-        "resultText": "You matched two numbers and won $50! Not bad."
+        "resultText": "You matched two numbers and won a little money! Not bad."
       },
       {
         "label": "Don't bother checking",
