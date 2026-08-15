@@ -8,6 +8,7 @@ import {
   resolveCountry,
   ensureBirthLocation,
   pushHistory,
+  pushCareerEvent,
   MIN_DATING_AGE,
   MIN_EARNING_AGE,
   ENROLLED_EDUCATION_STATUSES as ENROLLED_STATUSES,
@@ -77,7 +78,7 @@ const NAV_CATEGORIES = {
     { id: "school", label: "School", render: (container) => renderSchoolInto(container) },
     { id: "jobs", label: "Jobs", render: (container) => renderJobsInto(container) },
     { id: "special_careers", label: "Special Careers", render: renderComingSoon },
-    { id: "career_history", label: "Career History", render: renderComingSoon },
+    { id: "career_history", label: "Career History", render: (container) => renderCareerHistoryInto(container) },
   ],
   Relationships: [
     { id: "family", label: "Family", render: (container) => renderFamilyListInto(container) },
@@ -723,6 +724,7 @@ function openNavDrawer(categoryLabel) {
 
     const actionsWrap = document.createElement("div");
     actionsWrap.className = "nav-system-actions hidden";
+    actionsWrap.dataset.systemId = system.id;
 
     if (system.render) {
       system.render(actionsWrap);
@@ -866,6 +868,7 @@ function doApplyForJob(job, container) {
   const { succeeded, resultText } = applyForJob(character, job, namePools, character.country);
   renderGame();
   renderJobsInto(container);
+  if (succeeded) refreshCareerHistoryPanel();
   autosave();
   showToast(succeeded ? `Hired as ${job.levels[0].title}!` : resultText);
 }
@@ -886,7 +889,9 @@ function requestQuitJob(container) {
       character.job = null;
       endCoworkerRelationships(character);
       pushHistory(character, `You quit your job as ${level.title}.`);
+      pushCareerEvent(character, { title: level.title, event: "quit" });
       renderJobsInto(container);
+      refreshCareerHistoryPanel();
       renderGame();
       autosave();
     },
@@ -949,6 +954,56 @@ function doResolveOneTimeJob(job, container) {
   renderJobsInto(container);
   autosave();
   showToast(line);
+}
+
+// ---------- Occupation: Career History ----------
+// Read-only timeline built from character.careerHistory, the structured log
+// pushCareerEvent adds alongside the existing prose history line at every
+// Main Job/Career milestone (hire/promotion/quit/layoff) -- kept separate
+// from the free-text history feed so this view doesn't need to pattern-match
+// sentences to find job events.
+
+const CAREER_EVENT_LABELS = {
+  hired: "Hired as",
+  promoted: "Promoted to",
+  quit: "Quit as",
+  laid_off: "Laid off from",
+};
+
+// Jobs and Career History are sibling accordion panels, each rendered once
+// when the Occupation drawer opens (see openNavDrawer) -- a hire/quit inside
+// the already-open Jobs panel has no other way to reach Career History's
+// separate container, so without this it would keep showing stale data
+// until the whole drawer is closed and reopened. Only called from hire/quit
+// (both happen while the drawer is open); promotions/layoffs happen during
+// Age Up, which requires the drawer to already be closed.
+function refreshCareerHistoryPanel() {
+  const panel = navDrawer.list.querySelector('[data-system-id="career_history"]');
+  if (panel) renderCareerHistoryInto(panel);
+}
+
+function renderCareerHistoryInto(container) {
+  container.innerHTML = "";
+  const header = document.createElement("h3");
+  header.className = "occupation-modal-title";
+  header.textContent = "Career History";
+  container.appendChild(header);
+
+  const events = character.careerHistory ?? [];
+  if (events.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = "No career history yet.";
+    container.appendChild(empty);
+    return;
+  }
+
+  for (const entry of [...events].reverse()) {
+    const line = document.createElement("p");
+    line.className = "occupation-unemployed-label";
+    line.textContent = `Age ${entry.age}: ${CAREER_EVENT_LABELS[entry.event] ?? entry.event} ${entry.title}.`;
+    container.appendChild(line);
+  }
 }
 
 // ---------- Occupation: School ----------

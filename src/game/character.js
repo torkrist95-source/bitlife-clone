@@ -452,6 +452,16 @@ function pushHistory(character, text) {
   return text;
 }
 
+// A compact, structured log of Main Job/Career milestones (hired/promoted/
+// quit/laid off), separate from the free-text history feed -- Career History
+// needs to render a clean timeline of just those events, and matching
+// against pushHistory's prose would be fragile (wording changes, false
+// positives) where reading {age, title, event} directly isn't.
+function pushCareerEvent(character, { title, event }) {
+  character.careerHistory ??= [];
+  character.careerHistory.push({ age: character.age, title, event });
+}
+
 // Characters can't personally earn money before this age (the earliest
 // income event is the age-14 part-time job offer). Below that, normal
 // childhood expenses -- birthday parties, school costs, etc. -- are paid
@@ -618,6 +628,7 @@ export {
   resolveCountry,
   ensureBirthLocation,
   pushHistory,
+  pushCareerEvent,
   MIN_DATING_AGE,
   MIN_EARNING_AGE,
   ENROLLED_EDUCATION_STATUSES,

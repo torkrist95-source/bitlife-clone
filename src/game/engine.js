@@ -1,4 +1,4 @@
-import { getLifeStage, clampStat, randInt, pushHistory, generateRandomName } from "./character.js";
+import { getLifeStage, clampStat, randInt, pushHistory, pushCareerEvent, generateRandomName } from "./character.js";
 import { applySchoolYear, getGradeLevelForAge } from "./school.js";
 import { ensureCoworkers, endCoworkerRelationships } from "./npc.js";
 import { pickJobTitle } from "./npcLife.js";
@@ -43,6 +43,7 @@ function applyJobYear(character, jobsData) {
     const title = level.title;
     character.job = null;
     endCoworkerRelationships(character);
+    pushCareerEvent(character, { title, event: "laid_off" });
     return `You were laid off from your job as ${title}.`;
   }
 
@@ -50,7 +51,9 @@ function applyJobYear(character, jobsData) {
   if (hasNextLevel && character.job.yearsInRole >= MIN_YEARS_BEFORE_PROMOTION && randInt(0, 99) < PROMOTION_CHANCE) {
     character.job.levelIndex += 1;
     character.job.yearsInRole = 0;
-    return `You got promoted to ${jobDef.levels[character.job.levelIndex].title}!`;
+    const newTitle = jobDef.levels[character.job.levelIndex].title;
+    pushCareerEvent(character, { title: newTitle, event: "promoted" });
+    return `You got promoted to ${newTitle}!`;
   }
 
   return null;

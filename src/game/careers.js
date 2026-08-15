@@ -1,4 +1,4 @@
-import { randInt, clampStat, applyMoneyDelta, formatMoney, pushHistory, MIN_EARNING_AGE } from "./character.js";
+import { randInt, clampStat, applyMoneyDelta, formatMoney, pushHistory, pushCareerEvent, MIN_EARNING_AGE } from "./character.js";
 import { ensureCoworkers } from "./npc.js";
 
 // ---------- Main Job / Career ----------
@@ -71,6 +71,7 @@ function applyForJob(character, job, namePools, countryId) {
   character.job = { jobId: job.id, levelIndex: 0, yearsInRole: 0 };
   const line = `You got a job as ${level.title}.`;
   pushHistory(character, line);
+  pushCareerEvent(character, { title: level.title, event: "hired" });
   ensureCoworkers(character, namePools, countryId);
   return { succeeded: true, resultText: line };
 }

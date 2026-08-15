@@ -113,6 +113,11 @@ function migrateCharacterFields(character) {
   character.oddJobsTotalEarned ??= 0;
   character.oddJobLog ??= [];
   character.completedOneTimeJobs ??= [];
+  // Same "no way to reconstruct the past" limitation as Odd Jobs above --
+  // career milestones that happened before this feature existed only live
+  // in the free-text history, so Career History simply starts tracking from
+  // here going forward rather than trying to backfill it.
+  character.careerHistory ??= [];
   character.pendingEventId ??= null;
   character.history = migrateHistory(character.history);
 
