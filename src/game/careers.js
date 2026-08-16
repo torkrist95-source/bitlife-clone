@@ -11,9 +11,14 @@ import { ensureCoworkers } from "./npc.js";
 // can be compared against "at least this far along" rather than an exact
 // string match -- workforce/graduated_hs are treated as equally past high
 // school (this game doesn't rank "went straight to work" beneath
-// "graduated and then didn't go to college").
+// "graduated and then didn't go to college"). hs_dropout ranks with
+// not_started/elementary/middle, below high_school itself -- reaching
+// "workforce" or "graduated_hs" both require having actually finished
+// (hs_graduation only ever fires at 18 while still enrolled), so a
+// dropout who left early hasn't earned that rank.
 const EDUCATION_RANK = {
   not_started: 0,
+  hs_dropout: 0,
   elementary: 1,
   middle: 2,
   high_school: 3,

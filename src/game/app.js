@@ -40,6 +40,8 @@ import { GENDER_IDENTITIES, ATTRACTION_OPTIONS, resolveAttractedTo, attractionId
 import {
   getGradeLabel,
   getStatusLabel,
+  canDropOutOfHighSchool,
+  dropOutOfHighSchool,
   studyHarder,
   MAX_CLUBS,
   getAvailableClubs,
@@ -1062,6 +1064,7 @@ function renderCareerHistoryInto(container) {
 const SCHOOL_STATUS_MESSAGES = {
   not_started: "You're not old enough for school yet.",
   graduated_hs: "You graduated high school and are taking some time before deciding what's next.",
+  hs_dropout: "You dropped out of high school without graduating. Some jobs will be harder to come by without a diploma.",
   workforce: "You skipped college and went straight into the workforce.",
   graduated_college: "You graduated college.",
 };
@@ -1157,6 +1160,9 @@ function renderSchoolInto(container) {
   thingsList.appendChild(buildSchoolActionBtn("Study Harder", () => doStudyHarder(container)));
   thingsList.appendChild(buildSchoolActionBtn("Join a Club", openClubsModal));
   thingsList.appendChild(buildSchoolActionBtn("Join an After-School Activity", openActivitiesModal));
+  if (canDropOutOfHighSchool(character)) {
+    thingsList.appendChild(buildSchoolActionBtn("Drop Out of High School", () => requestDropOutOfHighSchool(container)));
+  }
   container.appendChild(thingsList);
 
   const peopleTitle = document.createElement("p");
@@ -1225,6 +1231,21 @@ function doCollegeSocialize(container) {
   renderCollegeInto(container);
   autosave();
   showToast(line);
+}
+
+function requestDropOutOfHighSchool(container) {
+  showConfirm({
+    title: "Drop out of high school?",
+    message: "Are you sure you want to drop out of high school? You won't graduate, and some jobs will be harder to come by without a diploma.",
+    confirmLabel: "Drop Out",
+    onConfirm: () => {
+      const line = dropOutOfHighSchool(character);
+      renderGame();
+      refreshSchoolIfOpen();
+      autosave();
+      showToast(line);
+    },
+  });
 }
 
 function requestDropOutOfCollege(container) {

@@ -83,6 +83,7 @@
   {
     "id": "office_assistant",
     "minAge": 18,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Office Assistant", "salary": 27000 },
       { "title": "Administrative Coordinator", "salary": 35000 },
@@ -92,6 +93,7 @@
   {
     "id": "customer_service",
     "minAge": 18,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Customer Service Rep", "salary": 29000 },
       { "title": "Senior Rep", "salary": 36000 },
@@ -101,6 +103,7 @@
   {
     "id": "bank_teller",
     "minAge": 18,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Bank Teller", "salary": 31000 },
       { "title": "Senior Teller", "salary": 38000 },
@@ -110,6 +113,7 @@
   {
     "id": "sales_rep",
     "minAge": 18,
+    "minEducationStatus": "graduated_hs",
     "levels": [
       { "title": "Sales Representative", "salary": 30000 },
       { "title": "Senior Sales Representative", "salary": 42000 },

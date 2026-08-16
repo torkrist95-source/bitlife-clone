@@ -31,6 +31,7 @@ const STATUS_LABELS = {
   middle: "Middle School",
   high_school: "High School",
   graduated_hs: "Graduated High School",
+  hs_dropout: "High School Dropout",
   college: "College",
   workforce: "Working (no college)",
   graduated_college: "Graduated College",
@@ -90,6 +91,12 @@ function applySchoolYear(character, namePools, countryId) {
   const edu = character.education;
   const lines = [];
 
+  // Without this, a dropout younger than 18 would get silently
+  // re-enrolled next year -- the grade/status logic below derives
+  // everything from age alone, with no memory that this specific
+  // character already left school on purpose.
+  if (edu.status === "hs_dropout") return lines;
+
   // The automatic tick only manages ages 5-17; turning 18 while still in
   // high school is exactly when graduation happens, once, via the same
   // forced-event mechanism every other chain in this game already uses.
@@ -142,6 +149,31 @@ function applySchoolYear(character, namePools, countryId) {
   // relationship-tier-gated NPC development, not here.
 
   return lines;
+}
+
+// ---------- Dropping out of high school ----------
+// Available a couple of years before graduation would normally happen
+// (age 16+, per the real-world minimum this is usually legally possible),
+// not at any younger K-12 stage -- elementary/middle school kids don't
+// "drop out." Deliberately one-way for now, same scope boundary as
+// college's Drop Out/Return pair before GED existed for it either.
+
+const MIN_HS_DROPOUT_AGE = 16;
+
+function canDropOutOfHighSchool(character) {
+  return character.education.status === "high_school" && character.age >= MIN_HS_DROPOUT_AGE;
+}
+
+function dropOutOfHighSchool(character) {
+  const edu = character.education;
+  edu.status = "hs_dropout";
+  edu.clubs = [];
+  edu.extracurriculars = [];
+  edu.activityProgress = {};
+  const line = "You dropped out of high school without graduating.";
+  pushHistory(character, line);
+  character.stats.happiness = clampStat(character.stats.happiness - 3);
+  return line;
 }
 
 // ---------- Studying ----------
@@ -843,6 +875,8 @@ export {
   getGradeLabel,
   getStatusLabel,
   applySchoolYear,
+  canDropOutOfHighSchool,
+  dropOutOfHighSchool,
   studyHarder,
   MAX_CLUBS,
   getAvailableClubs,
