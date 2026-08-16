@@ -2,13 +2,12 @@ import { randInt, applyMoneyDelta, formatMoney, pushHistory, generateRandomName,
 
 // Small, fixed, stable content -- same "lives as a hardcoded module, not a
 // fetched JSON file" convention as personality.js's TRAITS and school.js's
-// MAJORS/COLLEGE_TIERS. Replaces the service-type content that used to live
-// in odd_jobs.json (babysitting, lawn mowing, dog walking, tutoring, car
-// washing, snow shoveling, and the various "freelance work online" entries,
-// now consolidated into freelance_writing); the non-service windfalls from
-// that file (garage sale, found cash, a relative's gift) moved to
-// one_time_jobs.json instead, since those were never really a repeatable
-// "service" a player offers.
+// MAJORS/COLLEGE_TIERS. Originally replaced Odd Jobs' service-type content
+// (babysitting, lawn mowing, dog walking, tutoring, car washing, snow
+// shoveling, and the various "freelance work online" entries, now
+// consolidated into freelance_writing) -- One-Time Jobs, which the
+// non-service windfalls moved to at the time, has since been retired
+// entirely as redundant with this system.
 const FREELANCE_SERVICES = [
   { id: "babysitting", label: "Babysitting", minAge: 14, minRate: 10, maxRate: 25, hoursMin: 3, hoursMax: 15, hiredPhrase: "hired you to babysit their kids" },
   { id: "lawn_mowing", label: "Lawn Mowing", minAge: 14, minRate: 10, maxRate: 20, hoursMin: 2, hoursMax: 10, hiredPhrase: "hired you to mow their lawn" },
@@ -21,14 +20,12 @@ const FREELANCE_SERVICES = [
   { id: "freelance_writing", label: "Freelance Writing & Online Work", minAge: 16, minRate: 15, maxRate: 45, hoursMin: 4, hoursMax: 20, hiredPhrase: "hired you for freelance work online" },
 ];
 
-// Same "browse a pool, cap the yearly total" shape as One-Time Jobs
-// (careers.js), tracked in a separate counter since these are two distinct
-// systems that both happen to cap at 3/year -- character.jobCaps holds both,
-// reset together at the top of every Age Up (engine.js).
+// Caps the yearly total -- character.freelanceGigsCompletedThisYear, reset
+// at the top of every Age Up (engine.js).
 const YEARLY_FREELANCE_GIG_CAP = 3;
 
 function isFreelanceCapReached(character) {
-  return (character.jobCaps?.freelanceGigsCompleted ?? 0) >= YEARLY_FREELANCE_GIG_CAP;
+  return (character.freelanceGigsCompletedThisYear ?? 0) >= YEARLY_FREELANCE_GIG_CAP;
 }
 
 function getEligibleFreelanceServices(character) {
@@ -59,8 +56,7 @@ function postFreelanceAd(character, service, rate, namePools, countryId) {
   const clientGender = Math.random() < 0.5 ? "male" : "female";
   const clientName = generateRandomName(namePools, countryId, clientGender);
 
-  character.jobCaps ??= { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
-  character.jobCaps.freelanceGigsCompleted += 1;
+  character.freelanceGigsCompletedThisYear = (character.freelanceGigsCompletedThisYear ?? 0) + 1;
 
   const rateFormatted = `${formatMoney(clampedRate, character.currencyCode)}/hr`;
   const earningsFormatted = formatMoney(earnings, character.currencyCode);

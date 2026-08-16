@@ -123,12 +123,10 @@ function migrateCharacterFields(character) {
   // then), so these just get placeholder-initialized here.
   character.birthCity ??= null;
   character.currencyCode ??= null;
-  character.completedOneTimeJobs ??= [];
-  // One-Time Jobs and Freelance Gigs both cap at a few completions per Age
-  // Up year (careers.js/freelance.js) -- old saves simply start at zero for
-  // whatever year they're in; the counters get reset for real the next time
-  // this character actually ages up.
-  character.jobCaps ??= { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
+  // Freelance Gigs caps at a few completions per Age Up year (freelance.js)
+  // -- old saves simply start at zero for whatever year they're in; the
+  // counter gets reset for real the next time this character ages up.
+  character.freelanceGigsCompletedThisYear ??= 0;
   // Same "no way to reconstruct the past" limitation as Odd Jobs above --
   // career milestones that happened before this feature existed only live
   // in the free-text history, so Career History simply starts tracking from

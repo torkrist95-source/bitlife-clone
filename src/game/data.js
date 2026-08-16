@@ -28,10 +28,6 @@ function loadJobs() {
   return loadJSON("data/careers/jobs.json");
 }
 
-function loadOneTimeJobs() {
-  return loadJSON("data/careers/one_time_jobs.json");
-}
-
 function loadPartTimeJobs() {
   return loadJSON("data/careers/part_time_jobs.json");
 }
@@ -76,7 +72,6 @@ export {
   loadFamilyStructures,
   loadNamePools,
   loadJobs,
-  loadOneTimeJobs,
   loadPartTimeJobs,
   loadAgeUpEvents,
   loadNpcUpdates,

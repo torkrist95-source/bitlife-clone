@@ -36,14 +36,7 @@ import {
   askFamilyForHelp,
   borrowMoney,
 } from "./npc.js";
-import {
-  getEligibleJobs,
-  applyForJob,
-  YEARLY_ONE_TIME_JOB_CAP,
-  isOneTimeJobCapReached,
-  getEligibleOneTimeJobs,
-  resolveOneTimeJob,
-} from "./careers.js";
+import { getEligibleJobs, applyForJob } from "./careers.js";
 import { YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd } from "./freelance.js";
 import { getEligiblePartTimeJobs, applyForPartTimeJob } from "./partTimeJobs.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
@@ -83,7 +76,6 @@ import {
   loadFamilyStructures,
   loadNamePools,
   loadJobs,
-  loadOneTimeJobs,
   loadPartTimeJobs,
   loadAgeUpEvents,
   loadNpcUpdates,
@@ -151,7 +143,6 @@ let birthCircumstances = [];
 let familyStructures = [];
 let namePools = {};
 let jobsData = [];
-let oneTimeJobsData = [];
 let partTimeJobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
@@ -883,10 +874,11 @@ function getJobLevel(jobId, levelIndex) {
 
 // ---------- Occupation: Jobs ----------
 //
-// Main Job/Career -> Odd Jobs (automatic, summary only) -> One-Time Jobs
-// (browsable, complete once) -> People (Coworkers), all inline in one
-// accordion panel, mirroring renderSchoolInto's shape/section pattern
-// exactly -- no separate "Manage Jobs"/"View Coworkers" modal anymore.
+// Main Job/Career -> Part-Time Job -> Freelance Gigs -> People (Coworkers),
+// all inline in one accordion panel, mirroring renderSchoolInto's
+// shape/section pattern exactly -- no separate "Manage Jobs"/"View
+// Coworkers" modal anymore. (One-Time Jobs, previously here too, was
+// retired as redundant with Freelance Gigs.)
 
 function renderJobsInto(container) {
   container.innerHTML = "";
@@ -894,7 +886,6 @@ function renderJobsInto(container) {
   renderMainJobSection(container);
   renderPartTimeJobSection(container);
   renderFreelanceGigsSection(container);
-  renderOneTimeJobsSection(container);
 
   const peopleTitle = document.createElement("p");
   peopleTitle.className = "school-section-title";
@@ -1187,49 +1178,6 @@ freelanceModal.postBtn.addEventListener("click", () => {
   autosave();
   showToast(result.line);
 });
-
-// A browsable pool of gigs, each completable once -- resolves immediately
-// for a payout (no pass/fail roll, unlike Main Job applications) and never
-// reappears for this character once done. Capped at a few completions per
-// Age Up year, same as Freelance Gigs above.
-function renderOneTimeJobsSection(container) {
-  const title = document.createElement("p");
-  title.className = "school-section-title";
-  title.textContent = "One-Time Jobs";
-  container.appendChild(title);
-
-  if (isOneTimeJobCapReached(character)) {
-    const capNote = document.createElement("p");
-    capNote.className = "occupation-unemployed-label";
-    capNote.textContent = `You've completed the max of ${YEARLY_ONE_TIME_JOB_CAP} one-time jobs this year. Check back after your next birthday.`;
-    container.appendChild(capNote);
-    return;
-  }
-
-  const eligible = getEligibleOneTimeJobs(character, oneTimeJobsData);
-  if (eligible.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "occupation-unemployed-label";
-    empty.textContent = "No one-time opportunities available right now.";
-    container.appendChild(empty);
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "school-action-list";
-  for (const job of eligible) {
-    list.appendChild(buildSchoolActionBtn(job.label, () => doResolveOneTimeJob(job, container)));
-  }
-  container.appendChild(list);
-}
-
-function doResolveOneTimeJob(job, container) {
-  const line = resolveOneTimeJob(character, job);
-  renderGame();
-  renderJobsInto(container);
-  autosave();
-  showToast(line);
-}
 
 // ---------- Occupation: Career History ----------
 // Read-only timeline built from character.careerHistory, the structured log
@@ -2484,7 +2432,6 @@ async function init() {
     familyStructures,
     namePools,
     jobsData,
-    oneTimeJobsData,
     partTimeJobsData,
     ageUpEvents,
     npcUpdates,
@@ -2499,7 +2446,6 @@ async function init() {
     loadFamilyStructures(),
     loadNamePools(),
     loadJobs(),
-    loadOneTimeJobs(),
     loadPartTimeJobs(),
     loadAgeUpEvents(),
     loadNpcUpdates(),

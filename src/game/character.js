@@ -411,10 +411,9 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     // A fully separate slot from Main Job (partTimeJobs.js) -- a character
     // can hold both at once, so this isn't nested under `job` above.
     partTimeJob: null,
-    // Reset every Age Up (engine.js) -- caps how many One-Time Jobs/
-    // Freelance Gigs can be completed in a single year (careers.js/
-    // freelance.js).
-    jobCaps: { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 },
+    // Reset every Age Up (engine.js) -- caps how many Freelance Gigs can be
+    // completed in a single year (freelance.js).
+    freelanceGigsCompletedThisYear: 0,
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,
