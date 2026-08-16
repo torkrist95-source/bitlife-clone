@@ -195,7 +195,9 @@ const profileModal = {
   zodiac: document.getElementById("profile-modal-zodiac"),
   personality: document.getElementById("profile-modal-personality"),
   genderIdentitySelect: document.getElementById("profile-modal-gender-identity"),
+  genderIdentityValue: document.getElementById("profile-modal-gender-identity-value"),
   attractionSelect: document.getElementById("profile-modal-attraction"),
+  attractionValue: document.getElementById("profile-modal-attraction-value"),
   closeBtn: document.getElementById("profile-modal-close"),
 };
 
@@ -1714,8 +1716,22 @@ function openProfile() {
   profileModal.zodiac.textContent = character.zodiacSign ?? "Unknown";
   const dominantTraits = getDominantTraits(character);
   profileModal.personality.textContent = dominantTraits.length ? dominantTraits.join(", ") : "Unknown";
-  profileModal.genderIdentitySelect.value = character.genderIdentity ?? "male";
-  profileModal.attractionSelect.value = attractionIdFor(character.attractedTo);
+  // Both are locked until the same age everything else romance-related
+  // unlocks at (MIN_DATING_AGE) -- a toddler hasn't formed either yet, so
+  // there's nothing meaningful to edit before then. Below that age, show
+  // plain text in place of the select rather than a control that does
+  // nothing.
+  const identityUnlocked = character.age >= MIN_DATING_AGE;
+  profileModal.genderIdentityValue.textContent = "Too young to say";
+  profileModal.genderIdentityValue.classList.toggle("hidden", identityUnlocked);
+  profileModal.genderIdentitySelect.classList.toggle("hidden", !identityUnlocked);
+  if (identityUnlocked) profileModal.genderIdentitySelect.value = character.genderIdentity ?? "male";
+
+  profileModal.attractionValue.textContent = "Too young to say";
+  profileModal.attractionValue.classList.toggle("hidden", identityUnlocked);
+  profileModal.attractionSelect.classList.toggle("hidden", !identityUnlocked);
+  if (identityUnlocked) profileModal.attractionSelect.value = attractionIdFor(character.attractedTo);
+
   profileModal.overlay.classList.remove("hidden");
 }
 
