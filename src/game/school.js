@@ -32,6 +32,7 @@ const STATUS_LABELS = {
   high_school: "High School",
   graduated_hs: "Graduated High School",
   hs_dropout: "High School Dropout",
+  ged: "GED / High School Equivalency",
   college: "College",
   workforce: "Working (no college)",
   graduated_college: "Graduated College",
@@ -155,8 +156,7 @@ function applySchoolYear(character, namePools, countryId) {
 // Available a couple of years before graduation would normally happen
 // (age 16+, per the real-world minimum this is usually legally possible),
 // not at any younger K-12 stage -- elementary/middle school kids don't
-// "drop out." Deliberately one-way for now, same scope boundary as
-// college's Drop Out/Return pair before GED existed for it either.
+// "drop out." The way back is the GED section right below.
 
 const MIN_HS_DROPOUT_AGE = 16;
 
@@ -174,6 +174,39 @@ function dropOutOfHighSchool(character) {
   pushHistory(character, line);
   character.stats.happiness = clampStat(character.stats.happiness - 3);
   return line;
+}
+
+// ---------- GED ----------
+// A dropout's way back in -- retryable (a failed attempt costs a little
+// happiness but never locks the option out), same shape as an
+// extracurricular tryout. Passing sets a status distinct from
+// graduated_hs/workforce (same EDUCATION_RANK tier, careers.js) so the
+// character's real education history stays visible rather than reading as
+// an ordinary graduate, while unlocking exactly the same jobs.
+
+const GED_PASS_BASE_CHANCE = 45;
+
+function canAttemptGed(character) {
+  return character.education.status === "hs_dropout";
+}
+
+function attemptGed(character) {
+  const smarts = character.stats.smarts ?? 50;
+  const chance = Math.max(20, Math.min(90, GED_PASS_BASE_CHANCE + (smarts - 50) / 2));
+
+  if (randInt(0, 99) < chance) {
+    character.education.status = "ged";
+    character.stats.happiness = clampStat(character.stats.happiness + 8);
+    character.stats.reputation = clampStat(character.stats.reputation + 2);
+    const line = "You passed your GED! You now have the equivalent of a high school diploma.";
+    pushHistory(character, line);
+    return { succeeded: true, resultText: line };
+  }
+
+  character.stats.happiness = clampStat(character.stats.happiness - 2);
+  const line = "You didn't pass the GED this time, but you can study and try again.";
+  pushHistory(character, line);
+  return { succeeded: false, resultText: line };
 }
 
 // ---------- Studying ----------
@@ -530,6 +563,34 @@ function rollCollegeAdmission(character, tierId) {
   return randInt(0, 99) < chance;
 }
 
+// Shared by hs_graduation_college below (a followUp from the forced
+// graduation chain) and app.js's standalone "Apply to College" menu button
+// (for a GED holder, or anyone who graduated but skipped college at the
+// time) -- both need the exact same choice, just reached differently.
+function collegeChoiceEvent() {
+  return {
+    id: "college_choice",
+    trigger: "age_up",
+    conditions: { minAge: 0, maxAge: 200 },
+    text: "Which college are you applying to?",
+    choices: [
+      { label: "Community College", dynamic: "apply_community_college" },
+      { label: "State University", dynamic: "apply_state_university" },
+      { label: "Prestigious University", dynamic: "apply_prestigious_university" },
+    ],
+  };
+}
+
+// Reachable any time the character has a diploma-equivalent but hasn't
+// already gone -- a fresh graduated_hs (chose "Don't Go to College" at the
+// time) or a GED holder (attemptGed above). Once in college, status moves
+// off both of these, so this naturally stops applying without needing its
+// own flag.
+function canApplyToCollege(character) {
+  const status = character.education.status;
+  return status === "graduated_hs" || status === "ged";
+}
+
 function fundingChoiceEvent() {
   return {
     id: "college_funding_choice",
@@ -664,20 +725,7 @@ registerDynamicGenerators({
   },
 
   hs_graduation_college() {
-    return {
-      type: "followUp",
-      event: {
-        id: "college_choice",
-        trigger: "age_up",
-        conditions: { minAge: 0, maxAge: 200 },
-        text: "Which college are you applying to?",
-        choices: [
-          { label: "Community College", dynamic: "apply_community_college" },
-          { label: "State University", dynamic: "apply_state_university" },
-          { label: "Prestigious University", dynamic: "apply_prestigious_university" },
-        ],
-      },
-    };
+    return { type: "followUp", event: collegeChoiceEvent() };
   },
 
   apply_community_college(character) {
@@ -877,6 +925,10 @@ export {
   applySchoolYear,
   canDropOutOfHighSchool,
   dropOutOfHighSchool,
+  canAttemptGed,
+  attemptGed,
+  canApplyToCollege,
+  collegeChoiceEvent,
   studyHarder,
   MAX_CLUBS,
   getAvailableClubs,

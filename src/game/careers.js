@@ -9,13 +9,14 @@ import { ensureCoworkers } from "./npc.js";
 
 // Ranks character.education.status so a job's optional minEducationStatus
 // can be compared against "at least this far along" rather than an exact
-// string match -- workforce/graduated_hs are treated as equally past high
-// school (this game doesn't rank "went straight to work" beneath
-// "graduated and then didn't go to college"). hs_dropout ranks with
-// not_started/elementary/middle, below high_school itself -- reaching
-// "workforce" or "graduated_hs" both require having actually finished
-// (hs_graduation only ever fires at 18 while still enrolled), so a
-// dropout who left early hasn't earned that rank.
+// string match -- workforce/graduated_hs/ged are treated as equally past
+// high school (this game doesn't rank "went straight to work", "graduated
+// and then didn't go to college", or "passed the GED" beneath each other --
+// all three clear the same bar). hs_dropout ranks with not_started/
+// elementary/middle, below high_school itself -- reaching any of the
+// three above requires having actually finished one way or another, so a
+// dropout who hasn't yet passed their GED (school.js's attemptGed) hasn't
+// earned that rank.
 const EDUCATION_RANK = {
   not_started: 0,
   hs_dropout: 0,
@@ -24,6 +25,7 @@ const EDUCATION_RANK = {
   high_school: 3,
   graduated_hs: 4,
   workforce: 4,
+  ged: 4,
   college: 5,
   graduated_college: 6,
 };

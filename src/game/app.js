@@ -42,6 +42,10 @@ import {
   getStatusLabel,
   canDropOutOfHighSchool,
   dropOutOfHighSchool,
+  canAttemptGed,
+  attemptGed,
+  canApplyToCollege,
+  collegeChoiceEvent,
   studyHarder,
   MAX_CLUBS,
   getAvailableClubs,
@@ -1123,12 +1127,19 @@ function renderSchoolInto(container) {
     empty.className = "occupation-unemployed-label";
     empty.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
     container.appendChild(empty);
+
+    const actions = document.createElement("div");
+    actions.className = "school-action-list";
     if (canReturnToCollege(character)) {
-      const returnList = document.createElement("div");
-      returnList.className = "school-action-list";
-      returnList.appendChild(buildSchoolActionBtn("Return to College", () => requestReturnToCollege(container)));
-      container.appendChild(returnList);
+      actions.appendChild(buildSchoolActionBtn("Return to College", () => requestReturnToCollege(container)));
     }
+    if (canAttemptGed(character)) {
+      actions.appendChild(buildSchoolActionBtn("Take GED Test", () => doTakeGed(container)));
+    }
+    if (canApplyToCollege(character)) {
+      actions.appendChild(buildSchoolActionBtn("Apply to College", doApplyToCollege));
+    }
+    if (actions.children.length > 0) container.appendChild(actions);
     return;
   }
 
@@ -1246,6 +1257,29 @@ function requestDropOutOfHighSchool(container) {
       showToast(line);
     },
   });
+}
+
+// No confirmation -- low-stakes and retryable, same as an extracurricular
+// tryout, not a one-way decision like Drop Out above.
+function doTakeGed(container) {
+  const { resultText } = attemptGed(character);
+  renderGame();
+  refreshSchoolIfOpen();
+  autosave();
+  showToast(resultText);
+}
+
+// event-modal-overlay and nav-drawer-overlay share the same .modal-overlay
+// stacking (main.css), and event-modal-overlay comes first in the DOM --
+// with both open at once, the drawer would paint (and intercept clicks)
+// on top of the event modal underneath it. Every other action from this
+// School section uses the confirm modal instead, which happens to sit
+// later in the DOM and doesn't have this problem; this is the one place
+// that opens a full event-choice flow from inside the drawer, so it closes
+// the drawer first rather than risking a reorder of shared modal markup.
+function doApplyToCollege() {
+  hideNavDrawer();
+  showEventModal(collegeChoiceEvent());
 }
 
 function requestDropOutOfCollege(container) {
