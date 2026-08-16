@@ -84,27 +84,27 @@ function applyForJob(character, job, namePools, countryId) {
   return { succeeded: true, resultText: line };
 }
 
-// ---------- Odd Jobs (automatic, summary-only) ----------
-// The roll/trigger itself stays exactly as it was (events.js's
-// pickOddJobLine, an automatic per-year background chance) -- this just
-// reads the running total/log that function now maintains, for display.
-
-function getOddJobsSummary(character) {
-  return {
-    total: character.oddJobsTotalEarned ?? 0,
-    recent: (character.oddJobLog ?? []).slice(0, 5),
-  };
-}
-
 // ---------- One-Time Jobs ----------
 // A browsable pool of gigs, each completable once per character (tracked
 // by id, the same "join once, remember by id" convention already used by
 // character.education.clubs/extracurriculars) -- unlike Main Job
 // applications, these always pay out once attempted (no pass/fail roll),
-// per the explicit "browsable list, complete once" design.
+// per the explicit "browsable list, complete once" design. Also capped at
+// a handful of completions per Age Up year (character.jobCaps, reset
+// alongside Freelance Gigs' own counter in engine.js's ageUp) -- since
+// this path never fails a roll, every call to resolveOneTimeJob is by
+// definition a real completion, so the counter can increment unconditionally
+// there without risking a rejected attempt consuming a slot.
+
+const YEARLY_ONE_TIME_JOB_CAP = 3;
+
+function isOneTimeJobCapReached(character) {
+  return (character.jobCaps?.oneTimeJobsCompleted ?? 0) >= YEARLY_ONE_TIME_JOB_CAP;
+}
 
 function getEligibleOneTimeJobs(character, oneTimeJobsData) {
   if (character.age < MIN_EARNING_AGE) return [];
+  if (isOneTimeJobCapReached(character)) return [];
   const completed = new Set(character.completedOneTimeJobs ?? []);
   return (oneTimeJobsData ?? []).filter((job) => character.age >= job.minAge && !completed.has(job.id));
 }
@@ -114,9 +114,19 @@ function resolveOneTimeJob(character, job) {
   applyMoneyDelta(character, amount);
   character.completedOneTimeJobs ??= [];
   character.completedOneTimeJobs.push(job.id);
+  character.jobCaps ??= { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
+  character.jobCaps.oneTimeJobsCompleted += 1;
   const line = job.resultText.replace("{amount}", formatMoney(amount, character.currencyCode));
   pushHistory(character, line);
   return line;
 }
 
-export { getEligibleJobs, rollJobApplication, applyForJob, getOddJobsSummary, getEligibleOneTimeJobs, resolveOneTimeJob };
+export {
+  getEligibleJobs,
+  rollJobApplication,
+  applyForJob,
+  YEARLY_ONE_TIME_JOB_CAP,
+  isOneTimeJobCapReached,
+  getEligibleOneTimeJobs,
+  resolveOneTimeJob,
+};

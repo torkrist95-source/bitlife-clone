@@ -8,5 +8,8 @@
   { "id": "yard_sale_help", "label": "Help Run a Neighborhood Yard Sale", "minAge": 14, "moneyMin": 30, "moneyMax": 100, "weight": 7, "resultText": "You helped run a neighborhood yard sale and earned {amount}." },
   { "id": "moving_boxes_warehouse", "label": "Cover a Warehouse Shift", "minAge": 18, "moneyMin": 120, "moneyMax": 260, "weight": 6, "resultText": "You covered a one-off warehouse shift and earned {amount}." },
   { "id": "holiday_gift_wrapping", "label": "Wrap Gifts at the Mall", "minAge": 14, "moneyMin": 40, "moneyMax": 120, "weight": 7, "resultText": "You wrapped gifts at the mall for a day and earned {amount}." },
-  { "id": "festival_setup", "label": "Help Set Up a Local Festival", "minAge": 16, "moneyMin": 70, "moneyMax": 190, "weight": 6, "resultText": "You helped set up a local festival and earned {amount}." }
+  { "id": "festival_setup", "label": "Help Set Up a Local Festival", "minAge": 16, "moneyMin": 70, "moneyMax": 190, "weight": 6, "resultText": "You helped set up a local festival and earned {amount}." },
+  { "id": "garage_sale", "label": "Have a Garage Sale", "minAge": 14, "moneyMin": 30, "moneyMax": 120, "weight": 6, "resultText": "You cleared out your old stuff at a garage sale and made {amount}." },
+  { "id": "found_cash", "label": "Search the House for Spare Change", "minAge": 14, "moneyMin": 10, "moneyMax": 60, "weight": 3, "resultText": "You found {amount} you'd forgotten about in an old jacket pocket." },
+  { "id": "gift_money", "label": "Ask a Relative for Some Cash", "minAge": 14, "moneyMin": 20, "moneyMax": 100, "weight": 5, "resultText": "A relative slipped you {amount} as a gift." }
 ]

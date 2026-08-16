@@ -465,6 +465,19 @@ body {
   color: var(--color-text);
 }
 
+.freelance-rate-input {
+  width: 100%;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  margin-bottom: 18px;
+  box-sizing: border-box;
+}
+
 .dice-btn {
   flex-shrink: 0;
   width: 42px;
