@@ -3,9 +3,7 @@ import {
   randInt,
   weightedPick,
   applyMoneyDelta,
-  formatMoney,
   pushHistory,
-  MIN_EARNING_AGE,
   ENROLLED_EDUCATION_STATUSES,
 } from "./character.js";
 import { ensureSocialCircle, getKnownNpcs, resolveDynamicChoice } from "./npc.js";
@@ -338,29 +336,6 @@ function pickWorldUpdateLine(character, worldUpdates, countryName, celebrities) 
   return fillTemplate(entry.template, { country: countryName ?? "your country" });
 }
 
-// A small side-income roll, independent of the character's main job (or
-// lack of one) -- same MIN_EARNING_AGE gate every other personal-money
-// system already respects, so a young child never turns up with cash from
-// "odd jobs" no other system would let them earn. Routed through the same
-// recent-repetition tracking as NPC/world flavor (via a dedicated
-// `recentOddJobIds` field) so the same odd job can't fire two years running.
-function pickOddJobLine(character, oddJobsData) {
-  if (!oddJobsData || oddJobsData.length === 0) return null;
-  if (character.age < MIN_EARNING_AGE) return null;
-  const candidates = pickRecentAware(character, "recentOddJobIds", oddJobsData);
-  const entry = weightedPick(candidates);
-  rememberUpdate(character, "recentOddJobIds", entry.id);
-  const amount = randInt(entry.moneyMin, entry.moneyMax);
-  applyMoneyDelta(character, amount);
-  const line = fillTemplate(entry.template, { amount: formatMoney(amount, character.currencyCode) });
-  // Odd Jobs stays a fully automatic background roll (no player-triggered
-  // action) -- this just keeps a running total/log so Occupation > Jobs >
-  // Odd Jobs has something to actually show, per the summary-only design.
-  character.oddJobsTotalEarned = (character.oddJobsTotalEarned ?? 0) + amount;
-  character.oddJobLog = [{ age: character.age, amount, text: line }, ...(character.oddJobLog ?? [])].slice(0, 20);
-  return line;
-}
-
 // A spontaneous personal hobby, independent of anything club/extracurricular
 // membership already grants -- reuses npcLife.js's own hobby pool rather
 // than maintaining a second list, since the concept ("picked up a new
@@ -437,7 +412,9 @@ const WORLD_FLAVOR_SLOTS = 3;
 const WORLD_FLAVOR_CHANCE_PER_SLOT = 25; // percent, per independent slot
 // Lower-frequency, one-shot concepts (unlike NPC/world flavor above, these
 // aren't worth multiple slots) -- each is its own single independent roll.
-const ODD_JOB_CHANCE = 12; // percent, independent roll
+// (Odd Jobs' own automatic roll used to live here -- retired in favor of the
+// player-driven Freelance Gigs and One-Time Jobs systems in careers.js/
+// freelance.js, so there's no automatic-background-income roll anymore.)
 const HOBBY_INTEREST_CHANCE = 10; // percent, independent roll
 const SCHOOL_ACTIVITY_FLAVOR_CHANCE = 20; // percent, independent roll
 const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
@@ -453,7 +430,6 @@ function rollAgeUpHappening(character, pools) {
     ageUpEvents,
     npcUpdates,
     worldUpdates,
-    oddJobsData,
     celebrities,
     clubsData,
     extracurricularsData,
@@ -476,10 +452,6 @@ function rollAgeUpHappening(character, pools) {
       const line = pickWorldUpdateLine(character, worldUpdates, countryName, celebrities);
       if (line) lines.push(line);
     }
-  }
-  if (randInt(0, 99) < ODD_JOB_CHANCE) {
-    const line = pickOddJobLine(character, oddJobsData);
-    if (line) lines.push(line);
   }
   if (randInt(0, 99) < HOBBY_INTEREST_CHANCE) {
     const line = pickHobbyInterestLine(character, NPC_HOBBY_POOL);

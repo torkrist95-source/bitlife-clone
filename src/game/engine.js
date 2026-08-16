@@ -266,6 +266,10 @@ registerDynamicGenerators({
 function ageUp(character, jobsData, namePools, countryId) {
   const previousStage = getLifeStage(character.age);
   character.age += 1;
+  // One-Time Jobs and Freelance Gigs each cap at a handful of completions
+  // per Age Up year (careers.js/freelance.js) -- reset together here since
+  // Age Up is the only thing that ever advances "the year" in this game.
+  character.jobCaps = { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
   applyStatDrift(character);
   const currentStage = getLifeStage(character.age);
 

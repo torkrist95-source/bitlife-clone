@@ -110,7 +110,6 @@ function migrateCharacterFields(character) {
   // beyond the default.
   character.recentNpcUpdateIds ??= [];
   character.recentWorldUpdateIds ??= [];
-  character.recentOddJobIds ??= [];
   character.recentCelebrityIds ??= [];
   // Real values get resolved lazily by character.js's ensureBirthLocation
   // once the character actually becomes the active one being played (see
@@ -119,13 +118,12 @@ function migrateCharacterFields(character) {
   // then), so these just get placeholder-initialized here.
   character.birthCity ??= null;
   character.currencyCode ??= null;
-  // Odd Jobs' running total/log and the One-Time Jobs completed-ids list are
-  // both new tracking added on top of existing systems -- prior odd-job
-  // earnings already baked into free-text history can't be retroactively
-  // reconstructed, so the lifetime counter simply starts at 0 going forward.
-  character.oddJobsTotalEarned ??= 0;
-  character.oddJobLog ??= [];
   character.completedOneTimeJobs ??= [];
+  // One-Time Jobs and Freelance Gigs both cap at a few completions per Age
+  // Up year (careers.js/freelance.js) -- old saves simply start at zero for
+  // whatever year they're in; the counters get reset for real the next time
+  // this character actually ages up.
+  character.jobCaps ??= { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
   // Same "no way to reconstruct the past" limitation as Odd Jobs above --
   // career milestones that happened before this feature existed only live
   // in the free-text history, so Career History simply starts tracking from

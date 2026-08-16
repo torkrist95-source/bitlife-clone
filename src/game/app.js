@@ -34,7 +34,15 @@ import {
   askFamilyForHelp,
   borrowMoney,
 } from "./npc.js";
-import { getEligibleJobs, applyForJob, getOddJobsSummary, getEligibleOneTimeJobs, resolveOneTimeJob } from "./careers.js";
+import {
+  getEligibleJobs,
+  applyForJob,
+  YEARLY_ONE_TIME_JOB_CAP,
+  isOneTimeJobCapReached,
+  getEligibleOneTimeJobs,
+  resolveOneTimeJob,
+} from "./careers.js";
+import { YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd } from "./freelance.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
 import { GENDER_IDENTITIES, ATTRACTION_OPTIONS, resolveAttractedTo, attractionIdFor } from "./identity.js";
 import {
@@ -76,7 +84,6 @@ import {
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
-  loadOddJobs,
   loadCelebrities,
   loadClubs,
   loadExtracurriculars,
@@ -144,7 +151,6 @@ let oneTimeJobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
-let oddJobsData = [];
 let celebrities = [];
 let clubsData = [];
 let extracurricularsData = [];
@@ -243,6 +249,16 @@ const clubsModal = {
   overlay: document.getElementById("clubs-modal-overlay"),
   list: document.getElementById("clubs-list"),
   closeBtn: document.getElementById("clubs-modal-close"),
+};
+
+const freelanceModal = {
+  overlay: document.getElementById("freelance-modal-overlay"),
+  title: document.getElementById("freelance-modal-title"),
+  rateRange: document.getElementById("freelance-rate-range"),
+  rateInput: document.getElementById("freelance-rate-input"),
+  postBtn: document.getElementById("freelance-post-ad-btn"),
+  result: document.getElementById("freelance-result"),
+  closeBtn: document.getElementById("freelance-modal-close"),
 };
 
 const activitiesModal = {
@@ -705,7 +721,6 @@ game.ageBtn.addEventListener("click", () => {
     ageUpEvents,
     npcUpdates,
     worldUpdates,
-    oddJobsData,
     celebrities,
     clubsData,
     extracurricularsData,
@@ -822,7 +837,7 @@ function renderJobsInto(container) {
   container.innerHTML = "";
 
   renderMainJobSection(container);
-  renderOddJobsSection(container);
+  renderFreelanceGigsSection(container);
   renderOneTimeJobsSection(container);
 
   const peopleTitle = document.createElement("p");
@@ -933,38 +948,98 @@ function requestQuitJob(container) {
   });
 }
 
-// Odd Jobs stays a fully automatic background roll (events.js's
-// pickOddJobLine, unchanged) -- this section is read-only, no buttons,
-// just the running total/log that roll now maintains.
-function renderOddJobsSection(container) {
+// Freelance Gigs: browse age-appropriate services, pick one, set an hourly
+// rate, then "Post an Ad" (freelanceModal) resolves instantly -- no
+// simulated waiting, since Age Up is the only thing that advances time in
+// this game. Fully repeatable (no completed-ids tracking, unlike One-Time
+// Jobs below), just capped at a few completions per Age Up year.
+function renderFreelanceGigsSection(container) {
   const title = document.createElement("p");
   title.className = "school-section-title";
-  title.textContent = "Odd Jobs";
+  title.textContent = "Freelance Gigs";
   container.appendChild(title);
 
-  const { total, recent } = getOddJobsSummary(character);
-  const totalLine = document.createElement("p");
-  totalLine.className = "occupation-job-salary";
-  totalLine.textContent =
-    total > 0 ? `Lifetime earnings: ${formatMoney(total, character.currencyCode)}` : "No odd-job income yet.";
-  container.appendChild(totalLine);
-
-  for (const entry of recent) {
-    const line = document.createElement("p");
-    line.className = "occupation-unemployed-label";
-    line.textContent = `Age ${entry.age}: ${entry.text}`;
-    container.appendChild(line);
+  if (isFreelanceCapReached(character)) {
+    const capNote = document.createElement("p");
+    capNote.className = "occupation-unemployed-label";
+    capNote.textContent = `You've booked the max of ${YEARLY_FREELANCE_GIG_CAP} freelance gigs this year. Check back after your next birthday.`;
+    container.appendChild(capNote);
+    return;
   }
+
+  const eligible = getEligibleFreelanceServices(character);
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "No freelance gigs available right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "school-action-list";
+  for (const service of eligible) {
+    list.appendChild(buildSchoolActionBtn(service.label, () => openFreelanceModal(service, container)));
+  }
+  container.appendChild(list);
 }
+
+let freelanceJobsContainerRef = null;
+let currentFreelanceService = null;
+
+function openFreelanceModal(service, container) {
+  freelanceJobsContainerRef = container;
+  currentFreelanceService = service;
+  freelanceModal.title.textContent = service.label;
+  freelanceModal.rateRange.textContent = `Set your hourly rate: ${formatMoney(service.minRate, character.currencyCode)} - ${formatMoney(service.maxRate, character.currencyCode)}/hr.`;
+  freelanceModal.rateInput.min = service.minRate;
+  freelanceModal.rateInput.max = service.maxRate;
+  freelanceModal.rateInput.value = Math.round((service.minRate + service.maxRate) / 2);
+  freelanceModal.result.textContent = "";
+  freelanceModal.result.classList.add("hidden");
+  freelanceModal.overlay.classList.remove("hidden");
+}
+
+function hideFreelanceModal() {
+  freelanceModal.overlay.classList.add("hidden");
+}
+
+freelanceModal.closeBtn.addEventListener("click", hideFreelanceModal);
+
+freelanceModal.postBtn.addEventListener("click", () => {
+  if (!currentFreelanceService) return;
+  const rate = Number(freelanceModal.rateInput.value);
+  if (!Number.isFinite(rate) || rate <= 0) return;
+
+  const line = postFreelanceAd(character, currentFreelanceService, rate, namePools, character.country);
+  freelanceModal.result.textContent = line;
+  freelanceModal.result.classList.remove("hidden");
+
+  if (freelanceJobsContainerRef && freelanceJobsContainerRef.isConnected) {
+    renderJobsInto(freelanceJobsContainerRef);
+  }
+  renderGame();
+  autosave();
+  showToast(line);
+});
 
 // A browsable pool of gigs, each completable once -- resolves immediately
 // for a payout (no pass/fail roll, unlike Main Job applications) and never
-// reappears for this character once done.
+// reappears for this character once done. Capped at a few completions per
+// Age Up year, same as Freelance Gigs above.
 function renderOneTimeJobsSection(container) {
   const title = document.createElement("p");
   title.className = "school-section-title";
   title.textContent = "One-Time Jobs";
   container.appendChild(title);
+
+  if (isOneTimeJobCapReached(character)) {
+    const capNote = document.createElement("p");
+    capNote.className = "occupation-unemployed-label";
+    capNote.textContent = `You've completed the max of ${YEARLY_ONE_TIME_JOB_CAP} one-time jobs this year. Check back after your next birthday.`;
+    container.appendChild(capNote);
+    return;
+  }
 
   const eligible = getEligibleOneTimeJobs(character, oneTimeJobsData);
   if (eligible.length === 0) {
@@ -2213,7 +2288,6 @@ async function init() {
     ageUpEvents,
     npcUpdates,
     worldUpdates,
-    oddJobsData,
     celebrities,
     clubsData,
     extracurricularsData,
@@ -2228,7 +2302,6 @@ async function init() {
     loadAgeUpEvents(),
     loadNpcUpdates(),
     loadWorldUpdates(),
-    loadOddJobs(),
     loadCelebrities(),
     loadClubs(),
     loadExtracurriculars(),

@@ -408,6 +408,10 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     age: 0,
     money: 0,
     job: null,
+    // Reset every Age Up (engine.js) -- caps how many One-Time Jobs/
+    // Freelance Gigs can be completed in a single year (careers.js/
+    // freelance.js).
+    jobCaps: { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 },
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,
