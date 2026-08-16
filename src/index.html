@@ -10,7 +10,10 @@
   <div id="app">
     <header class="app-header">
       <button id="save-btn" class="save-btn" aria-label="Save game" type="button">💾</button>
-      <span class="app-title">One More Year</span>
+      <div class="app-title-group">
+        <span class="app-title">One More Year</span>
+        <span id="app-version" class="app-version"></span>
+      </div>
       <div class="header-settings">
         <button id="settings-btn" class="settings-btn" aria-label="Settings" type="button">⚙️</button>
         <div id="settings-panel" class="settings-panel">
@@ -22,12 +25,35 @@
           </div>
 
           <div class="settings-game-actions">
-            <span class="settings-label">Game</span>
             <button type="button" id="my-lives-btn" class="settings-action-btn">My Lives</button>
+          </div>
+
+          <div class="settings-game-actions">
+            <span class="settings-label">Game</span>
+            <div class="settings-version-row">
+              <span class="settings-version-label">Current Version</span>
+              <span id="settings-version-value" class="settings-version-value"></span>
+            </div>
+            <button type="button" id="check-updates-btn" class="settings-action-btn">Check for Updates</button>
+            <p id="update-status" class="settings-update-status hidden"></p>
+            <button type="button" id="reload-update-btn" class="settings-action-btn hidden">Reload to Update</button>
+          </div>
+
+          <div class="settings-game-actions">
+            <span class="settings-label">About</span>
+            <button type="button" id="whats-new-btn" class="settings-action-btn">What's New</button>
           </div>
         </div>
       </div>
     </header>
+
+    <div id="changelog-modal-overlay" class="modal-overlay hidden">
+      <div class="event-modal">
+        <h2 class="occupation-modal-title">What's New</h2>
+        <div id="changelog-list" class="changelog-list"></div>
+        <button type="button" id="changelog-modal-close" class="event-choice-btn">Close</button>
+      </div>
+    </div>
 
     <div id="home-screen" class="screen hidden">
       <h1 class="creation-title">My Lives</h1>

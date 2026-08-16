@@ -659,6 +659,75 @@ body {
   text-align: center;
 }
 
+.app-title-group {
+  text-align: center;
+}
+
+.app-version {
+  display: block;
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.settings-version-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.settings-version-label {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.settings-version-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.settings-update-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.changelog-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 16px 0;
+  text-align: left;
+}
+
+.changelog-entry {
+  margin-bottom: 16px;
+}
+
+.changelog-entry:last-child {
+  margin-bottom: 0;
+}
+
+.changelog-version {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.changelog-notes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

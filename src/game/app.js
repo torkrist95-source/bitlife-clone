@@ -82,6 +82,8 @@ import {
   loadExtracurriculars,
 } from "./data.js";
 import { listLives, loadActiveCharacter, saveCharacter, createLife, setActiveLife, deleteLife } from "./save.js";
+import { GAME_VERSION } from "./version.js";
+import { CHANGELOG } from "./changelog.js";
 
 // Bottom-nav hierarchy: category -> the full roadmap of systems under it.
 // Each system expands (accordion-style) to reveal its content inline --
@@ -2057,12 +2059,25 @@ game.profileEntry.addEventListener("keydown", (event) => {
 
 profileModal.closeBtn.addEventListener("click", hideProfile);
 
-// ---------- Settings (theme + save button + My Lives) ----------
+// ---------- Settings (theme + save button + My Lives + Game/About) ----------
 
 const settings = {
   btn: document.getElementById("settings-btn"),
   panel: document.getElementById("settings-panel"),
   themeBtns: document.querySelectorAll(".theme-btn"),
+  versionValue: document.getElementById("settings-version-value"),
+  checkUpdatesBtn: document.getElementById("check-updates-btn"),
+  updateStatus: document.getElementById("update-status"),
+  reloadUpdateBtn: document.getElementById("reload-update-btn"),
+  whatsNewBtn: document.getElementById("whats-new-btn"),
+};
+
+const appVersionEl = document.getElementById("app-version");
+
+const changelogModal = {
+  overlay: document.getElementById("changelog-modal-overlay"),
+  list: document.getElementById("changelog-list"),
+  closeBtn: document.getElementById("changelog-modal-close"),
 };
 
 function applyTheme(theme) {
@@ -2071,9 +2086,94 @@ function applyTheme(theme) {
   settings.themeBtns.forEach((btn) => btn.classList.toggle("selected", btn.dataset.theme === theme));
 }
 
+// Same GAME_VERSION constant renders in both places (game header and
+// Settings -> Game) -- see version.js. Never duplicate this string.
+function renderVersion() {
+  appVersionEl.textContent = `v${GAME_VERSION}`;
+  settings.versionValue.textContent = `v${GAME_VERSION}`;
+}
+
+// Re-fetches version.js as plain text (not re-imported as a module, which
+// would just return this already-loaded page's own in-memory copy) so the
+// comparison reflects whatever's actually deployed right now. Parses the
+// same GAME_VERSION constant back out with a regex rather than requiring
+// a second file to stay in sync with it.
+async function checkForUpdates() {
+  settings.updateStatus.classList.remove("hidden");
+  settings.updateStatus.textContent = "Checking for updates...";
+  settings.reloadUpdateBtn.classList.add("hidden");
+
+  try {
+    const res = await fetch(`game/version.js?_=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    const text = await res.text();
+    const match = text.match(/GAME_VERSION\s*=\s*"([^"]+)"/);
+    if (!match) throw new Error("Couldn't parse deployed version");
+    const latestVersion = match[1];
+
+    if (latestVersion === GAME_VERSION) {
+      settings.updateStatus.textContent = "You're up to date!";
+    } else {
+      settings.updateStatus.textContent = `Update available — One More Year v${latestVersion}`;
+      settings.reloadUpdateBtn.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error("Failed to check for updates:", err);
+    settings.updateStatus.textContent = "Unable to check for updates. Please try again later.";
+  }
+}
+
+// A plain location.reload() isn't reliable here -- browsers can still
+// serve a cached copy of the JS module graph on a normal reload even
+// though checkForUpdates itself bypassed the cache to detect the new
+// version. Navigating to a cache-busted URL forces a genuinely fresh
+// fetch of everything. localStorage (every save, all of it) lives
+// independently of any of this and survives untouched either way -- no
+// service worker/cache layer in front of this static site to worry about.
+function reloadForUpdate() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("_", Date.now());
+  window.location.href = url.toString();
+}
+
+function renderChangelog() {
+  changelogModal.list.innerHTML = "";
+  for (const entry of CHANGELOG) {
+    const wrap = document.createElement("div");
+    wrap.className = "changelog-entry";
+
+    const version = document.createElement("p");
+    version.className = "changelog-version";
+    version.textContent = `v${entry.version}`;
+    wrap.appendChild(version);
+
+    const notes = document.createElement("ul");
+    notes.className = "changelog-notes";
+    for (const note of entry.notes) {
+      const li = document.createElement("li");
+      li.textContent = note;
+      notes.appendChild(li);
+    }
+    wrap.appendChild(notes);
+
+    changelogModal.list.appendChild(wrap);
+  }
+}
+
+function openChangelogModal() {
+  settings.panel.classList.remove("open");
+  renderChangelog();
+  changelogModal.overlay.classList.remove("hidden");
+}
+
+function hideChangelogModal() {
+  changelogModal.overlay.classList.add("hidden");
+}
+
 function initSettings() {
   const savedTheme = localStorage.getItem("theme") ?? "light";
   applyTheme(savedTheme);
+  renderVersion();
 
   settings.btn.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -2089,6 +2189,11 @@ function initSettings() {
   settings.themeBtns.forEach((btn) => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
+
+  settings.checkUpdatesBtn.addEventListener("click", checkForUpdates);
+  settings.reloadUpdateBtn.addEventListener("click", reloadForUpdate);
+  settings.whatsNewBtn.addEventListener("click", openChangelogModal);
+  changelogModal.closeBtn.addEventListener("click", hideChangelogModal);
 }
 
 document.getElementById("save-btn").addEventListener("click", manualSave);
