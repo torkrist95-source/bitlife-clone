@@ -94,6 +94,15 @@ function migrateCharacterFields(character) {
   // character picks up coworkers the next time the list opens or they age
   // up, no namePools-dependent generation needed here.
   character.coworkers ??= [];
+  // Always recomputed (not `??=`) rather than backfilled once -- this stays
+  // self-healing against romanceStatus itself, the actual source of truth,
+  // instead of trusting every code path that can set/clear "partner" to
+  // also remember npc.js's recomputeHasPartner. Cheap given how few NPCs a
+  // character ever has. Duplicated here rather than imported, same
+  // self-contained-migration reasoning as everything else in this function.
+  character.flags.hasPartner = [...character.socialCircle, ...character.coworkers].some(
+    (npc) => npc.romanceStatus === "partner"
+  );
   character.recentEventIds ??= [];
   // Same degrading-memory idea as recentEventIds, just for the NPC-update
   // and world-update flavor pools (see events.js's pickRecentAware) --

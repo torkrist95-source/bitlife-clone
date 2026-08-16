@@ -28,6 +28,7 @@ import {
   askToBecomeFriends,
   developRomance,
   askOut,
+  breakUp,
   askForHelp,
   thankTeacher,
   askFamilyForHelp,
@@ -1408,6 +1409,15 @@ function getNpcInteractions(npc, kind) {
     } else if (npc.romanceStatus === "crush") {
       interactions.push({ label: "Ask Out", run: () => askOut(character, npc).resultText });
     }
+  }
+
+  // Not gated behind canRomanticallyMatch above -- ending an existing
+  // relationship has to stay possible even if the player later changed
+  // their attraction (profile modal) in a way that NPC no longer matches;
+  // otherwise they'd be permanently stuck with a partner they can't date
+  // under the new setting but also can't break up with.
+  if (npc.romanceStatus === "dating" || npc.romanceStatus === "partner") {
+    interactions.push({ label: "Break Up", run: () => breakUp(character, npc) });
   }
 
   return interactions;

@@ -198,12 +198,42 @@ function maybeTierUpFriendship(npc) {
   return "";
 }
 
-function maybeTierUpRomance(npc) {
+function maybeTierUpRomance(character, npc) {
   if (npc.romanceStatus === "dating" && npc.romance >= PARTNER_THRESHOLD) {
     npc.romanceStatus = "partner";
+    recomputeHasPartner(character);
     return ` You and ${npc.name} have become partners!`;
   }
   return "";
+}
+
+// Every NPC the character could currently be partnered with, across both
+// lists a romance can live on. Single source of truth for "who is my
+// partner" -- the Partner page (app.js) and the partner-hangout dynamic
+// generators below both go through this rather than each re-deriving it.
+function findPartner(character) {
+  const all = [...(character.socialCircle ?? []), ...(character.coworkers ?? [])];
+  return all.find((npc) => npc.romanceStatus === "partner") ?? null;
+}
+
+// `character.flags.hasPartner` exists purely so JSON-authored events can
+// gate on it via the generic `requires` condition engine (events.js), which
+// only reads dot-paths off `character` and has no way to scan NPC arrays
+// itself. Always recomputed from the actual romanceStatus values right
+// after anything that could change them (never hand-toggled independently)
+// so it can't drift out of sync with what findPartner would actually find.
+function recomputeHasPartner(character) {
+  character.flags.hasPartner = findPartner(character) !== null;
+}
+
+// Flavor-text label for a partner, derived from their own gender rather
+// than the player's -- "girlfriend"/"boyfriend" reads naturally regardless
+// of which gender the player is, and falls back to the neutral "partner"
+// for anyone whose gender isn't one of the two binary values.
+function partnerTermFor(npc) {
+  if (npc.gender === "male") return "boyfriend";
+  if (npc.gender === "female") return "girlfriend";
+  return "partner";
 }
 
 // Whether the player and this NPC are mutually eligible to romantically
@@ -253,7 +283,7 @@ function hangOut(character, npc) {
   // nothing else raises `romance` after the relationship starts.
   if (npc.romanceStatus === "dating" || npc.romanceStatus === "partner") {
     npc.romance = clampStat((npc.romance ?? 0) + randInt(3, 8));
-    line += maybeTierUpRomance(npc);
+    line += maybeTierUpRomance(character, npc);
   }
   pushHistory(character, line);
   return line;
@@ -356,7 +386,7 @@ function askOut(character, npc) {
     npc.closeness = clampStat(npc.closeness + 10);
     character.stats.happiness = clampStat(character.stats.happiness + 8);
     let line = `You asked ${npc.name} out, and they said yes!`;
-    line += maybeTierUpRomance(npc);
+    line += maybeTierUpRomance(character, npc);
     pushHistory(character, line);
     return { succeeded: true, resultText: line };
   }
@@ -366,6 +396,23 @@ function askOut(character, npc) {
   const line = `You asked ${npc.name} out, but they turned you down.`;
   pushHistory(character, line);
   return { succeeded: false, resultText: line };
+}
+
+// The one direction Develop Romance/Ask Out/Hang Out never move: back down.
+// Ends the romantic track outright (regardless of whether it was Dating or
+// already Partner) but deliberately leaves friendLevel/closeness alone --
+// per the design plan, an ex stays in the character's life and can still be
+// a friend, not someone who gets wiped from the roster.
+function breakUp(character, npc) {
+  const wasPartner = npc.romanceStatus === "partner";
+  npc.romanceStatus = "none";
+  npc.romance = 0;
+  npc.closeness = clampStat(npc.closeness - randInt(10, 20));
+  character.stats.happiness = clampStat(character.stats.happiness - randInt(5, 12));
+  if (wasPartner) recomputeHasPartner(character);
+  const line = wasPartner ? `You and ${npc.name} broke up.` : `You and ${npc.name} stopped seeing each other.`;
+  pushHistory(character, line);
+  return line;
 }
 
 function askForHelp(character, teacher) {
@@ -574,6 +621,58 @@ const DYNAMIC_GENERATORS = {
     }
     return { type: "resolve", effects: { happiness: 2 }, resultText: "You skipped the dance and watched movies with your family instead." };
   },
+
+  // Rolled periodically for anyone with `flags.hasPartner` (romance.json's
+  // partner_hangout_invite -- see events.js's `requires`), the recurring
+  // "your partner wants to spend time together" beat: accept and something
+  // good (usually) happens, decline and the relationship takes a small hit.
+  // Both sides always resolve against whichever NPC findPartner() actually
+  // returns rather than a name baked into the JSON, since that's the only
+  // way the event text can be correct regardless of who the partner is.
+  partner_hangout_accept(character) {
+    const partner = findPartner(character);
+    if (!partner) {
+      return { type: "resolve", effects: {}, resultText: "You thought about reaching out, but things have changed since." };
+    }
+    const term = partnerTermFor(partner);
+    const outcomes = [
+      { weight: 6, activity: "went to the movies together", happiness: 6, romance: randInt(5, 9) },
+      { weight: 5, activity: "grabbed dinner together", happiness: 5, romance: randInt(5, 9) },
+      { weight: 4, activity: "went for a long walk and talked for hours", happiness: 6, romance: randInt(6, 10) },
+      { weight: 4, activity: "stayed in and just relaxed together", happiness: 4, romance: randInt(4, 7) },
+      { weight: 2, activity: "went out, but ended up bickering the whole time", happiness: -4, romance: -randInt(4, 9) },
+    ];
+    const picked = weightedPick(outcomes);
+    partner.romance = clampStat((partner.romance ?? 0) + picked.romance);
+    partner.closeness = clampStat(partner.closeness + Math.max(0, picked.romance));
+    const mood = picked.happiness >= 0 ? "It was fun." : "It didn't go great.";
+    return {
+      type: "resolve",
+      effects: { happiness: picked.happiness },
+      resultText: `You and your ${term}, ${partner.name}, ${picked.activity}. ${mood}`,
+    };
+  },
+
+  partner_hangout_decline(character) {
+    const partner = findPartner(character);
+    if (!partner) {
+      return { type: "resolve", effects: {}, resultText: "You had other things on your mind." };
+    }
+    const term = partnerTermFor(partner);
+    const excuses = [
+      "you said you were too busy and stayed home instead",
+      "you weren't in the mood and turned the invite down",
+      "you told them you needed some time to yourself",
+    ];
+    const excuse = excuses[randInt(0, excuses.length - 1)];
+    const romanceDelta = -randInt(3, 8);
+    partner.romance = clampStat((partner.romance ?? 0) + romanceDelta);
+    return {
+      type: "resolve",
+      effects: { happiness: -1 },
+      resultText: `Your ${term}, ${partner.name}, asked you to hang out, but ${excuse}.`,
+    };
+  },
 };
 
 function resolveDynamicChoice(character, dynamicId, ctx) {
@@ -611,6 +710,8 @@ export {
   askToBecomeFriends,
   developRomance,
   askOut,
+  breakUp,
+  findPartner,
   askForHelp,
   thankTeacher,
   askFamilyForHelp,

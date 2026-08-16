@@ -1,0 +1,14 @@
+[
+  {
+    "id": "partner_hangout_invite",
+    "trigger": "age_up",
+    "conditions": { "minAge": 12, "maxAge": 200 },
+    "requires": [{ "path": "flags.hasPartner", "op": "truthy" }],
+    "weight": 9,
+    "text": "Your partner asks if you want to spend some time together.",
+    "choices": [
+      { "label": "Sure, let's do something", "dynamic": "partner_hangout_accept" },
+      { "label": "Not this time", "dynamic": "partner_hangout_decline" }
+    ]
+  }
+]
