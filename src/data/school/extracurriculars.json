@@ -1,10 +1,10 @@
 [
-  { "id": "basketball", "label": "Basketball", "minAge": 10, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "basketball": 8 } },
-  { "id": "soccer", "label": "Soccer", "minAge": 8, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "soccer": 8 } },
-  { "id": "track", "label": "Track & Field", "minAge": 10, "maxAge": 18, "tryout": false, "skillGrant": { "athletics": 6 } },
-  { "id": "swimming", "label": "Swimming", "minAge": 8, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "swimming": 8 } },
-  { "id": "cheerleading", "label": "Cheerleading", "minAge": 12, "maxAge": 18, "tryout": true, "statCheck": "looks", "skillGrant": { "cheer": 6 } },
-  { "id": "theater", "label": "Theater", "minAge": 10, "maxAge": 18, "tryout": true, "statCheck": "looks", "hobbyGrant": "acting" },
-  { "id": "school_band", "label": "Band", "minAge": 10, "maxAge": 18, "tryout": false, "hobbyGrant": "music" },
-  { "id": "academic_team", "label": "Academic Competition Team", "minAge": 12, "maxAge": 18, "tryout": true, "statCheck": "smarts", "skillGrant": { "academics": 6 } }
+  { "id": "basketball", "label": "Basketball", "minAge": 10, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "basketball": 8 }, "category": "sport", "varsityEligible": true, "activityVerb": "Practice" },
+  { "id": "soccer", "label": "Soccer", "minAge": 8, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "soccer": 8 }, "category": "sport", "varsityEligible": true, "activityVerb": "Practice" },
+  { "id": "track", "label": "Track & Field", "minAge": 10, "maxAge": 18, "tryout": false, "skillGrant": { "athletics": 6 }, "category": "sport", "varsityEligible": true, "activityVerb": "Practice" },
+  { "id": "swimming", "label": "Swimming", "minAge": 8, "maxAge": 18, "tryout": true, "statCheck": "health", "skillGrant": { "swimming": 8 }, "category": "sport", "varsityEligible": true, "activityVerb": "Practice" },
+  { "id": "cheerleading", "label": "Cheerleading", "minAge": 12, "maxAge": 18, "tryout": true, "statCheck": "looks", "skillGrant": { "cheer": 6 }, "category": "sport", "varsityEligible": true, "activityVerb": "Practice" },
+  { "id": "theater", "label": "Theater", "minAge": 10, "maxAge": 18, "tryout": true, "statCheck": "looks", "hobbyGrant": "acting", "category": "performance", "activityVerb": "Rehearse" },
+  { "id": "school_band", "label": "Band", "minAge": 10, "maxAge": 18, "tryout": false, "hobbyGrant": "music", "category": "performance", "activityVerb": "Rehearse" },
+  { "id": "academic_team", "label": "Academic Competition Team", "minAge": 12, "maxAge": 18, "tryout": true, "statCheck": "smarts", "skillGrant": { "academics": 6 }, "category": "academic", "activityVerb": "Study Session" }
 ]

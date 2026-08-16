@@ -200,28 +200,5 @@
         "resultText": "You decided student government wasn't for you and let someone else run."
       }
     ]
-  },
-  {
-    "id": "sports_competition",
-    "trigger": "age_up",
-    "conditions": { "minAge": 11, "maxAge": 17 },
-    "requires": [{ "path": "education.extracurriculars.length", "op": ">=", "value": 1 }],
-    "weight": 5,
-    "text": "Your team has a big competition this week.",
-    "choices": [
-      {
-        "label": "Give it everything you've got",
-        "outcomes": [
-          { "weight": 5, "requires": [{ "path": "stats.health", "op": ">=", "value": 55 }], "effects": { "happiness": 7, "reputation": 3, "fame": 1 }, "resultText": "You played the game of your life, and your team pulled off a big win." },
-          { "weight": 6, "effects": { "happiness": 2 }, "resultText": "You gave it your all, but your team came up just short." },
-          { "weight": 3, "effects": { "health": -4, "happiness": -1 }, "resultText": "You pushed yourself hard and picked up a minor injury along the way." }
-        ]
-      },
-      {
-        "label": "Play it safe",
-        "effects": { "happiness": 1 },
-        "resultText": "You played a more conservative game, more focused on not getting hurt than winning big."
-      }
-    ]
   }
 ]

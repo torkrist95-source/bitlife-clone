@@ -44,8 +44,12 @@ import {
   getAvailableClubs,
   joinClub,
   leaveClub,
+  participateInClub,
   getAvailableExtracurriculars,
   attemptExtracurricular,
+  participateInExtracurricular,
+  getVarsityEligibility,
+  attemptVarsityTryout,
   leaveExtracurricular,
 } from "./school.js";
 import {
@@ -1065,7 +1069,22 @@ function buildSchoolActionBtn(label, onClick) {
   return btn;
 }
 
+// Remembered so the Clubs/Activities modals (stacked on top of this
+// accordion, not replacing it -- see openNavDrawer) can refresh the "Your
+// Activities" list the moment something changes underneath them, the same
+// "onUpdate" idea openNpcProfile already uses for Friends/Family. `render`
+// itself only ever runs once when the drawer opens, so without this the
+// section would keep showing whatever was joined at that exact moment.
+let schoolContainerRef = null;
+
+function refreshSchoolIfOpen() {
+  if (schoolContainerRef && schoolContainerRef.isConnected) {
+    renderSchoolInto(schoolContainerRef);
+  }
+}
+
 function renderSchoolInto(container) {
+  schoolContainerRef = container;
   container.innerHTML = "";
   const edu = character.education;
   const enrolled = ENROLLED_STATUSES.has(edu.status);
@@ -1090,6 +1109,24 @@ function renderSchoolInto(container) {
     empty.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
     container.appendChild(empty);
     return;
+  }
+
+  const joinedClubs = clubsData.filter((c) => (edu.clubs ?? []).includes(c.id));
+  const joinedActivities = extracurricularsData.filter((a) => (edu.extracurriculars ?? []).includes(a.id));
+  if (joinedClubs.length > 0 || joinedActivities.length > 0) {
+    const activitiesTitle = document.createElement("p");
+    activitiesTitle.className = "school-section-title";
+    activitiesTitle.textContent = "Your Activities";
+    container.appendChild(activitiesTitle);
+
+    const activitiesLine = document.createElement("p");
+    activitiesLine.className = "occupation-job-salary";
+    const labels = [
+      ...joinedClubs.map((c) => c.label),
+      ...joinedActivities.map((a) => (edu.activityProgress?.[a.id]?.varsity ? `${a.label} (Varsity)` : a.label)),
+    ];
+    activitiesLine.textContent = labels.join(", ");
+    container.appendChild(activitiesLine);
   }
 
   const thingsTitle = document.createElement("p");
@@ -1135,6 +1172,23 @@ function buildActionCard({ name, meta, actionLabel, onAction }) {
   return buildPersonCard({ name, meta, action: btn });
 }
 
+// Multi-button variant of buildActionCard's single button -- a joined
+// club/activity needs its recurring participation action alongside Leave
+// (and, for a sport, sometimes a Varsity Tryout button too), not just one.
+function buildActionsGroup(actions) {
+  const wrap = document.createElement("div");
+  wrap.className = "card-actions-group";
+  for (const { label, onAction } of actions) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "friend-hangout-btn";
+    btn.textContent = label;
+    btn.addEventListener("click", onAction);
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
 // ---------- Clubs ----------
 
 function renderClubsList() {
@@ -1153,17 +1207,33 @@ function renderClubsList() {
 
   for (const club of joined) {
     clubsModal.list.appendChild(
-      buildActionCard({
+      buildPersonCard({
         name: club.label,
         meta: "Joined",
-        actionLabel: "Leave",
-        onAction: () => {
-          const line = leaveClub(character, club.id, clubsData);
-          renderClubsList();
-          renderGame();
-          autosave();
-          showToast(line);
-        },
+        action: buildActionsGroup([
+          {
+            label: club.activityVerb ?? "Attend Club",
+            onAction: () => {
+              const line = participateInClub(character, club);
+              renderClubsList();
+              refreshSchoolIfOpen();
+              renderGame();
+              autosave();
+              showToast(line);
+            },
+          },
+          {
+            label: "Leave",
+            onAction: () => {
+              const line = leaveClub(character, club.id, clubsData);
+              renderClubsList();
+              refreshSchoolIfOpen();
+              renderGame();
+              autosave();
+              showToast(line);
+            },
+          },
+        ]),
       })
     );
   }
@@ -1177,6 +1247,7 @@ function renderClubsList() {
         onAction: () => {
           const line = joinClub(character, club, namePools, character.country);
           renderClubsList();
+          refreshSchoolIfOpen();
           renderGame();
           autosave();
           showToast(line);
@@ -1214,18 +1285,52 @@ function renderActivitiesList() {
   }
 
   for (const activity of joined) {
-    activitiesModal.list.appendChild(
-      buildActionCard({
-        name: activity.label,
-        meta: "Joined",
-        actionLabel: "Leave",
+    const isVarsity = character.education.activityProgress?.[activity.id]?.varsity === true;
+    const actions = [
+      {
+        label: activity.activityVerb ?? "Practice",
         onAction: () => {
-          const line = leaveExtracurricular(character, activity.id, extracurricularsData);
+          const line = participateInExtracurricular(character, activity);
           renderActivitiesList();
+          refreshSchoolIfOpen();
           renderGame();
           autosave();
           showToast(line);
         },
+      },
+    ];
+    if (getVarsityEligibility(character, activity)) {
+      actions.push({
+        label: "Varsity Tryout",
+        onAction: () => {
+          const { resultText } = attemptVarsityTryout(character, activity);
+          activitiesModal.result.textContent = resultText;
+          activitiesModal.result.classList.remove("hidden");
+          renderActivitiesList();
+          refreshSchoolIfOpen();
+          renderGame();
+          autosave();
+          showToast(resultText);
+        },
+      });
+    }
+    actions.push({
+      label: "Leave",
+      onAction: () => {
+        const line = leaveExtracurricular(character, activity.id, extracurricularsData);
+        renderActivitiesList();
+        refreshSchoolIfOpen();
+        renderGame();
+        autosave();
+        showToast(line);
+      },
+    });
+
+    activitiesModal.list.appendChild(
+      buildPersonCard({
+        name: isVarsity ? `${activity.label} (Varsity)` : activity.label,
+        meta: "Joined",
+        action: buildActionsGroup(actions),
       })
     );
   }
@@ -1241,6 +1346,7 @@ function renderActivitiesList() {
           activitiesModal.result.textContent = resultText;
           activitiesModal.result.classList.remove("hidden");
           renderActivitiesList();
+          refreshSchoolIfOpen();
           renderGame();
           autosave();
           showToast(resultText);

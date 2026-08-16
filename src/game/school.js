@@ -1,4 +1,4 @@
-import { randInt, clampStat, generateRandomName, applyMoneyDelta, formatMoney, pushHistory } from "./character.js";
+import { randInt, clampStat, weightedPick, generateRandomName, applyMoneyDelta, formatMoney, pushHistory } from "./character.js";
 import { createSocialNpc, registerDynamicGenerators, askForHelp, ensureSocialCircle } from "./npc.js";
 import { conditionsPass } from "./events.js";
 
@@ -114,6 +114,7 @@ function applySchoolYear(character, namePools, countryId) {
     edu.gpa ??= Number((2.6 + Math.random() * 1.2).toFixed(2));
     edu.clubs = [];
     edu.extracurriculars = [];
+    edu.activityProgress = {};
     lines.push(
       status === "elementary"
         ? `You started school at ${edu.schoolName}.`
@@ -212,6 +213,28 @@ function leaveClub(character, clubId, clubsData) {
   return line;
 }
 
+// Repeatable, unlike joinClub above -- a smaller version of the same skill/
+// happiness/bonding rewards, available every time the player wants it
+// rather than once at signup. Odds of the two social rolls are lower than
+// joinClub's since this can be clicked repeatedly in the same year.
+function participateInClub(character, club) {
+  for (const [skill, delta] of Object.entries(club.skillGrant ?? {})) {
+    character.skills[skill] = clampStat((character.skills[skill] ?? 0) + Math.max(1, Math.ceil(delta / 4)));
+  }
+  character.stats.happiness = clampStat(character.stats.happiness + randInt(2, 4));
+
+  let resultText = `You spent an afternoon at ${club.label}.`;
+  const roll = randInt(0, 99);
+  if (roll < 15 && (character.socialCircle ?? []).length > 0) {
+    const friend = character.socialCircle[randInt(0, character.socialCircle.length - 1)];
+    friend.closeness = clampStat(friend.closeness + randInt(3, 7));
+    resultText += ` You bonded with ${friend.name} over it.`;
+  }
+
+  pushHistory(character, resultText);
+  return resultText;
+}
+
 // ---------- Extracurriculars & tryouts ----------
 
 function getAvailableExtracurriculars(character, activitiesData) {
@@ -231,12 +254,25 @@ function applyExtracurricularRewards(character, activity) {
   character.stats.happiness = clampStat(character.stats.happiness + 4);
 }
 
+// Tracks how long the character has been on a given team, separately from
+// the plain `extracurriculars` id list -- needed to gate the Varsity tryout
+// below on "at least a season in", and to remember which activities have
+// actually made Varsity. Kept as its own small keyed object rather than
+// upgrading `extracurriculars` itself to richer entries, so every existing
+// reader of that plain id array (the "already joined" filter, the college
+// scholarship participation check) keeps working unchanged.
+function startActivityProgress(character, activityId) {
+  character.education.activityProgress ??= {};
+  character.education.activityProgress[activityId] = { joinedAge: character.age, varsity: false };
+}
+
 // Not deterministic either way: a highly skilled character can still
 // occasionally fail a tryout, and an inexperienced one can still make it.
 function attemptExtracurricular(character, activity) {
   if (!activity.tryout) {
     character.education.extracurriculars.push(activity.id);
     applyExtracurricularRewards(character, activity);
+    startActivityProgress(character, activity.id);
     const line = `You joined ${activity.label}.`;
     pushHistory(character, line);
     return { succeeded: true, resultText: line };
@@ -249,6 +285,7 @@ function attemptExtracurricular(character, activity) {
   if (randInt(0, 99) < chance) {
     character.education.extracurriculars.push(activity.id);
     applyExtracurricularRewards(character, activity);
+    startActivityProgress(character, activity.id);
     const line = `You made the ${activity.label} team after impressing the coach with your ability.`;
     pushHistory(character, line);
     return { succeeded: true, resultText: line };
@@ -260,8 +297,146 @@ function attemptExtracurricular(character, activity) {
   return { succeeded: false, resultText: line };
 }
 
+// ---------- Extracurricular practice (recurring) ----------
+// The repeatable counterpart to attemptExtracurricular's one-time tryout --
+// small recurring skill/happiness gains, plus an occasional themed "big
+// moment" roll (a game, a performance, a meet) instead of the flat generic
+// sports_competition age-up event this replaces, which used to fire the
+// same "your team has a big game" text for a Chess Club member as for a
+// varsity athlete. Varsity participants (see attemptVarsityTryout below)
+// get bigger gains and better big-moment odds on the same pool.
+
+const BIG_MOMENT_CHANCE = 20; // percent, per participate call
+const VARSITY_BIG_MOMENT_BONUS = 10; // added to the roll above, varsity only
+const VARSITY_EFFECT_MULTIPLIER = 1.5;
+const ATHLETIC_RECRUIT_THRESHOLD = 60;
+const ATHLETIC_RECRUIT_CHANCE = 25; // percent, once eligible
+
+// One themed pool per category (see extracurriculars.json's `category`)
+// instead of per-individual-activity content -- keeps authoring
+// manageable while still giving a sports team, a theater troupe, and an
+// academic team their own flavor instead of sharing one mismatched pool.
+const BIG_MOMENT_POOLS = {
+  sport: [
+    { weight: 5, minHealth: 55, happiness: 7, reputation: 3, fame: 1, text: "{activity} had a big game, and you played the game of your life -- a big win." },
+    { weight: 6, happiness: 2, text: "{activity} had a big game. You gave it your all, but came up just short." },
+    { weight: 3, health: -4, happiness: -1, text: "You pushed hard during a big {activity} game and picked up a minor injury." },
+  ],
+  performance: [
+    { weight: 5, happiness: 7, reputation: 3, fame: 1, text: "You had a big {activity} performance and nailed it -- the crowd loved it." },
+    { weight: 6, happiness: 2, text: "You had a big {activity} performance. It went fine, nothing special." },
+    { weight: 3, happiness: -2, text: "You froze up during a big {activity} performance. Rough night." },
+  ],
+  academic: [
+    { weight: 5, happiness: 6, reputation: 3, smarts: 1, text: "{activity} had a big competition, and your team took first place." },
+    { weight: 6, happiness: 2, text: "{activity} competed, but didn't place this time." },
+    { weight: 3, happiness: -2, text: "You blanked on a question during a big {activity} competition. Embarrassing, but you'll get the next one." },
+  ],
+};
+
+// "Practiced with the Basketball team" / "rehearsed for Theater" / "put in
+// a study session with Academic Competition Team" -- one natural phrasing
+// per category for the common (non-big-moment) case.
+function routineParticipationLine(activity, activityLabel) {
+  if (activity.category === "sport") return `You practiced with the ${activityLabel} team.`;
+  if (activity.category === "performance") return `You rehearsed for ${activityLabel}.`;
+  if (activity.category === "academic") return `You put in a solid study session with ${activityLabel}.`;
+  return `You spent some time on ${activityLabel}.`;
+}
+
+function participateInExtracurricular(character, activity) {
+  const progress = character.education.activityProgress?.[activity.id];
+  const isVarsity = progress?.varsity === true;
+  const activityLabel = isVarsity ? `Varsity ${activity.label}` : activity.label;
+
+  for (const [skill, delta] of Object.entries(activity.skillGrant ?? {})) {
+    character.skills[skill] = clampStat((character.skills[skill] ?? 0) + Math.max(1, Math.ceil(delta / (isVarsity ? 3 : 4))));
+  }
+  if (activity.category === "sport") {
+    character.skills.athleticism = clampStat((character.skills.athleticism ?? 0) + (isVarsity ? 3 : 2));
+  }
+  character.stats.happiness = clampStat(character.stats.happiness + randInt(2, 4));
+
+  const pool = BIG_MOMENT_POOLS[activity.category];
+  const bigMomentRoll = BIG_MOMENT_CHANCE + (isVarsity ? VARSITY_BIG_MOMENT_BONUS : 0);
+  if (pool && randInt(0, 99) < bigMomentRoll) {
+    const eligible = pool.filter((o) => o.minHealth == null || character.stats.health >= o.minHealth);
+    const picked = weightedPick(eligible.length > 0 ? eligible : pool);
+    const multiplier = isVarsity ? VARSITY_EFFECT_MULTIPLIER : 1;
+    for (const stat of ["happiness", "health", "reputation", "fame", "smarts"]) {
+      if (picked[stat] != null) {
+        character.stats[stat] = clampStat(character.stats[stat] + Math.round(picked[stat] * multiplier));
+      }
+    }
+    let line = picked.text.replace("{activity}", activityLabel);
+
+    // Rare, one-time bridge toward a future Pro Athlete Special Career --
+    // this only ever sets a flag/skill signal, it doesn't grant a career
+    // itself (that ladder doesn't exist yet). Gated on a real win
+    // (picked.happiness > 0) so it reads as earned, not handed out on a
+    // rough night.
+    if (
+      isVarsity &&
+      activity.category === "sport" &&
+      picked.happiness > 0 &&
+      !character.flags.athleticRecruit &&
+      (character.skills.athleticism ?? 0) >= ATHLETIC_RECRUIT_THRESHOLD &&
+      randInt(0, 99) < ATHLETIC_RECRUIT_CHANCE
+    ) {
+      character.flags.athleticRecruit = true;
+      line += " A college scout was in the stands and seemed impressed by what they saw.";
+    }
+
+    pushHistory(character, line);
+    return line;
+  }
+
+  const line = routineParticipationLine(activity, activityLabel);
+  pushHistory(character, line);
+  return line;
+}
+
+// ---------- Varsity tryouts ----------
+// A second, harder tryout layered on top of the base team -- only offered
+// once the character has actually put in a season, and only for the sport
+// category (matches "varsity" as a term; performance/academic activities
+// don't get this second tier). Feeds `skills.athleticism`, the same signal
+// participateInExtracurricular already builds toward the recruitment
+// moment above, rather than inventing a separate stat.
+
+const VARSITY_MIN_SEASONS = 1;
+
+function getVarsityEligibility(character, activity) {
+  if (activity.category !== "sport" || !activity.varsityEligible) return false;
+  const progress = character.education.activityProgress?.[activity.id];
+  if (!progress || progress.varsity) return false;
+  return character.age - progress.joinedAge >= VARSITY_MIN_SEASONS;
+}
+
+function attemptVarsityTryout(character, activity) {
+  const relevantStat = character.stats[activity.statCheck] ?? 50;
+  const athleticism = character.skills.athleticism ?? 0;
+  const chance = Math.max(10, Math.min(70, 20 + (relevantStat - 50) / 2 + athleticism / 4));
+
+  if (randInt(0, 99) < chance) {
+    character.education.activityProgress[activity.id].varsity = true;
+    character.skills.athleticism = clampStat(athleticism + 15);
+    character.stats.happiness = clampStat(character.stats.happiness + 8);
+    character.stats.reputation = clampStat(character.stats.reputation + 4);
+    const line = `You made Varsity ${activity.label}!`;
+    pushHistory(character, line);
+    return { succeeded: true, resultText: line };
+  }
+
+  character.stats.happiness = clampStat(character.stats.happiness - 3);
+  const line = `You didn't make Varsity ${activity.label} this time, but you can try out again next season.`;
+  pushHistory(character, line);
+  return { succeeded: false, resultText: line };
+}
+
 function leaveExtracurricular(character, activityId, activitiesData) {
   character.education.extracurriculars = (character.education.extracurriculars ?? []).filter((id) => id !== activityId);
+  if (character.education.activityProgress) delete character.education.activityProgress[activityId];
   const activity = activitiesData.find((a) => a.id === activityId);
   const line = `You left ${activity?.label ?? "the activity"}.`;
   pushHistory(character, line);
@@ -453,7 +628,11 @@ export {
   getAvailableClubs,
   joinClub,
   leaveClub,
+  participateInClub,
   getAvailableExtracurriculars,
   attemptExtracurricular,
+  participateInExtracurricular,
+  getVarsityEligibility,
+  attemptVarsityTryout,
   leaveExtracurricular,
 };

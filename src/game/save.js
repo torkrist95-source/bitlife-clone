@@ -153,6 +153,11 @@ function migrateCharacterFields(character) {
   };
   character.education.clubs ??= [];
   character.education.extracurriculars ??= [];
+  // Never existed before Varsity tryouts -- old saves' existing
+  // extracurriculars just have no season/varsity history to backfill, they
+  // simply start being tracked from here going forward, same as every
+  // other "no way to reconstruct the past" field in this function.
+  character.education.activityProgress ??= {};
 
   // applySchoolYear only ever progresses status forward through ages 5-17,
   // so a save from before this feature existed, for a character already

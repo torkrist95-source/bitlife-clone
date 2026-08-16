@@ -1,7 +1,7 @@
 [
-  { "id": "science_club", "label": "Science Club", "minAge": 8, "maxAge": 18, "skillGrant": { "science": 8 } },
-  { "id": "art_club", "label": "Art Club", "minAge": 6, "maxAge": 18, "hobbyGrant": "painting" },
-  { "id": "drama_club", "label": "Drama Club", "minAge": 10, "maxAge": 18, "hobbyGrant": "acting", "skillGrant": { "acting": 6 }, "reputationEffect": 2 },
+  { "id": "science_club", "label": "Science Club", "minAge": 8, "maxAge": 18, "skillGrant": { "science": 8 }, "activityVerb": "Run an Experiment" },
+  { "id": "art_club", "label": "Art Club", "minAge": 6, "maxAge": 18, "hobbyGrant": "painting", "activityVerb": "Work on a Project" },
+  { "id": "drama_club", "label": "Drama Club", "minAge": 10, "maxAge": 18, "hobbyGrant": "acting", "skillGrant": { "acting": 6 }, "reputationEffect": 2, "activityVerb": "Rehearse a Scene" },
   {
     "id": "debate_club",
     "label": "Debate Club",
@@ -9,10 +9,11 @@
     "maxAge": 18,
     "requires": [{ "path": "stats.smarts", "op": ">=", "value": 50 }],
     "skillGrant": { "debate": 8 },
-    "reputationEffect": 2
+    "reputationEffect": 2,
+    "activityVerb": "Prep for a Debate"
   },
-  { "id": "chess_club", "label": "Chess Club", "minAge": 7, "maxAge": 18, "skillGrant": { "chess": 6 } },
-  { "id": "photography_club", "label": "Photography Club", "minAge": 10, "maxAge": 18, "hobbyGrant": "photography" },
-  { "id": "music_club", "label": "Music Club", "minAge": 8, "maxAge": 18, "hobbyGrant": "music", "skillGrant": { "music": 6 } },
-  { "id": "computer_club", "label": "Computer Club", "minAge": 10, "maxAge": 18, "skillGrant": { "programming": 8 } }
+  { "id": "chess_club", "label": "Chess Club", "minAge": 7, "maxAge": 18, "skillGrant": { "chess": 6 }, "activityVerb": "Play a Match" },
+  { "id": "photography_club", "label": "Photography Club", "minAge": 10, "maxAge": 18, "hobbyGrant": "photography", "activityVerb": "Go on a Photo Walk" },
+  { "id": "music_club", "label": "Music Club", "minAge": 8, "maxAge": 18, "hobbyGrant": "music", "skillGrant": { "music": 6 }, "activityVerb": "Practice" },
+  { "id": "computer_club", "label": "Computer Club", "minAge": 10, "maxAge": 18, "skillGrant": { "programming": 8 }, "activityVerb": "Code Something" }
 ]

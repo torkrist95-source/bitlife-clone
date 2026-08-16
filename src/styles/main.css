@@ -1019,6 +1019,14 @@ body {
   opacity: 0.8;
 }
 
+.card-actions-group {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .occupation-job-list {
   display: flex;
   flex-direction: column;
