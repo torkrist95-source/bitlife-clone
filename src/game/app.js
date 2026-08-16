@@ -53,6 +53,9 @@ import {
   getVarsityEligibility,
   attemptVarsityTryout,
   leaveExtracurricular,
+  getMajorLabel,
+  collegeSocialize,
+  dropOutOfCollege,
 } from "./school.js";
 import {
   loadCountries,
@@ -1057,7 +1060,6 @@ function renderCareerHistoryInto(container) {
 const SCHOOL_STATUS_MESSAGES = {
   not_started: "You're not old enough for school yet.",
   graduated_hs: "You graduated high school and are taking some time before deciding what's next.",
-  college: "You're off at college. (More to come here soon.)",
   workforce: "You skipped college and went straight into the workforce.",
   graduated_college: "You graduated college.",
 };
@@ -1089,6 +1091,12 @@ function renderSchoolInto(container) {
   schoolContainerRef = container;
   container.innerHTML = "";
   const edu = character.education;
+
+  if (edu.status === "college") {
+    renderCollegeInto(container);
+    return;
+  }
+
   const enrolled = ENROLLED_STATUSES.has(edu.status);
 
   const header = document.createElement("div");
@@ -1155,6 +1163,75 @@ function renderSchoolInto(container) {
     buildSchoolActionBtn("View Current Teacher", () => openNpcProfile(character.education.teacher, "teacher"))
   );
   container.appendChild(peopleList);
+}
+
+// ---------- Occupation: College ----------
+// Separate from renderSchoolInto above rather than another branch inside
+// it -- college's header (college name/tier instead of school name/grade)
+// and actions (Study/Socialize/Drop Out instead of clubs/activities) are
+// different enough that folding it into the K-12 function would mean more
+// conditionals than just having its own.
+
+function renderCollegeInto(container) {
+  const edu = character.education;
+
+  const header = document.createElement("div");
+  header.className = "school-header";
+  const name = document.createElement("h3");
+  name.className = "occupation-modal-title";
+  name.textContent = edu.collegeName ?? "College";
+  header.appendChild(name);
+
+  const detail = document.createElement("p");
+  detail.className = "occupation-job-salary";
+  const majorLabel = getMajorLabel(edu.major) ?? "Undeclared";
+  const gpaText = edu.gpa != null ? edu.gpa.toFixed(2) : "N/A";
+  detail.textContent = `${majorLabel} · Year ${edu.collegeYear ?? 1} of 4 · GPA ${gpaText}`;
+  header.appendChild(detail);
+  container.appendChild(header);
+
+  const thingsTitle = document.createElement("p");
+  thingsTitle.className = "school-section-title";
+  thingsTitle.textContent = "Things To Do";
+  container.appendChild(thingsTitle);
+
+  const thingsList = document.createElement("div");
+  thingsList.className = "school-action-list";
+  thingsList.appendChild(buildSchoolActionBtn("Study", () => doCollegeStudy(container)));
+  thingsList.appendChild(buildSchoolActionBtn("Socialize", () => doCollegeSocialize(container)));
+  thingsList.appendChild(buildSchoolActionBtn("Drop Out of College", () => requestDropOutOfCollege(container)));
+  container.appendChild(thingsList);
+}
+
+function doCollegeStudy(container) {
+  const line = studyHarder(character);
+  renderGame();
+  renderCollegeInto(container);
+  autosave();
+  showToast(line);
+}
+
+function doCollegeSocialize(container) {
+  const line = collegeSocialize(character);
+  renderGame();
+  renderCollegeInto(container);
+  autosave();
+  showToast(line);
+}
+
+function requestDropOutOfCollege(container) {
+  showConfirm({
+    title: "Drop out of college?",
+    message: `Are you sure you want to drop out of ${character.education.collegeName ?? "college"}? You won't earn a degree, but you can always enter the workforce instead.`,
+    confirmLabel: "Drop Out",
+    onConfirm: () => {
+      const line = dropOutOfCollege(character);
+      renderGame();
+      refreshSchoolIfOpen();
+      autosave();
+      showToast(line);
+    },
+  });
 }
 
 function doStudyHarder(container) {

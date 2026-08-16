@@ -439,6 +439,11 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
       clubs: [],
       extracurriculars: [],
       teacher: null,
+      // College-specific, set once enrollment actually happens (school.js).
+      collegeName: null,
+      collegeTier: null,
+      major: null,
+      collegeYear: null,
     },
     pendingEventId: null,
     // Birth narrative happens at age 0, before the first Age Up.

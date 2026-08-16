@@ -455,6 +455,104 @@ function leaveExtracurricular(character, activityId, activitiesData) {
   return line;
 }
 
+// ---------- College ----------
+// A small, fixed list rather than its own data file -- same reasoning as
+// personality.js's trait list: doesn't need per-content-update JSON
+// treatment, and majors.json would just be duplicating ids that already
+// have to live on jobs.json's `requiredMajors` anyway.
+
+const MAJORS = [
+  { id: "business", label: "Business Administration" },
+  { id: "computer_science", label: "Computer Science" },
+  { id: "nursing", label: "Nursing" },
+  { id: "education", label: "Education" },
+  { id: "engineering", label: "Engineering" },
+  { id: "journalism", label: "Journalism" },
+  { id: "liberal_arts", label: "Liberal Arts" },
+];
+
+function getMajorLabel(majorId) {
+  return MAJORS.find((m) => m.id === majorId)?.label ?? null;
+}
+
+// admissionBonus shapes how hard each tier actually is to get into --
+// community college is a near-lock for most students, prestigious is a
+// real risk even for a strong one. Same three used both for admission odds
+// and as the character's ongoing collegeTier/collegeName after enrolling.
+const COLLEGE_TIERS = {
+  community: { label: "Community College", admissionBonus: 40 },
+  state: { label: "State University", admissionBonus: 0 },
+  prestigious: { label: "Prestigious University", admissionBonus: -25 },
+};
+
+const COLLEGE_YEARS_TO_GRADUATE = 4;
+const COLLEGE_GPA_DRIFT_MIN = -0.15;
+const COLLEGE_GPA_DRIFT_MAX = 0.15;
+
+function rollCollegeAdmission(character, tierId) {
+  const gpa = character.education.gpa ?? 2.5;
+  const gpaBonus = (gpa - 2.5) * 20;
+  const smartsBonus = (character.stats.smarts - 50) / 2;
+  const wasInvolved = (character.education.clubs?.length ?? 0) + (character.education.extracurriculars?.length ?? 0) > 0;
+  const chance = Math.max(5, Math.min(98, 50 + gpaBonus + smartsBonus + (wasInvolved ? 10 : 0) + COLLEGE_TIERS[tierId].admissionBonus));
+  return randInt(0, 99) < chance;
+}
+
+function fundingChoiceEvent() {
+  return {
+    id: "college_funding_choice",
+    trigger: "age_up",
+    conditions: { minAge: 0, maxAge: 200 },
+    text: "How will you pay for college?",
+    choices: [
+      { label: "Ask Parents to Pay", dynamic: "college_fund_parents" },
+      { label: "Apply for Student Loan", dynamic: "college_fund_loan" },
+      { label: "Apply for Scholarship", dynamic: "college_fund_scholarship" },
+    ],
+  };
+}
+
+function chooseMajorEvent() {
+  return {
+    id: "college_major_choice",
+    trigger: "age_up",
+    conditions: { minAge: 0, maxAge: 200 },
+    text: "What will you major in?",
+    choices: MAJORS.map((m) => ({ label: m.label, dynamic: `choose_major_${m.id}` })),
+  };
+}
+
+// Deliberately leaves the old HS clubs/extracurriculars arrays alone --
+// college doesn't have its own version of them yet (Greek life etc. is a
+// later addition), but college_fund_scholarship below still needs to read
+// them for its "extracurricular involvement" bonus, and nothing else
+// consumes them once education.status stops being a K-12 status (see
+// ENROLLED_EDUCATION_STATUSES, character.js), so leaving them as-is is
+// harmless rather than something that needs clearing.
+function enrollInCollege(character, tierId) {
+  const tier = COLLEGE_TIERS[tierId];
+  character.education.status = "college";
+  character.education.collegeTier = tierId;
+  character.education.collegeName = tier.label;
+  character.education.collegeYear = 1;
+  character.education.gpa = Number((2.6 + Math.random() * 1.2).toFixed(2));
+}
+
+function applyToCollege(character, tierId) {
+  const tier = COLLEGE_TIERS[tierId];
+  if (rollCollegeAdmission(character, tierId)) {
+    enrollInCollege(character, tierId);
+    const line = `You got into ${tier.label}!`;
+    pushHistory(character, line);
+    return { type: "followUp", event: chooseMajorEvent() };
+  }
+
+  character.education.status = "workforce";
+  const line = `You applied to ${tier.label}, but weren't accepted. You decided to enter the workforce instead.`;
+  pushHistory(character, line);
+  return { type: "resolve", effects: { happiness: -3 }, resultText: null };
+}
+
 // ---------- Graduation & college (dynamic choice generators) ----------
 // Registered into the shared dynamic-choice registry (npc.js) rather
 // than requiring events.js/app.js to know school.js exists -- any module
@@ -533,22 +631,33 @@ registerDynamicGenerators({
     };
   },
 
-  hs_graduation_college(character) {
-    character.education.status = "college";
+  hs_graduation_college() {
     return {
       type: "followUp",
       event: {
-        id: "college_funding_choice",
+        id: "college_choice",
         trigger: "age_up",
         conditions: { minAge: 0, maxAge: 200 },
-        text: "How will you pay for college?",
+        text: "Which college are you applying to?",
         choices: [
-          { label: "Ask Parents to Pay", dynamic: "college_fund_parents" },
-          { label: "Apply for Student Loan", dynamic: "college_fund_loan" },
-          { label: "Apply for Scholarship", dynamic: "college_fund_scholarship" },
+          { label: "Community College", dynamic: "apply_community_college" },
+          { label: "State University", dynamic: "apply_state_university" },
+          { label: "Prestigious University", dynamic: "apply_prestigious_university" },
         ],
       },
     };
+  },
+
+  apply_community_college(character) {
+    return applyToCollege(character, "community");
+  },
+
+  apply_state_university(character) {
+    return applyToCollege(character, "state");
+  },
+
+  apply_prestigious_university(character) {
+    return applyToCollege(character, "prestigious");
   },
 
   hs_graduation_workforce(character) {
@@ -628,7 +737,83 @@ registerDynamicGenerators({
     pushHistory(character, line);
     return { type: "resolve", effects: { happiness: -1 }, resultText: null };
   },
+
+  college_graduation_reveal(character) {
+    character.education.status = "graduated_college";
+    const majorLabel = getMajorLabel(character.education.major) ?? "your field";
+    const gpaText = character.education.gpa != null ? character.education.gpa.toFixed(2) : "N/A";
+    const line = `Congratulations! You graduated from ${character.education.collegeName ?? "college"} with a degree in ${majorLabel}! Final GPA: ${gpaText}`;
+    pushHistory(character, line);
+    return { type: "resolve", effects: { happiness: 10, reputation: 3 }, resultText: null };
+  },
 });
+
+// One generator per major, all doing the same thing -- registered
+// separately from the object literal above rather than 7 nearly-identical
+// entries typed out by hand. Chains straight into the existing funding
+// choice, same next step hs_graduation_college always led to.
+const majorGenerators = {};
+for (const major of MAJORS) {
+  majorGenerators[`choose_major_${major.id}`] = (character) => {
+    character.education.major = major.id;
+    const line = `You declared ${major.label} as your major.`;
+    pushHistory(character, line);
+    return { type: "followUp", event: fundingChoiceEvent() };
+  };
+}
+registerDynamicGenerators(majorGenerators);
+
+// ---------- College: yearly tick, studying, dropping out ----------
+
+function applyCollegeYear(character) {
+  const edu = character.education;
+  if (edu.status !== "college") return null;
+
+  // Defensive default for a save that somehow reached "college" before
+  // this system existed (the old dead-end version) -- treat it as freshly
+  // enrolled rather than crashing on a missing collegeYear.
+  edu.collegeYear ??= 1;
+
+  if (edu.collegeYear >= COLLEGE_YEARS_TO_GRADUATE) {
+    character.pendingEventId = "college_graduation";
+    return null;
+  }
+
+  edu.collegeYear += 1;
+  if (edu.gpa != null) {
+    const smartsPull = (character.stats.smarts - 50) / 200;
+    const drift = COLLEGE_GPA_DRIFT_MIN + Math.random() * (COLLEGE_GPA_DRIFT_MAX - COLLEGE_GPA_DRIFT_MIN) + smartsPull;
+    edu.gpa = Math.max(0, Math.min(4, Number((edu.gpa + drift).toFixed(2))));
+  }
+  return null;
+}
+
+// Reuses studyHarder as-is -- it already just moves gpa/smarts off
+// character.education.gpa/character.stats without caring whether the
+// character is in high school or college.
+function collegeSocialize(character) {
+  character.stats.happiness = clampStat(character.stats.happiness + randInt(4, 8));
+  const drop = 0.05 + Math.random() * 0.15;
+  character.education.gpa = Math.max(0, Math.min(4, Number(((character.education.gpa ?? 3) - drop).toFixed(2))));
+
+  let line = "You spent the week hanging out with friends instead of hitting the books.";
+  if ((character.socialCircle ?? []).length > 0 && randInt(0, 99) < 30) {
+    const friend = character.socialCircle[randInt(0, character.socialCircle.length - 1)];
+    friend.closeness = clampStat(friend.closeness + randInt(3, 8));
+    line += ` You and ${friend.name} had a great time.`;
+  }
+  pushHistory(character, line);
+  return line;
+}
+
+function dropOutOfCollege(character) {
+  const edu = character.education;
+  edu.status = "workforce";
+  const line = `You dropped out of ${edu.collegeName ?? "college"} without finishing your degree.`;
+  pushHistory(character, line);
+  character.stats.happiness = clampStat(character.stats.happiness - 5);
+  return line;
+}
 
 export {
   getGradeLevelForAge,
@@ -649,4 +834,9 @@ export {
   getVarsityEligibility,
   attemptVarsityTryout,
   leaveExtracurricular,
+  MAJORS,
+  getMajorLabel,
+  applyCollegeYear,
+  collegeSocialize,
+  dropOutOfCollege,
 };

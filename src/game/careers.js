@@ -23,16 +23,17 @@ const EDUCATION_RANK = {
   graduated_college: 6,
 };
 
-// Hard gates only -- age, smarts (existing), plus the two new optional
-// gates (education, a specific skill). Both new fields are absent on 13 of
-// jobs.json's 16 entries, so this is a pure extension, not a behavior
-// change for jobs that don't declare them.
+// Hard gates only -- age and smarts, plus optional ones a job can declare:
+// education status, a specific skill, and (for the graduated_college tier)
+// a required college major. Absent on jobs that don't need them, so this
+// stays a pure extension rather than a behavior change for those.
 function getEligibleJobs(character, jobsData) {
   return jobsData.filter((job) => {
     if (character.age < job.minAge) return false;
     if (job.minSmarts && character.stats.smarts < job.minSmarts) return false;
     if (job.minEducationStatus && EDUCATION_RANK[character.education.status] < EDUCATION_RANK[job.minEducationStatus]) return false;
     if (job.minSkill && (character.skills[job.minSkill.skill] ?? 0) < job.minSkill.value) return false;
+    if (job.requiredMajors && !job.requiredMajors.includes(character.education.major)) return false;
     return true;
   });
 }

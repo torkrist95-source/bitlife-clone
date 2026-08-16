@@ -120,7 +120,8 @@
     "id": "accountant",
     "minAge": 18,
     "minSmarts": 55,
-    "minEducationStatus": "graduated_hs",
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["business"],
     "levels": [
       { "title": "Junior Accountant", "salary": 45000 },
       { "title": "Accountant", "salary": 58000 },
@@ -131,8 +132,8 @@
     "id": "software_developer",
     "minAge": 18,
     "minSmarts": 60,
-    "minEducationStatus": "graduated_hs",
-    "minSkill": { "skill": "programming", "value": 10 },
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["computer_science"],
     "levels": [
       { "title": "Junior Developer", "salary": 55000 },
       { "title": "Software Developer", "salary": 75000 },
@@ -143,11 +144,48 @@
     "id": "nurse",
     "minAge": 18,
     "minSmarts": 55,
-    "minEducationStatus": "graduated_hs",
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["nursing"],
     "levels": [
       { "title": "Registered Nurse", "salary": 50000 },
       { "title": "Charge Nurse", "salary": 65000 },
       { "title": "Nurse Manager", "salary": 85000 }
+    ]
+  },
+  {
+    "id": "teacher",
+    "minAge": 18,
+    "minSmarts": 50,
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["education"],
+    "levels": [
+      { "title": "Teacher", "salary": 42000 },
+      { "title": "Senior Teacher", "salary": 52000 },
+      { "title": "Department Head", "salary": 68000 }
+    ]
+  },
+  {
+    "id": "engineer",
+    "minAge": 18,
+    "minSmarts": 65,
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["engineering"],
+    "levels": [
+      { "title": "Junior Engineer", "salary": 60000 },
+      { "title": "Engineer", "salary": 80000 },
+      { "title": "Senior Engineer", "salary": 105000 }
+    ]
+  },
+  {
+    "id": "journalist",
+    "minAge": 18,
+    "minSmarts": 55,
+    "minEducationStatus": "graduated_college",
+    "requiredMajors": ["journalism"],
+    "levels": [
+      { "title": "Staff Writer", "salary": 38000 },
+      { "title": "Journalist", "salary": 48000 },
+      { "title": "Senior Correspondent", "salary": 65000 }
     ]
   }
 ]

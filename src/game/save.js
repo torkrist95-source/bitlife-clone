@@ -162,6 +162,14 @@ function migrateCharacterFields(character) {
   // simply start being tracked from here going forward, same as every
   // other "no way to reconstruct the past" field in this function.
   character.education.activityProgress ??= {};
+  // Same reasoning -- College predates these, so an existing save's
+  // "college"/"graduated_college" status (if it somehow reached that with
+  // the old dead-end version) just starts from a clean slate rather than
+  // trying to reconstruct a major/college choice that was never made.
+  character.education.collegeName ??= null;
+  character.education.collegeTier ??= null;
+  character.education.major ??= null;
+  character.education.collegeYear ??= null;
 
   // applySchoolYear only ever progresses status forward through ages 5-17,
   // so a save from before this feature existed, for a character already

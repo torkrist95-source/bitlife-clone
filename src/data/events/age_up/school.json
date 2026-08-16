@@ -8,6 +8,14 @@
     "dynamic": "hs_graduation_reveal"
   },
   {
+    "id": "college_graduation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 0, "maxAge": 200 },
+    "weight": 0,
+    "text": "It's graduation day.",
+    "dynamic": "college_graduation_reveal"
+  },
+  {
     "id": "spelling_test",
     "trigger": "age_up",
     "conditions": { "minAge": 6, "maxAge": 10 },

@@ -1,5 +1,5 @@
 import { getLifeStage, clampStat, randInt, pushHistory, pushCareerEvent, generateRandomName } from "./character.js";
-import { applySchoolYear, getGradeLevelForAge } from "./school.js";
+import { applySchoolYear, applyCollegeYear, getGradeLevelForAge } from "./school.js";
 import { ensureCoworkers, endCoworkerRelationships, registerDynamicGenerators } from "./npc.js";
 import { pickJobTitle } from "./npcLife.js";
 
@@ -289,6 +289,7 @@ function ageUp(character, jobsData, namePools, countryId) {
 
   const schoolLines = applySchoolYear(character, namePools, countryId);
   for (const schoolLine of schoolLines) pushHistory(character, schoolLine);
+  applyCollegeYear(character);
 
   const familyLines = applyFamilyYear(character, jobsData, namePools, countryId);
   for (const familyLine of familyLines) pushHistory(character, familyLine);
