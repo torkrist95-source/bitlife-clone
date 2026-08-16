@@ -56,6 +56,8 @@ import {
   getMajorLabel,
   collegeSocialize,
   dropOutOfCollege,
+  canReturnToCollege,
+  returnToCollege,
 } from "./school.js";
 import {
   loadCountries,
@@ -1118,6 +1120,12 @@ function renderSchoolInto(container) {
     empty.className = "occupation-unemployed-label";
     empty.textContent = SCHOOL_STATUS_MESSAGES[edu.status] ?? "Not currently in school.";
     container.appendChild(empty);
+    if (canReturnToCollege(character)) {
+      const returnList = document.createElement("div");
+      returnList.className = "school-action-list";
+      returnList.appendChild(buildSchoolActionBtn("Return to College", () => requestReturnToCollege(container)));
+      container.appendChild(returnList);
+    }
     return;
   }
 
@@ -1226,6 +1234,25 @@ function requestDropOutOfCollege(container) {
     confirmLabel: "Drop Out",
     onConfirm: () => {
       const line = dropOutOfCollege(character);
+      renderGame();
+      refreshSchoolIfOpen();
+      autosave();
+      showToast(line);
+    },
+  });
+}
+
+// Resumes rather than reapplies -- same major/year/GPA as when they left
+// (school.js's returnToCollege never rerolls admission), so this is a much
+// lighter confirmation than the original application was.
+function requestReturnToCollege(container) {
+  const edu = character.education;
+  showConfirm({
+    title: "Return to college?",
+    message: `Go back to ${edu.collegeName ?? "college"} and pick up where you left off (Year ${edu.collegeYear ?? 1}, ${getMajorLabel(edu.major) ?? "Undeclared"})?`,
+    confirmLabel: "Return",
+    onConfirm: () => {
+      const line = returnToCollege(character);
       renderGame();
       refreshSchoolIfOpen();
       autosave();

@@ -815,6 +815,28 @@ function dropOutOfCollege(character) {
   return line;
 }
 
+// dropOutOfCollege deliberately never clears major/collegeTier/
+// collegeName/collegeYear/gpa -- they're what makes returning possible.
+// `collegeYear != null` is what distinguishes "workforce because they
+// dropped out of college" from "workforce because they never went"
+// (hs_graduation_workforce), which never sets those fields at all.
+function canReturnToCollege(character) {
+  return character.education.status === "workforce" && character.education.collegeYear != null;
+}
+
+// Resuming rather than reapplying -- picks back up at the exact year/GPA/
+// major they left at (applyCollegeYear, engine.js, needs nothing new to
+// keep ticking once status is "college" again), not a fresh admission
+// roll. They already got in once.
+function returnToCollege(character) {
+  const edu = character.education;
+  edu.status = "college";
+  const line = `You decided to go back to ${edu.collegeName ?? "college"} to finish your degree.`;
+  pushHistory(character, line);
+  character.stats.happiness = clampStat(character.stats.happiness + 5);
+  return line;
+}
+
 export {
   getGradeLevelForAge,
   getStatusForGrade,
@@ -839,4 +861,6 @@ export {
   applyCollegeYear,
   collegeSocialize,
   dropOutOfCollege,
+  canReturnToCollege,
+  returnToCollege,
 };
