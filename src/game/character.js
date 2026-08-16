@@ -182,13 +182,24 @@ function generateFamilyMembers(structureId, lastName, tier, excludeName, namePoo
     return parent;
   }
 
-  function addGuardian(relationshipType, guardianRelation, ageRange) {
+  // `surname` defaults to the character's own last name -- right for a
+  // guardian raising a relative (a grandparent/aunt/uncle plausibly shares
+  // it), but wrong for foster care, which never renames the child: the
+  // foster family keeps its own, unrelated surname. foster_care below
+  // passes a freshly-generated one instead of the shared default.
+  function addGuardian(relationshipType, guardianRelation, ageRange, surname = lastName) {
     const occupation = rollParentOccupation(tier);
+    const gender = guardianGender(guardianRelation);
     const guardian = {
       role: "guardian",
       relationshipType,
       guardianRelation,
-      name: `${randomFirstName(namePools, countryId, guardianGender(guardianRelation), used)} ${lastName}`,
+      // Unlike mother/father parents (where `role` itself already implies
+      // gender), "guardian" is gender-ambiguous -- stored explicitly so a
+      // later formal adoption (see engine.js) can assign the right
+      // mother/father role without guessing.
+      gender,
+      name: `${randomFirstName(namePools, countryId, gender, used)} ${surname}`,
       age: randInt(ageRange[0], ageRange[1]),
       employed: occupation.employed,
       job: occupation.job,
@@ -218,7 +229,7 @@ function generateFamilyMembers(structureId, lastName, tier, excludeName, namePoo
       parents = [addGuardian("guardian", randChoice(GUARDIAN_RELATIONS), [30, 65])];
       break;
     case "foster_care":
-      parents = [addGuardian("foster", "foster caregiver", [30, 60])];
+      parents = [addGuardian("foster", "foster caregiver", [30, 60], randomSurname(namePools, countryId))];
       flags.inFosterCare = true;
       break;
     case "two_biological_parents":

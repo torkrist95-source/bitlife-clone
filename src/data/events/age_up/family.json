@@ -1,0 +1,32 @@
+[
+  {
+    "id": "foster_adoption_offer",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 17 },
+    "requires": [
+      { "path": "familyStructure", "op": "==", "value": "foster_care" },
+      { "path": "family.parents.0.closeness", "op": ">=", "value": 75 }
+    ],
+    "weight": 5,
+    "text": "Your foster family has asked if you'd like them to formally adopt you.",
+    "choices": [
+      { "label": "Yes, I'd love that", "dynamic": "accept_family_adoption" },
+      { "label": "I'm not ready for that", "dynamic": "decline_family_adoption" }
+    ]
+  },
+  {
+    "id": "guardian_adoption_offer",
+    "trigger": "age_up",
+    "conditions": { "minAge": 5, "maxAge": 17 },
+    "requires": [
+      { "path": "familyStructure", "op": "==", "value": "guardian" },
+      { "path": "family.parents.0.closeness", "op": ">=", "value": 75 }
+    ],
+    "weight": 5,
+    "text": "Your guardian has asked if you'd like them to formally adopt you, making the arrangement legally permanent.",
+    "choices": [
+      { "label": "Yes, I'd love that", "dynamic": "accept_family_adoption" },
+      { "label": "I'm not ready for that", "dynamic": "decline_family_adoption" }
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 import { getLifeStage, clampStat, randInt, pushHistory, pushCareerEvent, generateRandomName } from "./character.js";
 import { applySchoolYear, getGradeLevelForAge } from "./school.js";
-import { ensureCoworkers, endCoworkerRelationships } from "./npc.js";
+import { ensureCoworkers, endCoworkerRelationships, registerDynamicGenerators } from "./npc.js";
 import { pickJobTitle } from "./npcLife.js";
 
 // Once promoted into a role, a character needs at least this many years in
@@ -206,6 +206,62 @@ function applyFamilyYear(character, jobsData, namePools, countryId) {
   }
   return lines;
 }
+
+// ---------- Formal adoption from foster care / guardianship ----------
+// Registered the same way school.js contributes its own dynamic choices --
+// triggered by family.json's foster_guardian_adoption_offer event (gated
+// there on familyStructure + the caregiver's closeness), not by anything
+// in the yearly tick above. Both structures share one pair of generators
+// since the resolution logic only ever touches family.parents[0], not
+// anything structure-specific beyond what's already on that record.
+registerDynamicGenerators({
+  accept_family_adoption(character) {
+    const caregiver = character.family?.parents?.[0];
+    if (!caregiver || (character.familyStructure !== "foster_care" && character.familyStructure !== "guardian")) {
+      return { type: "resolve", effects: {}, resultText: "There wasn't anyone in a position to adopt you right now." };
+    }
+
+    const wasFoster = character.familyStructure === "foster_care";
+    caregiver.role = caregiver.gender === "female" ? "mother" : "father";
+    caregiver.relationshipType = "adoptive";
+    delete caregiver.guardianRelation;
+    character.familyStructure = "adopted";
+    // Same flags a character born straight into the "adopted" structure
+    // gets (character.js) -- this is that same end state, just reached
+    // partway through life instead of at birth.
+    character.flags.isAdopted = true;
+    character.flags.inFosterCare = false;
+    caregiver.closeness = clampStat(caregiver.closeness + 15);
+
+    let line;
+    if (wasFoster) {
+      // Foster families keep their own surname (character.js's
+      // addGuardian never renames the child) -- formal adoption is the
+      // moment that actually changes, giving the character their new
+      // family's last name the way a real foster-to-adopt story would.
+      const newLastName = caregiver.name.trim().split(/\s+/).slice(-1)[0];
+      const firstName = character.name.trim().split(/\s+/)[0];
+      character.name = `${firstName} ${newLastName}`;
+      line = `${caregiver.name} formally adopted you! You're now officially part of the ${newLastName} family.`;
+    } else {
+      // A guardian already shares the family surname, so there's no name
+      // change here -- what's changing is the relationship becoming
+      // legally permanent, not the household itself.
+      line = `${caregiver.name} formally adopted you, making the arrangement permanent.`;
+    }
+
+    return { type: "resolve", effects: { happiness: 15 }, resultText: line };
+  },
+
+  decline_family_adoption(character) {
+    const caregiver = character.family?.parents?.[0];
+    if (!caregiver) {
+      return { type: "resolve", effects: {}, resultText: "You had a lot on your mind, but nothing came of it." };
+    }
+    const line = `${caregiver.name} asked about formally adopting you, but you weren't ready to say yes yet.`;
+    return { type: "resolve", effects: { happiness: -1 }, resultText: line };
+  },
+});
 
 function ageUp(character, jobsData, namePools, countryId) {
   const previousStage = getLifeStage(character.age);

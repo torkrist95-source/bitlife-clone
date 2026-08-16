@@ -136,6 +136,10 @@ function migrateCharacterFields(character) {
 
   for (const parent of character.family?.parents ?? []) {
     parent.closeness ??= 60;
+    // Only "guardian"-role parents ever lacked this -- mother/father
+    // already imply gender through `role` itself. Never stored before
+    // formal adoption (engine.js) needed to know which role to assign.
+    if (parent.role === "guardian") parent.gender ??= randomGender();
   }
   for (const sibling of character.family?.siblings ?? []) {
     sibling.closeness ??= 60;

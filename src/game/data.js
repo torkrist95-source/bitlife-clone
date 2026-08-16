@@ -40,6 +40,7 @@ async function loadAgeUpEvents() {
     loadJSON("data/events/age_up/adult.json"),
     loadJSON("data/events/age_up/school.json"),
     loadJSON("data/events/age_up/romance.json"),
+    loadJSON("data/events/age_up/family.json"),
   ]);
   return pools.flat();
 }
