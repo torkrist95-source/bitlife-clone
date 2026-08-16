@@ -41,10 +41,12 @@ import {
   getGradeLabel,
   getStatusLabel,
   studyHarder,
+  MAX_CLUBS,
   getAvailableClubs,
   joinClub,
   leaveClub,
   participateInClub,
+  MAX_EXTRACURRICULARS,
   getAvailableExtracurriculars,
   attemptExtracurricular,
   participateInExtracurricular,
@@ -1205,6 +1207,13 @@ function renderClubsList() {
     return;
   }
 
+  if (joined.length >= MAX_CLUBS && available.length === 0) {
+    const capNote = document.createElement("p");
+    capNote.className = "occupation-empty";
+    capNote.textContent = `You're in the maximum of ${MAX_CLUBS} clubs. Leave one to join another.`;
+    clubsModal.list.appendChild(capNote);
+  }
+
   for (const club of joined) {
     clubsModal.list.appendChild(
       buildPersonCard({
@@ -1282,6 +1291,13 @@ function renderActivitiesList() {
     empty.textContent = "No activities available right now.";
     activitiesModal.list.appendChild(empty);
     return;
+  }
+
+  if (joined.length >= MAX_EXTRACURRICULARS && available.length === 0) {
+    const capNote = document.createElement("p");
+    capNote.className = "occupation-empty";
+    capNote.textContent = "You can only be in one after-school activity at a time. Leave it to join another.";
+    activitiesModal.list.appendChild(capNote);
   }
 
   for (const activity of joined) {

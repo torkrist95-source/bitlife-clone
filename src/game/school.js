@@ -168,8 +168,15 @@ function studyHarder(character) {
 
 // ---------- Clubs ----------
 
+// A real student can't realistically carry a full course load's worth of
+// clubs -- capped separately from extracurriculars below since they're
+// the lower-commitment option and reasonably support carrying more than
+// one at once.
+const MAX_CLUBS = 2;
+
 function getAvailableClubs(character, clubsData) {
   const joined = new Set(character.education.clubs ?? []);
+  if (joined.size >= MAX_CLUBS) return [];
   return clubsData.filter(
     (club) => character.age >= club.minAge && character.age <= club.maxAge && !joined.has(club.id) && conditionsPass(character, club.requires)
   );
@@ -237,8 +244,13 @@ function participateInClub(character, club) {
 
 // ---------- Extracurriculars & tryouts ----------
 
+// Extracurriculars are the bigger commitment (tryouts, practices/rehearsals,
+// Varsity) -- unlike clubs above, only one at a time.
+const MAX_EXTRACURRICULARS = 1;
+
 function getAvailableExtracurriculars(character, activitiesData) {
   const joined = new Set(character.education.extracurriculars ?? []);
+  if (joined.size >= MAX_EXTRACURRICULARS) return [];
   return activitiesData.filter(
     (a) => character.age >= a.minAge && character.age <= a.maxAge && !joined.has(a.id) && conditionsPass(character, a.requires)
   );
@@ -625,10 +637,12 @@ export {
   getStatusLabel,
   applySchoolYear,
   studyHarder,
+  MAX_CLUBS,
   getAvailableClubs,
   joinClub,
   leaveClub,
   participateInClub,
+  MAX_EXTRACURRICULARS,
   getAvailableExtracurriculars,
   attemptExtracurricular,
   participateInExtracurricular,
