@@ -85,6 +85,10 @@ function migrateCharacterFields(character) {
   // romantic relationship an existing save already has, regardless of the
   // genders involved.
   character.attractedTo ??= ["male", "female"];
+  // Same default createCharacter uses for a brand-new character (see
+  // character.js) -- duplicated rather than imported, same reasoning as
+  // every other self-contained default in this function.
+  character.genderIdentity ??= character.gender === "female" ? "female" : "male";
   // Old saves simply have none until the next hire; ensureCoworkers is
   // lazy/idempotent (same as ensureSocialCircle), so an already-employed
   // character picks up coworkers the next time the list opens or they age

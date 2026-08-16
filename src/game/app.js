@@ -35,6 +35,7 @@ import {
 } from "./npc.js";
 import { getEligibleJobs, applyForJob, getOddJobsSummary, getEligibleOneTimeJobs, resolveOneTimeJob } from "./careers.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
+import { GENDER_IDENTITIES, ATTRACTION_OPTIONS, resolveAttractedTo, attractionIdFor } from "./identity.js";
 import {
   getGradeLabel,
   getStatusLabel,
@@ -84,7 +85,7 @@ const NAV_CATEGORIES = {
   Relationships: [
     { id: "family", label: "Family", render: (container) => renderFamilyListInto(container) },
     { id: "friends", label: "Friends", render: (container) => renderFriendsInto(container) },
-    { id: "partner", label: "Partner", render: renderComingSoon },
+    { id: "partner", label: "Partner", render: (container) => renderPartnerInto(container) },
   ],
   Activities: [
     { id: "hobbies", label: "Hobbies", render: renderComingSoon },
@@ -193,6 +194,8 @@ const profileModal = {
   birthDate: document.getElementById("profile-modal-birthdate"),
   zodiac: document.getElementById("profile-modal-zodiac"),
   personality: document.getElementById("profile-modal-personality"),
+  genderIdentitySelect: document.getElementById("profile-modal-gender-identity"),
+  attractionSelect: document.getElementById("profile-modal-attraction"),
   closeBtn: document.getElementById("profile-modal-close"),
 };
 
@@ -468,6 +471,23 @@ function populateCountrySelect() {
   updateCountryFlavor();
 }
 
+// Both lists are small and fixed (see identity.js), so they're populated
+// once at startup rather than re-built every time the profile opens.
+function populateIdentitySelects() {
+  for (const { id, label } of GENDER_IDENTITIES) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = label;
+    profileModal.genderIdentitySelect.appendChild(option);
+  }
+  for (const { id, label } of ATTRACTION_OPTIONS) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = label;
+    profileModal.attractionSelect.appendChild(option);
+  }
+}
+
 function selectGender(gender) {
   selectedGender = gender;
   creation.genderBtns.forEach((b) => b.classList.toggle("selected", b.dataset.gender === gender));
@@ -522,13 +542,6 @@ function resetCreationForm() {
   creation.genderBtns.forEach((b) => b.classList.remove("selected"));
   creation.attractionBtns.forEach((b) => b.classList.remove("selected"));
   updateStartButton();
-}
-
-// "both" is a single button for the player to pick, but the underlying
-// model is a list of genders the character is attracted to -- translate
-// here rather than carrying two different representations around.
-function resolveAttractedTo(attraction) {
-  return attraction === "both" ? ["male", "female"] : [attraction];
 }
 
 function startLife() {
@@ -1588,6 +1601,36 @@ function renderFriendsInto(container) {
   }
 }
 
+// A partner is just whichever NPC(s) reached romanceStatus "partner" via
+// the normal Develop Romance -> Ask Out -> partner progression (npc.js) --
+// no separate data model, this only searches the same social circle/
+// coworker lists Friends and Coworkers already read from. Checks coworkers
+// too, and labels a partner met at work "Coworker" rather than the
+// generic Friend-tier label, purely cosmetic (getNpcInteractions doesn't
+// branch on it) -- same interactions either way.
+function renderPartnerInto(container) {
+  container.innerHTML = "";
+  const partners = [
+    ...(character.socialCircle ?? []).map((npc) => ({ npc, kind: "friend" })),
+    ...(character.coworkers ?? []).map((npc) => ({ npc, kind: "coworker" })),
+  ].filter(({ npc }) => npc.romanceStatus === "partner");
+
+  if (partners.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "You don't have a partner right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  for (const { npc, kind } of partners) {
+    const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc) });
+    card.classList.add("classmate-card");
+    card.addEventListener("click", () => openNpcProfile(npc, kind, () => renderPartnerInto(container)));
+    container.appendChild(card);
+  }
+}
+
 function parentRelationLabel(parent) {
   if (parent.role === "guardian") {
     const relation = parent.guardianRelation ?? "guardian";
@@ -1671,12 +1714,31 @@ function openProfile() {
   profileModal.zodiac.textContent = character.zodiacSign ?? "Unknown";
   const dominantTraits = getDominantTraits(character);
   profileModal.personality.textContent = dominantTraits.length ? dominantTraits.join(", ") : "Unknown";
+  profileModal.genderIdentitySelect.value = character.genderIdentity ?? "male";
+  profileModal.attractionSelect.value = attractionIdFor(character.attractedTo);
   profileModal.overlay.classList.remove("hidden");
 }
 
 function hideProfile() {
   profileModal.overlay.classList.add("hidden");
 }
+
+// Both selects write straight through on change, same low-friction pattern
+// as the theme toggle -- no separate save button. Changing attraction never
+// touches any existing NPC's romanceStatus (canRomanticallyMatch only gates
+// *new* romantic interactions going forward, in npc.js), so an existing
+// partner who wouldn't match under the new value stays exactly as they are.
+profileModal.genderIdentitySelect.addEventListener("change", () => {
+  if (!character) return;
+  character.genderIdentity = profileModal.genderIdentitySelect.value;
+  autosave();
+});
+
+profileModal.attractionSelect.addEventListener("change", () => {
+  if (!character) return;
+  character.attractedTo = resolveAttractedTo(profileModal.attractionSelect.value);
+  autosave();
+});
 
 game.profileEntry.addEventListener("click", openProfile);
 game.profileEntry.addEventListener("keydown", (event) => {
@@ -1761,6 +1823,7 @@ async function init() {
   ]);
 
   populateCountrySelect();
+  populateIdentitySelects();
   wireCreationScreen();
   initSettings();
 

@@ -379,6 +379,9 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
   return {
     name: playerName,
     gender,
+    // Freely-editable later (see identity.js) -- starts matching `gender`
+    // simply because that's the only information available at creation.
+    genderIdentity: gender === "female" ? "female" : "male",
     attractedTo: attractedTo?.length ? attractedTo : ["male", "female"],
     country: country.id,
     countryName: country.name,
