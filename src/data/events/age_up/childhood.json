@@ -321,6 +321,10 @@
     "id": "summer_at_grandparents",
     "trigger": "age_up",
     "conditions": { "minAge": 5, "maxAge": 8 },
+    "requires": [
+      { "path": "familyStructure", "op": "!=", "value": "guardian" },
+      { "path": "familyStructure", "op": "!=", "value": "foster_care" }
+    ],
     "weight": 6,
     "text": "You spend a week of summer at your grandparents' house.",
     "choices": [
@@ -611,6 +615,10 @@
     "id": "holiday_gathering",
     "trigger": "age_up",
     "conditions": { "minAge": 6, "maxAge": 12 },
+    "requires": [
+      { "path": "familyStructure", "op": "!=", "value": "guardian" },
+      { "path": "familyStructure", "op": "!=", "value": "foster_care" }
+    ],
     "weight": 6,
     "text": "It's a big holiday, and the whole extended family gets together.",
     "choices": [
