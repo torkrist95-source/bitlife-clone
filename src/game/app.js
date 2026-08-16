@@ -200,9 +200,48 @@ const game = {
 
 const eventModal = {
   overlay: document.getElementById("event-modal-overlay"),
+  icon: document.getElementById("event-modal-icon"),
   text: document.getElementById("event-modal-text"),
+  stats: document.getElementById("event-modal-stats"),
   choices: document.getElementById("event-modal-choices"),
 };
+
+// Shared "notification card" pieces (icon + optional label/value stat rows)
+// reused by both the age-up event modal (milestones like starting a new
+// school level, graduation) and the Freelance Gigs result -- one small
+// piece of visual language instead of two bespoke ones, still skinned
+// entirely through the existing theme tokens (light/dark/retro).
+function setCardIcon(iconEl, icon) {
+  if (icon) {
+    iconEl.textContent = icon;
+    iconEl.classList.remove("hidden");
+  } else {
+    iconEl.textContent = "";
+    iconEl.classList.add("hidden");
+  }
+}
+
+function renderStatRows(container, statRows) {
+  container.innerHTML = "";
+  if (!statRows?.length) {
+    container.classList.add("hidden");
+    return;
+  }
+  for (const { label, value } of statRows) {
+    const row = document.createElement("div");
+    row.className = "event-modal-stat-row";
+    const labelEl = document.createElement("span");
+    labelEl.className = "event-modal-stat-label";
+    labelEl.textContent = label;
+    const valueEl = document.createElement("span");
+    valueEl.className = "event-modal-stat-value";
+    valueEl.textContent = value;
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    container.appendChild(row);
+  }
+  container.classList.remove("hidden");
+}
 
 const confirmModal = {
   overlay: document.getElementById("confirm-modal-overlay"),
@@ -257,7 +296,10 @@ const freelanceModal = {
   rateRange: document.getElementById("freelance-rate-range"),
   rateInput: document.getElementById("freelance-rate-input"),
   postBtn: document.getElementById("freelance-post-ad-btn"),
-  result: document.getElementById("freelance-result"),
+  resultWrap: document.getElementById("freelance-result-wrap"),
+  resultIcon: document.getElementById("freelance-result-icon"),
+  resultText: document.getElementById("freelance-result-text"),
+  resultStats: document.getElementById("freelance-result-stats"),
   closeBtn: document.getElementById("freelance-modal-close"),
 };
 
@@ -660,7 +702,9 @@ function groupHistoryByAge(history) {
 }
 
 function showEventModal(event) {
+  setCardIcon(eventModal.icon, event.icon);
   eventModal.text.textContent = event.text;
+  renderStatRows(eventModal.stats, event.statRows);
   eventModal.choices.innerHTML = "";
 
   const eligibleChoices = getEligibleChoices(character, event);
@@ -995,8 +1039,10 @@ function openFreelanceModal(service, container) {
   freelanceModal.rateInput.min = service.minRate;
   freelanceModal.rateInput.max = service.maxRate;
   freelanceModal.rateInput.value = Math.round((service.minRate + service.maxRate) / 2);
-  freelanceModal.result.textContent = "";
-  freelanceModal.result.classList.add("hidden");
+  freelanceModal.resultWrap.classList.add("hidden");
+  setCardIcon(freelanceModal.resultIcon, null);
+  freelanceModal.resultText.textContent = "";
+  renderStatRows(freelanceModal.resultStats, null);
   freelanceModal.overlay.classList.remove("hidden");
 }
 
@@ -1011,16 +1057,22 @@ freelanceModal.postBtn.addEventListener("click", () => {
   const rate = Number(freelanceModal.rateInput.value);
   if (!Number.isFinite(rate) || rate <= 0) return;
 
-  const line = postFreelanceAd(character, currentFreelanceService, rate, namePools, character.country);
-  freelanceModal.result.textContent = line;
-  freelanceModal.result.classList.remove("hidden");
+  const result = postFreelanceAd(character, currentFreelanceService, rate, namePools, character.country);
+  setCardIcon(freelanceModal.resultIcon, "💼");
+  freelanceModal.resultText.textContent = `${result.clientName} ${currentFreelanceService.hiredPhrase}.`;
+  renderStatRows(freelanceModal.resultStats, [
+    { label: "Hours", value: String(result.hours) },
+    { label: "Hourly Rate", value: result.rateFormatted },
+    { label: "Earnings", value: result.earningsFormatted },
+  ]);
+  freelanceModal.resultWrap.classList.remove("hidden");
 
   if (freelanceJobsContainerRef && freelanceJobsContainerRef.isConnected) {
     renderJobsInto(freelanceJobsContainerRef);
   }
   renderGame();
   autosave();
-  showToast(line);
+  showToast(result.line);
 });
 
 // A browsable pool of gigs, each completable once -- resolves immediately

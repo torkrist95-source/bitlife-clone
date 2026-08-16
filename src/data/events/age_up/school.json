@@ -16,6 +16,30 @@
     "dynamic": "college_graduation_reveal"
   },
   {
+    "id": "started_elementary_school",
+    "trigger": "age_up",
+    "conditions": { "minAge": 0, "maxAge": 200 },
+    "weight": 0,
+    "text": "First day of school!",
+    "dynamic": "started_elementary_school_reveal"
+  },
+  {
+    "id": "started_middle_school",
+    "trigger": "age_up",
+    "conditions": { "minAge": 0, "maxAge": 200 },
+    "weight": 0,
+    "text": "A new chapter begins.",
+    "dynamic": "started_middle_school_reveal"
+  },
+  {
+    "id": "started_high_school",
+    "trigger": "age_up",
+    "conditions": { "minAge": 0, "maxAge": 200 },
+    "weight": 0,
+    "text": "A new chapter begins.",
+    "dynamic": "started_high_school_reveal"
+  },
+  {
     "id": "spelling_test",
     "trigger": "age_up",
     "conditions": { "minAge": 6, "maxAge": 10 },

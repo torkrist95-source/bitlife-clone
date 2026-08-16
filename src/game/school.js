@@ -130,6 +130,15 @@ function applySchoolYear(character, namePools, countryId) {
           ? `You started middle school at ${edu.schoolName}.`
           : `You started high school at ${edu.schoolName}.`
     );
+    // The feed line above is the permanent record; this also surfaces the
+    // moment as a popup card the same Age Up (rollAgeUpHappening, events.js,
+    // always prioritizes a pending forced event over its normal rolls) --
+    // both, not one replacing the other. Same forced-event mechanism
+    // hs_graduation below already uses; the actual card content is built at
+    // runtime by the matching *_reveal generator since the school name isn't
+    // known until this point.
+    character.pendingEventId =
+      status === "elementary" ? "started_elementary_school" : status === "middle" ? "started_middle_school" : "started_high_school";
   }
 
   edu.gradeLevel = grade;
@@ -637,7 +646,25 @@ function applyToCollege(character, tierId) {
     enrollInCollege(character, tierId);
     const line = `You got into ${tier.label}!`;
     pushHistory(character, line);
-    return { type: "followUp", event: chooseMajorEvent() };
+    // A quick reveal card before the major picker, same shell->reveal shape
+    // as the milestone cards above -- `dynamic` (not `choices`) on the card
+    // itself means showEventModal synthesizes a single "Continue" button
+    // that chains straight into the existing major-choice screen, so the
+    // rest of the admission -> major -> funding -> enrollment flow is
+    // completely unchanged.
+    return {
+      type: "followUp",
+      event: {
+        id: "college_acceptance_card",
+        trigger: "age_up",
+        conditions: { minAge: 0, maxAge: 200 },
+        icon: "🎉",
+        text: `You got into ${tier.label}!`,
+        statRows: [{ label: "College", value: tier.label }],
+        resultText: null,
+        dynamic: "college_acceptance_continue",
+      },
+    };
   }
 
   character.education.status = "workforce";
@@ -694,6 +721,61 @@ registerDynamicGenerators({
     return { type: "resolve", effects: {}, resultText: null };
   },
 
+  // Milestone reveal cards for school.js's own started_elementary_school/
+  // started_middle_school/started_high_school forced events (applySchoolYear
+  // above) -- same shell -> reveal shape as hs_graduation below, needed
+  // because the school name isn't known until runtime and the static JSON
+  // shell event can't embed it. `resultText: null` on the card itself is
+  // required, not decorative: with no choices of its own, showEventModal
+  // synthesizes a single "Continue" button from the card's own top-level
+  // fields, and without this, applyResolved would push the button's own
+  // label ("Continue") as a bogus second history line alongside the real
+  // one applySchoolYear already pushed.
+  started_elementary_school_reveal(character) {
+    return {
+      type: "followUp",
+      event: {
+        id: "started_elementary_school_card",
+        trigger: "age_up",
+        conditions: { minAge: 0, maxAge: 200 },
+        icon: "🎒",
+        text: "You started school!",
+        statRows: [{ label: "School", value: character.education.schoolName }],
+        resultText: null,
+      },
+    };
+  },
+
+  started_middle_school_reveal(character) {
+    return {
+      type: "followUp",
+      event: {
+        id: "started_middle_school_card",
+        trigger: "age_up",
+        conditions: { minAge: 0, maxAge: 200 },
+        icon: "🏫",
+        text: "You started middle school!",
+        statRows: [{ label: "School", value: character.education.schoolName }],
+        resultText: null,
+      },
+    };
+  },
+
+  started_high_school_reveal(character) {
+    return {
+      type: "followUp",
+      event: {
+        id: "started_high_school_card",
+        trigger: "age_up",
+        conditions: { minAge: 0, maxAge: 200 },
+        icon: "🏫",
+        text: "You started high school!",
+        statRows: [{ label: "School", value: character.education.schoolName }],
+        resultText: null,
+      },
+    };
+  },
+
   teacher_praise_reveal(character) {
     const teacher = character.education.teacher;
     if (!teacher) {
@@ -714,7 +796,9 @@ registerDynamicGenerators({
         id: "hs_graduation_choice",
         trigger: "age_up",
         conditions: { minAge: 0, maxAge: 200 },
-        text: `Congratulations!\n\nYou graduated from high school!\n\nFinal GPA: ${gpaText}`,
+        icon: "🎓",
+        text: "Congratulations! You graduated from high school!",
+        statRows: [{ label: "Final GPA", value: gpaText }],
         choices: [
           { label: "Apply to College", dynamic: "hs_graduation_college" },
           { label: "Enter the Workforce", dynamic: "hs_graduation_workforce" },
@@ -726,6 +810,13 @@ registerDynamicGenerators({
 
   hs_graduation_college() {
     return { type: "followUp", event: collegeChoiceEvent() };
+  },
+
+  // The Continue button on applyToCollege's acceptance card (above) --
+  // chains into the same major picker every acceptance already led to
+  // before that card existed.
+  college_acceptance_continue() {
+    return { type: "followUp", event: chooseMajorEvent() };
   },
 
   apply_community_college(character) {
@@ -822,9 +913,30 @@ registerDynamicGenerators({
     character.education.status = "graduated_college";
     const majorLabel = getMajorLabel(character.education.major) ?? "your field";
     const gpaText = character.education.gpa != null ? character.education.gpa.toFixed(2) : "N/A";
-    const line = `Congratulations! You graduated from ${character.education.collegeName ?? "college"} with a degree in ${majorLabel}! Final GPA: ${gpaText}`;
+    const collegeName = character.education.collegeName ?? "college";
+    const line = `Congratulations! You graduated from ${collegeName} with a degree in ${majorLabel}! Final GPA: ${gpaText}`;
     pushHistory(character, line);
-    return { type: "resolve", effects: { happiness: 10, reputation: 3 }, resultText: null };
+    // Effects applied directly here (rather than via the returned `effects`
+    // field) because a followUp -- unlike `resolve` -- doesn't run
+    // applyResolved for this generator's own return value; the followUp
+    // card just displays, it doesn't separately re-apply anything.
+    character.stats.happiness = clampStat(character.stats.happiness + 10);
+    character.stats.reputation = clampStat(character.stats.reputation + 3);
+    return {
+      type: "followUp",
+      event: {
+        id: "college_graduation_card",
+        trigger: "age_up",
+        conditions: { minAge: 0, maxAge: 200 },
+        icon: "🎓",
+        text: `You graduated from ${collegeName}!`,
+        statRows: [
+          { label: "Major", value: majorLabel },
+          { label: "Final GPA", value: gpaText },
+        ],
+        resultText: null,
+      },
+    };
   },
 });
 

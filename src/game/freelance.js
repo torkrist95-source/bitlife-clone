@@ -46,6 +46,10 @@ function getEligibleFreelanceServices(character) {
 // application roll), so every call here is a real completion and the cap
 // counter can increment unconditionally -- a rejected attempt never reaches
 // this function in the first place.
+//
+// Returns the individual pieces (client, hours, rate, earnings) rather than
+// just the prose line, so a caller can render them as a structured result
+// card (app.js) instead of only the single sentence also pushed to history.
 function postFreelanceAd(character, service, rate, namePools, countryId) {
   const clampedRate = Math.max(service.minRate, Math.min(service.maxRate, Math.round(rate)));
   const hours = randInt(service.hoursMin, service.hoursMax);
@@ -58,9 +62,11 @@ function postFreelanceAd(character, service, rate, namePools, countryId) {
   character.jobCaps ??= { oneTimeJobsCompleted: 0, freelanceGigsCompleted: 0 };
   character.jobCaps.freelanceGigsCompleted += 1;
 
-  const line = `${clientName} ${service.hiredPhrase} for ${hours} hours. You earned ${formatMoney(earnings, character.currencyCode)} (${formatMoney(clampedRate, character.currencyCode)}/hr).`;
+  const rateFormatted = `${formatMoney(clampedRate, character.currencyCode)}/hr`;
+  const earningsFormatted = formatMoney(earnings, character.currencyCode);
+  const line = `${clientName} ${service.hiredPhrase} for ${hours} hours. You earned ${earningsFormatted} (${rateFormatted}).`;
   pushHistory(character, line);
-  return line;
+  return { line, clientName, hours, rate: clampedRate, rateFormatted, earnings, earningsFormatted };
 }
 
 export { FREELANCE_SERVICES, YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd };

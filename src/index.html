@@ -157,7 +157,9 @@
 
     <div id="event-modal-overlay" class="modal-overlay hidden">
       <div id="event-modal" class="event-modal">
+        <p id="event-modal-icon" class="event-modal-icon hidden"></p>
         <p id="event-modal-text"></p>
+        <div id="event-modal-stats" class="event-modal-stats hidden"></div>
         <div id="event-modal-choices" class="event-modal-choices"></div>
       </div>
     </div>
@@ -243,7 +245,11 @@
         <h2 id="freelance-modal-title" class="occupation-modal-title">Freelance Gig</h2>
         <p id="freelance-rate-range" class="occupation-job-salary"></p>
         <input type="number" id="freelance-rate-input" class="freelance-rate-input" />
-        <p id="freelance-result" class="occupation-unemployed-label hidden"></p>
+        <div id="freelance-result-wrap" class="hidden">
+          <p id="freelance-result-icon" class="event-modal-icon hidden"></p>
+          <p id="freelance-result-text" class="freelance-result-text"></p>
+          <div id="freelance-result-stats" class="event-modal-stats hidden"></div>
+        </div>
         <div class="school-action-list">
           <button type="button" id="freelance-post-ad-btn" class="nav-action-btn">Post an Ad</button>
         </div>
