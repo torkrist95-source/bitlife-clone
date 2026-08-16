@@ -1,7 +1,8 @@
 import { getLifeStage, clampStat, randInt, pushHistory, pushCareerEvent, generateRandomName } from "./character.js";
 import { applySchoolYear, applyCollegeYear, getGradeLevelForAge } from "./school.js";
-import { ensureCoworkers, endCoworkerRelationships, registerDynamicGenerators } from "./npc.js";
+import { ensureCoworkers, endCoworkerRelationships, ensurePartTimeCoworkers, registerDynamicGenerators } from "./npc.js";
 import { pickJobTitle } from "./npcLife.js";
+import { applyPartTimeJobYear } from "./partTimeJobs.js";
 
 // Once promoted into a role, a character needs at least this many years in
 // it before another promotion can be rolled.
@@ -263,7 +264,7 @@ registerDynamicGenerators({
   },
 });
 
-function ageUp(character, jobsData, namePools, countryId) {
+function ageUp(character, jobsData, namePools, countryId, partTimeJobsData) {
   const previousStage = getLifeStage(character.age);
   character.age += 1;
   // One-Time Jobs and Freelance Gigs each cap at a handful of completions
@@ -283,12 +284,19 @@ function ageUp(character, jobsData, namePools, countryId) {
   const jobLine = applyJobYear(character, jobsData);
   if (jobLine) pushHistory(character, jobLine);
 
+  const partTimeJobLine = applyPartTimeJobYear(character, partTimeJobsData);
+  if (partTimeJobLine) pushHistory(character, partTimeJobLine);
+
   // Coworker turnover/development itself happens in applyNpcLifeYear
   // (called separately from rollAgeUpHappening) alongside every other
   // relationship-tier-gated NPC development -- this just makes sure a
-  // freshly-hired character's roster exists before that tick can act on it.
+  // freshly-hired character's roster(s) exist before that tick can act on
+  // them. Main Job and Part-Time Job are independent, so both are checked.
   if (character.job) {
     ensureCoworkers(character, namePools, countryId);
+  }
+  if (character.partTimeJob) {
+    ensurePartTimeCoworkers(character, namePools, countryId);
   }
 
   const schoolLines = applySchoolYear(character, namePools, countryId);

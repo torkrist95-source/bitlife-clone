@@ -19,6 +19,8 @@ import {
   ensureSocialCircle,
   ensureCoworkers,
   endCoworkerRelationships,
+  ensurePartTimeCoworkers,
+  endPartTimeCoworkerRelationships,
   canRomanticallyMatch,
   talk,
   getToKnow,
@@ -43,6 +45,7 @@ import {
   resolveOneTimeJob,
 } from "./careers.js";
 import { YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd } from "./freelance.js";
+import { getEligiblePartTimeJobs, applyForPartTimeJob } from "./partTimeJobs.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
 import { GENDER_IDENTITIES, ATTRACTION_OPTIONS, resolveAttractedTo, attractionIdFor } from "./identity.js";
 import {
@@ -81,6 +84,7 @@ import {
   loadNamePools,
   loadJobs,
   loadOneTimeJobs,
+  loadPartTimeJobs,
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
@@ -148,6 +152,7 @@ let familyStructures = [];
 let namePools = {};
 let jobsData = [];
 let oneTimeJobsData = [];
+let partTimeJobsData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
@@ -320,6 +325,12 @@ const coworkersModal = {
   overlay: document.getElementById("coworkers-modal-overlay"),
   list: document.getElementById("coworkers-list"),
   closeBtn: document.getElementById("coworkers-modal-close"),
+};
+
+const partTimeCoworkersModal = {
+  overlay: document.getElementById("part-time-coworkers-modal-overlay"),
+  list: document.getElementById("part-time-coworkers-list"),
+  closeBtn: document.getElementById("part-time-coworkers-modal-close"),
 };
 
 const npcProfileModal = {
@@ -759,7 +770,7 @@ function hideEventModal() {
 }
 
 game.ageBtn.addEventListener("click", () => {
-  ageUp(character, jobsData, namePools, character.country);
+  ageUp(character, jobsData, namePools, character.country, partTimeJobsData);
 
   const happening = rollAgeUpHappening(character, {
     ageUpEvents,
@@ -881,6 +892,7 @@ function renderJobsInto(container) {
   container.innerHTML = "";
 
   renderMainJobSection(container);
+  renderPartTimeJobSection(container);
   renderFreelanceGigsSection(container);
   renderOneTimeJobsSection(container);
 
@@ -892,6 +904,7 @@ function renderJobsInto(container) {
   const peopleList = document.createElement("div");
   peopleList.className = "school-action-list";
   peopleList.appendChild(buildSchoolActionBtn("View Coworkers", openCoworkersModal));
+  peopleList.appendChild(buildSchoolActionBtn("View Part-Time Coworkers", openPartTimeCoworkersModal));
   container.appendChild(peopleList);
 }
 
@@ -986,6 +999,106 @@ function requestQuitJob(container) {
       pushCareerEvent(character, { title: level.title, event: "quit" });
       renderJobsInto(container);
       refreshCareerHistoryPanel();
+      renderGame();
+      autosave();
+    },
+  });
+}
+
+// A second, independent job slot -- a character can hold this alongside
+// Main Job/Career at the same time. No application roll (always succeeds,
+// same casual tone as Freelance Gigs/One-Time Jobs) and no promotion
+// ladder (fixed hourly wage/weekly hours rolled once at hire, unlike Main
+// Job's levels array).
+function renderPartTimeJobSection(container) {
+  const title = document.createElement("p");
+  title.className = "school-section-title";
+  title.textContent = "Part-Time Job";
+  container.appendChild(title);
+
+  const partTimeJobDef = character.partTimeJob ? partTimeJobsData.find((j) => j.id === character.partTimeJob.jobId) : null;
+  if (character.partTimeJob && !partTimeJobDef) {
+    // A job that no longer resolves against partTimeJobsData -- treat as
+    // unemployed rather than crashing on a stale reference.
+    endPartTimeCoworkerRelationships(character);
+    character.partTimeJob = null;
+  }
+
+  if (character.partTimeJob && partTimeJobDef) {
+    const { hourlyWage, weeklyHours } = character.partTimeJob;
+    const yearlyIncome = hourlyWage * weeklyHours * 52;
+
+    const jobTitle = document.createElement("p");
+    jobTitle.className = "occupation-job-title";
+    jobTitle.textContent = partTimeJobDef.title;
+    const jobSalary = document.createElement("p");
+    jobSalary.className = "occupation-job-salary";
+    jobSalary.textContent = `${formatMoney(hourlyWage, character.currencyCode)}/hr, ${weeklyHours} hrs/wk (${formatMoney(yearlyIncome, character.currencyCode)}/yr)`;
+    container.appendChild(jobTitle);
+    container.appendChild(jobSalary);
+
+    const actionList = document.createElement("div");
+    actionList.className = "school-action-list";
+    actionList.appendChild(buildSchoolActionBtn("Quit Part-Time Job", () => requestQuitPartTimeJob(container)));
+    container.appendChild(actionList);
+    return;
+  }
+
+  const eligible = getEligiblePartTimeJobs(character, partTimeJobsData);
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = character.age < MIN_EARNING_AGE ? "You're not old enough to work yet." : "No part-time jobs available to you right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const jobList = document.createElement("div");
+  jobList.className = "occupation-job-list";
+  for (const job of eligible) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "occupation-job-btn";
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = job.title;
+    const wageSpan = document.createElement("span");
+    wageSpan.className = "occupation-job-btn-salary";
+    wageSpan.textContent = `${formatMoney(job.wageMin, character.currencyCode)}-${formatMoney(job.wageMax, character.currencyCode)}/hr`;
+
+    btn.appendChild(titleSpan);
+    btn.appendChild(wageSpan);
+    btn.addEventListener("click", () => doApplyForPartTimeJob(job, container));
+    jobList.appendChild(btn);
+  }
+  container.appendChild(jobList);
+}
+
+function doApplyForPartTimeJob(job, container) {
+  const { resultText } = applyForPartTimeJob(character, job, namePools, character.country);
+  renderGame();
+  renderJobsInto(container);
+  autosave();
+  showToast(resultText);
+}
+
+function requestQuitPartTimeJob(container) {
+  const partTimeJobDef = character.partTimeJob ? partTimeJobsData.find((j) => j.id === character.partTimeJob.jobId) : null;
+  if (!partTimeJobDef) {
+    if (character.partTimeJob) endPartTimeCoworkerRelationships(character);
+    character.partTimeJob = null;
+    renderJobsInto(container);
+    return;
+  }
+  showConfirm({
+    title: "Quit your part-time job?",
+    message: `Are you sure you want to quit your part-time job as a ${partTimeJobDef.title}?`,
+    confirmLabel: "Quit",
+    onConfirm: () => {
+      character.partTimeJob = null;
+      endPartTimeCoworkerRelationships(character);
+      pushHistory(character, `You quit your part-time job as a ${partTimeJobDef.title}.`);
+      renderJobsInto(container);
       renderGame();
       autosave();
     },
@@ -1758,6 +1871,41 @@ coworkersModal.closeBtn.addEventListener("click", () => {
   hideNavDrawer();
 });
 
+function renderPartTimeCoworkersList() {
+  if (character.partTimeJob) ensurePartTimeCoworkers(character, namePools, character.country);
+  partTimeCoworkersModal.list.innerHTML = "";
+  const coworkers = character.partTimeCoworkers ?? [];
+
+  if (coworkers.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = character.partTimeJob ? "You don't have any part-time coworkers yet." : "You don't have a part-time job right now.";
+    partTimeCoworkersModal.list.appendChild(empty);
+    return;
+  }
+
+  for (const npc of coworkers) {
+    const card = buildPersonCard({ name: npc.name, meta: buildRelationshipMeta(npc, "Coworker") });
+    card.classList.add("classmate-card");
+    card.addEventListener("click", () => openNpcProfile(npc, "coworker", renderPartTimeCoworkersList));
+    partTimeCoworkersModal.list.appendChild(card);
+  }
+}
+
+function openPartTimeCoworkersModal() {
+  renderPartTimeCoworkersList();
+  partTimeCoworkersModal.overlay.classList.remove("hidden");
+}
+
+function hidePartTimeCoworkersModal() {
+  partTimeCoworkersModal.overlay.classList.add("hidden");
+}
+
+partTimeCoworkersModal.closeBtn.addEventListener("click", () => {
+  hidePartTimeCoworkersModal();
+  hideNavDrawer();
+});
+
 // ---------- NPC Profile (reused for classmates, coworkers, and the teacher) ----------
 
 let currentNpcProfile = null;
@@ -2337,6 +2485,7 @@ async function init() {
     namePools,
     jobsData,
     oneTimeJobsData,
+    partTimeJobsData,
     ageUpEvents,
     npcUpdates,
     worldUpdates,
@@ -2351,6 +2500,7 @@ async function init() {
     loadNamePools(),
     loadJobs(),
     loadOneTimeJobs(),
+    loadPartTimeJobs(),
     loadAgeUpEvents(),
     loadNpcUpdates(),
     loadWorldUpdates(),

@@ -118,6 +118,40 @@ function endCoworkerRelationships(character) {
   character.coworkers = [];
 }
 
+// A second, independent coworker roster for Part-Time Jobs (partTimeJobs.js)
+// -- kept separate from Main Job's `coworkers` above rather than merged into
+// one list, since a character can hold both jobs at once and the two
+// workplaces shouldn't blend into a single roster. Same shape and rules as
+// Main Job coworkers otherwise, just a smaller crew and a lower age floor:
+// teen-accessible part-time workplaces plausibly include other teens
+// alongside an adult supervisor, unlike Main Job's adults-only 16+ floor.
+const PART_TIME_COWORKER_MIN_SIZE = 1;
+const PART_TIME_COWORKER_MAX_SIZE = 3;
+const MIN_PART_TIME_COWORKER_AGE = 14;
+
+function partTimeCoworkerAge(character) {
+  return Math.max(MIN_PART_TIME_COWORKER_AGE, character.age + randInt(-4, 6));
+}
+
+function ensurePartTimeCoworkers(character, namePools, countryId) {
+  if (!character.partTimeJob) return;
+  if (character.partTimeCoworkers && character.partTimeCoworkers.length > 0) return;
+
+  const count = randInt(PART_TIME_COWORKER_MIN_SIZE, PART_TIME_COWORKER_MAX_SIZE);
+  const coworkers = [];
+  for (let i = 0; i < count; i++) {
+    coworkers.push(createSocialNpc(namePools, countryId, partTimeCoworkerAge(character)));
+  }
+  character.partTimeCoworkers = coworkers;
+}
+
+function endPartTimeCoworkerRelationships(character) {
+  const coworkers = character.partTimeCoworkers ?? [];
+  const keepers = coworkers.filter((npc) => npc.friendLevel !== "acquaintance");
+  character.socialCircle = [...(character.socialCircle ?? []), ...keepers];
+  character.partTimeCoworkers = [];
+}
+
 // Every NPC the character actually knows by name: family (already
 // generated at birth) plus the social circle above. Used to pick a
 // specific, real subject for NPC-update flavor lines and dynamic events,
@@ -135,7 +169,7 @@ function getKnownNpcs(character) {
   for (const sibling of character.family?.siblings ?? []) {
     npcs.push({ name: sibling.name, relation: "sibling", relationLabel: "sibling" });
   }
-  for (const npc of [...(character.socialCircle ?? []), ...(character.coworkers ?? [])]) {
+  for (const npc of [...(character.socialCircle ?? []), ...(character.coworkers ?? []), ...(character.partTimeCoworkers ?? [])]) {
     const relation = relationLabelFor(npc);
     if (relation) npcs.push({ name: npc.name, relation, relationLabel: relation });
   }
@@ -212,7 +246,7 @@ function maybeTierUpRomance(character, npc) {
 // partner" -- the Partner page (app.js) and the partner-hangout dynamic
 // generators below both go through this rather than each re-deriving it.
 function findPartner(character) {
-  const all = [...(character.socialCircle ?? []), ...(character.coworkers ?? [])];
+  const all = [...(character.socialCircle ?? []), ...(character.coworkers ?? []), ...(character.partTimeCoworkers ?? [])];
   return all.find((npc) => npc.romanceStatus === "partner") ?? null;
 }
 
@@ -696,6 +730,9 @@ export {
   ensureCoworkers,
   coworkerAge,
   endCoworkerRelationships,
+  ensurePartTimeCoworkers,
+  partTimeCoworkerAge,
+  endPartTimeCoworkerRelationships,
   getKnownNpcs,
   developCrush,
   resolveDynamicChoice,

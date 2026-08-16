@@ -1,0 +1,10 @@
+[
+  { "id": "newspaper_delivery", "title": "Newspaper Delivery", "minAge": 14, "wageMin": 9, "wageMax": 12, "hoursMin": 5, "hoursMax": 10 },
+  { "id": "grocery_bagger", "title": "Grocery Bagger", "minAge": 14, "wageMin": 9, "wageMax": 13, "hoursMin": 8, "hoursMax": 15 },
+  { "id": "library_page", "title": "Library Page", "minAge": 14, "wageMin": 9, "wageMax": 12, "hoursMin": 6, "hoursMax": 12 },
+  { "id": "golf_caddy", "title": "Golf Caddy", "minAge": 15, "wageMin": 10, "wageMax": 15, "hoursMin": 6, "hoursMax": 14 },
+  { "id": "concession_stand", "title": "Concession Stand Worker", "minAge": 15, "wageMin": 9, "wageMax": 13, "hoursMin": 8, "hoursMax": 16 },
+  { "id": "ice_cream_scooper", "title": "Ice Cream Scooper", "minAge": 15, "wageMin": 10, "wageMax": 14, "hoursMin": 8, "hoursMax": 15 },
+  { "id": "pool_lifeguard", "title": "Pool Lifeguard", "minAge": 16, "wageMin": 11, "wageMax": 16, "hoursMin": 10, "hoursMax": 20 },
+  { "id": "parking_attendant", "title": "Parking Attendant", "minAge": 16, "wageMin": 10, "wageMax": 15, "hoursMin": 8, "hoursMax": 16 }
+]

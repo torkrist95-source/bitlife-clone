@@ -1,5 +1,5 @@
 import { randInt, clampStat, weightedPick, ENROLLED_EDUCATION_STATUSES } from "./character.js";
-import { createSocialNpc, coworkerAge } from "./npc.js";
+import { createSocialNpc, coworkerAge, partTimeCoworkerAge } from "./npc.js";
 
 // ---------- Acquaintance-tier roster churn ----------
 // Shared by classmates (school.js) and coworkers (engine.js) -- the exact
@@ -60,6 +60,20 @@ function maybeChurnCoworkers(character, namePools, countryId) {
       `${gone.name} transferred to a different branch.`,
     ],
     joinTemplate: (newcomer) => `${newcomer.name} joined as a new coworker.`,
+  });
+}
+
+function maybeChurnPartTimeCoworkers(character, namePools, countryId) {
+  return churnAcquaintanceRoster(character.partTimeCoworkers ?? [], {
+    namePools,
+    countryId,
+    newcomerAge: partTimeCoworkerAge(character),
+    leaveReasons: (gone) => [
+      `${gone.name} quit to focus on school.`,
+      `${gone.name} wasn't scheduled anymore.`,
+      `${gone.name} moved on to a different part-time job.`,
+    ],
+    joinTemplate: (newcomer) => `${newcomer.name} joined as a new part-time coworker.`,
   });
 }
 
@@ -188,10 +202,12 @@ function applyNpcLifeYear(character, namePools, countryId, jobsData) {
   // of the tier-gated development below runs.
   for (const npc of character.socialCircle ?? []) npc.age += 1;
   for (const npc of character.coworkers ?? []) npc.age += 1;
+  for (const npc of character.partTimeCoworkers ?? []) npc.age += 1;
 
   const candidates = [
     ...(character.socialCircle ?? []).map((npc) => ({ npc, roster: character.socialCircle })),
     ...(character.coworkers ?? []).map((npc) => ({ npc, roster: character.coworkers })),
+    ...(character.partTimeCoworkers ?? []).map((npc) => ({ npc, roster: character.partTimeCoworkers })),
   ];
 
   // Decide *which* NPCs get to develop this year before running anything
@@ -224,6 +240,10 @@ function applyNpcLifeYear(character, namePools, countryId, jobsData) {
   if (character.job) {
     const coworkerChurnLine = maybeChurnCoworkers(character, namePools, countryId);
     if (coworkerChurnLine) lines.push(coworkerChurnLine);
+  }
+  if (character.partTimeJob) {
+    const partTimeCoworkerChurnLine = maybeChurnPartTimeCoworkers(character, namePools, countryId);
+    if (partTimeCoworkerChurnLine) lines.push(partTimeCoworkerChurnLine);
   }
 
   return lines;
