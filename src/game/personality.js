@@ -35,6 +35,14 @@ function generatePersonality() {
   for (const trait of TRAITS) {
     personality[trait] = randInt(10, 90);
   }
+  // Unlike every other pair here (Kind/Manipulative is deliberately allowed
+  // to coexist -- see comment above), Introverted/Extroverted are opposite
+  // ends of one spectrum, not two independent traits -- rolling them
+  // separately could put both in a character's "dominant" summary at once.
+  // Derive both from a single roll so they can never both score high.
+  const extroversion = randInt(10, 90);
+  personality.extroverted = extroversion;
+  personality.introverted = 100 - extroversion;
   return personality;
 }
 
