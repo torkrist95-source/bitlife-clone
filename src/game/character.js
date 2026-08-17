@@ -249,7 +249,8 @@ function rollSiblingCount() {
 }
 
 function generateSiblings(count, lastName, structureId, excludeNames, namePools, countryId) {
-  const relationshipType = structureId === "adopted" ? "adoptive" : structureId === "biological_plus_step" ? "step" : "biological";
+  const relationshipType =
+    structureId === "adopted" ? "adoptive" : structureId === "biological_plus_step" ? "step" : structureId === "foster_care" ? "foster" : "biological";
   const siblings = [];
   const usedNames = [...excludeNames];
   for (let i = 0; i < count; i++) {
@@ -363,7 +364,11 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
 
   const { parents, flags: familyFlags } = generateFamilyMembers(structure.id, lastName, tier, firstName, namePools, countryId);
   const usedFirstNames = [firstName, ...parents.map((p) => p.name.split(" ")[0])];
-  const siblings = generateSiblings(rollSiblingCount(), lastName, structure.id, usedFirstNames, namePools, countryId);
+  // A sibling generated under foster_care belongs to the SAME placement, not
+  // the player's own birth family -- they take the foster caregiver's
+  // surname (already on parents[0], see addGuardian above), not `lastName`.
+  const siblingLastName = structure.id === "foster_care" ? parents[0].name.trim().split(/\s+/).slice(-1)[0] : lastName;
+  const siblings = generateSiblings(rollSiblingCount(), siblingLastName, structure.id, usedFirstNames, namePools, countryId);
   const pet = maybeGeneratePet();
 
   const birthDate = randomBirthDate();

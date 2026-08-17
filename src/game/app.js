@@ -2162,7 +2162,8 @@ function parentRelationLabel(parent) {
 // itself -- "role" in npc distinguishes a parent/guardian record (which
 // has one) from a sibling record (which doesn't).
 function familyRoleLabel(npc) {
-  return "role" in npc ? parentRelationLabel(npc) : "Sibling";
+  if ("role" in npc) return parentRelationLabel(npc);
+  return npc.relationshipType === "foster" ? "Foster Sibling" : "Sibling";
 }
 
 function renderFamilyListInto(container) {
@@ -2181,7 +2182,12 @@ function renderFamilyListInto(container) {
   if (parents.length > 0) {
     const title = document.createElement("p");
     title.className = "school-section-title";
-    title.textContent = "Parents";
+    // "Parents" is wrong for a guardian/foster placement -- neither role is
+    // actually a parent. Only swap the heading when NONE of them are (a
+    // mixed biological+step household still has a real parent in it, so it
+    // keeps "Parents" as normal).
+    const hasParentRole = parents.some((p) => p.role === "mother" || p.role === "father");
+    title.textContent = hasParentRole ? "Parents" : parents.length === 1 ? "Caregiver" : "Caregivers";
     container.appendChild(title);
     for (const member of parents) appendFamilyCard(container, member);
   }
