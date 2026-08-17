@@ -9,15 +9,15 @@ import { randInt, applyMoneyDelta, formatMoney, pushHistory, generateRandomName,
 // non-service windfalls moved to at the time, has since been retired
 // entirely as redundant with this system.
 const FREELANCE_SERVICES = [
-  { id: "babysitting", label: "Babysitting", minAge: 14, minRate: 10, maxRate: 25, hoursMin: 3, hoursMax: 15, hiredPhrase: "hired you to babysit their kids" },
-  { id: "lawn_mowing", label: "Lawn Mowing", minAge: 14, minRate: 10, maxRate: 20, hoursMin: 2, hoursMax: 10, hiredPhrase: "hired you to mow their lawn" },
+  // Read as neighborhood-kid jobs specifically, unlike the rest of this list
+  // (Tutoring, Dog Walking, etc. are plausible for an adult too) -- capped
+  // at 17 so they age out right as Main Job/Career becomes the norm at 18.
+  { id: "babysitting", label: "Babysitting", minAge: 14, maxAge: 17, minRate: 10, maxRate: 25, hoursMin: 3, hoursMax: 15, hiredPhrase: "hired you to babysit their kids" },
+  { id: "lawn_mowing", label: "Lawn Mowing", minAge: 14, maxAge: 17, minRate: 10, maxRate: 20, hoursMin: 2, hoursMax: 10, hiredPhrase: "hired you to mow their lawn" },
   { id: "dog_walking", label: "Dog Walking", minAge: 14, minRate: 8, maxRate: 18, hoursMin: 2, hoursMax: 12, hiredPhrase: "hired you to walk their dog" },
   { id: "pet_sitting", label: "Pet Sitting", minAge: 14, minRate: 10, maxRate: 20, hoursMin: 3, hoursMax: 14, hiredPhrase: "hired you to pet-sit while they were away" },
   { id: "tutoring", label: "Tutoring", minAge: 14, minRate: 15, maxRate: 35, hoursMin: 3, hoursMax: 12, hiredPhrase: "hired you as a tutor" },
-  { id: "house_cleaning", label: "House Cleaning", minAge: 14, minRate: 12, maxRate: 25, hoursMin: 2, hoursMax: 10, hiredPhrase: "hired you to clean their house" },
   { id: "car_washing", label: "Car Washing", minAge: 14, minRate: 8, maxRate: 16, hoursMin: 2, hoursMax: 8, hiredPhrase: "hired you to wash their cars" },
-  { id: "snow_shoveling", label: "Snow Shoveling", minAge: 14, minRate: 10, maxRate: 20, hoursMin: 2, hoursMax: 8, hiredPhrase: "hired you to shovel snow" },
-  { id: "freelance_writing", label: "Freelance Writing & Online Work", minAge: 16, minRate: 15, maxRate: 45, hoursMin: 4, hoursMax: 20, hiredPhrase: "hired you for freelance work online" },
 ];
 
 // Caps the yearly total -- character.freelanceGigsCompletedThisYear, reset
@@ -31,7 +31,7 @@ function isFreelanceCapReached(character) {
 function getEligibleFreelanceServices(character) {
   if (character.age < MIN_EARNING_AGE) return [];
   if (isFreelanceCapReached(character)) return [];
-  return FREELANCE_SERVICES.filter((service) => character.age >= service.minAge);
+  return FREELANCE_SERVICES.filter((service) => character.age >= service.minAge && (service.maxAge == null || character.age <= service.maxAge));
 }
 
 // Unlike One-Time Jobs' pass-through payout, Freelance Gigs are instant but
