@@ -155,6 +155,17 @@
       </nav>
     </div>
 
+    <div id="category-screen" class="screen hidden">
+      <div class="category-screen-header">
+        <button type="button" id="category-back-btn" class="category-nav-btn" aria-label="Back">← Back</button>
+        <h2 id="category-screen-title" class="category-screen-title"></h2>
+        <button type="button" id="category-close-btn" class="category-nav-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div id="category-screen-list" class="category-screen-list"></div>
+      <p id="category-screen-empty" class="category-menu-empty hidden">Nothing here yet.</p>
+    </div>
+
     <div id="event-modal-overlay" class="modal-overlay hidden">
       <div id="event-modal" class="event-modal">
         <p id="event-modal-icon" class="event-modal-icon hidden"></p>
@@ -194,18 +205,6 @@
         </div>
 
         <button type="button" id="profile-modal-close" class="event-choice-btn">Close</button>
-      </div>
-    </div>
-
-    <div id="nav-drawer-overlay" class="modal-overlay hidden">
-      <div class="event-modal category-menu-modal">
-        <div class="nav-drawer-header">
-          <h2 id="nav-drawer-title" class="category-menu-title"></h2>
-          <button type="button" id="nav-drawer-close" class="nav-drawer-close-btn" aria-label="Close">✕</button>
-        </div>
-
-        <div id="nav-drawer-list" class="nav-drawer-list"></div>
-        <p id="nav-drawer-empty" class="category-menu-empty hidden">Nothing here yet.</p>
       </div>
     </div>
 

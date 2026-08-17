@@ -262,12 +262,12 @@ const profileModal = {
   closeBtn: document.getElementById("profile-modal-close"),
 };
 
-const navDrawer = {
-  overlay: document.getElementById("nav-drawer-overlay"),
-  title: document.getElementById("nav-drawer-title"),
-  list: document.getElementById("nav-drawer-list"),
-  empty: document.getElementById("nav-drawer-empty"),
-  closeBtn: document.getElementById("nav-drawer-close"),
+const categoryScreen = {
+  title: document.getElementById("category-screen-title"),
+  list: document.getElementById("category-screen-list"),
+  empty: document.getElementById("category-screen-empty"),
+  backBtn: document.getElementById("category-back-btn"),
+  closeBtn: document.getElementById("category-close-btn"),
 };
 
 const financeModal = {
@@ -353,7 +353,7 @@ const toast = document.getElementById("toast");
 
 // ---------- Screen switching ----------
 
-const screens = { home: home.screen, creation: creation.screen, game: game.screen };
+const screens = { home: home.screen, creation: creation.screen, game: game.screen, category: document.getElementById("category-screen") };
 
 function showScreen(name) {
   for (const [key, el] of Object.entries(screens)) {
@@ -786,24 +786,27 @@ game.ageBtn.addEventListener("click", () => {
 });
 
 game.navBtns.forEach((btn) => {
-  btn.addEventListener("click", () => openNavDrawer(btn.dataset.label));
+  btn.addEventListener("click", () => openCategoryScreen(btn.dataset.label));
 });
 
-// ---------- Bottom-nav hierarchy: category drawer with accordion systems ----------
+// ---------- Bottom-nav hierarchy: full-screen category section with accordion systems ----------
 //
-// Gameplay -> [Category Drawer] -> tap a system to expand/collapse its
-// actions inline -> tap an action to open that system's existing
-// modal/interaction. There's no separate "system page" to navigate to and
-// no Back stack -- the drawer stays open underneath (same stacking
-// pattern the confirm modal already uses over other modals) while an
-// action's modal is open on top, and that modal's own Close hides both,
-// returning straight to gameplay.
+// Gameplay -> [Category Screen, full game viewport] -> tap a system to
+// expand/collapse its actions inline -> tap an action to open that
+// system's existing modal/interaction, which stacks on top exactly as it
+// would over gameplay (this screen isn't part of the .modal-overlay pile,
+// just a plain in-flow `.screen` like game-screen itself, so nothing about
+// modal stacking changes here). One system open at a time, same accordion
+// behavior as before -- Back collapses whichever one is open (there's no
+// deeper "system page" to navigate to, so Back never needs a real history
+// stack); Close always returns straight to gameplay.
 
-function openNavDrawer(categoryLabel) {
+function openCategoryScreen(categoryLabel) {
   const systems = NAV_CATEGORIES[categoryLabel] ?? [];
-  navDrawer.title.textContent = categoryLabel;
-  navDrawer.list.innerHTML = "";
-  navDrawer.empty.classList.toggle("hidden", systems.length > 0);
+  categoryScreen.title.textContent = categoryLabel;
+  categoryScreen.list.innerHTML = "";
+  categoryScreen.empty.classList.toggle("hidden", systems.length > 0);
+  categoryScreen.backBtn.style.visibility = "hidden";
 
   for (const system of systems) {
     const item = document.createElement("div");
@@ -842,28 +845,39 @@ function openNavDrawer(categoryLabel) {
 
     header.addEventListener("click", () => {
       const isExpanded = !actionsWrap.classList.contains("hidden");
-      // Accordion: only one system open at a time within this drawer.
-      navDrawer.list.querySelectorAll(".nav-system-actions").forEach((el) => el.classList.add("hidden"));
-      navDrawer.list.querySelectorAll(".nav-system-arrow").forEach((el) => (el.textContent = "▸"));
+      // Accordion: only one system open at a time within this screen.
+      collapseOpenCategorySystem();
       if (!isExpanded) {
         actionsWrap.classList.remove("hidden");
         arrow.textContent = "▾";
+        categoryScreen.backBtn.style.visibility = "visible";
       }
     });
 
     item.appendChild(header);
     item.appendChild(actionsWrap);
-    navDrawer.list.appendChild(item);
+    categoryScreen.list.appendChild(item);
   }
 
-  navDrawer.overlay.classList.remove("hidden");
+  showScreen("category");
 }
 
-function hideNavDrawer() {
-  navDrawer.overlay.classList.add("hidden");
+// Shared by the Back button and by openCategoryScreen's own accordion
+// toggle (collapsing whichever system was previously open before expanding
+// the one just clicked) -- one place that knows how to fully reset the
+// accordion to its flat, nothing-expanded state.
+function collapseOpenCategorySystem() {
+  categoryScreen.list.querySelectorAll(".nav-system-actions").forEach((el) => el.classList.add("hidden"));
+  categoryScreen.list.querySelectorAll(".nav-system-arrow").forEach((el) => (el.textContent = "▸"));
+  categoryScreen.backBtn.style.visibility = "hidden";
 }
 
-navDrawer.closeBtn.addEventListener("click", hideNavDrawer);
+function closeCategoryScreen() {
+  showScreen("game");
+}
+
+categoryScreen.backBtn.addEventListener("click", collapseOpenCategorySystem);
+categoryScreen.closeBtn.addEventListener("click", closeCategoryScreen);
 
 // ---------- Occupation ----------
 
@@ -1187,14 +1201,14 @@ freelanceModal.postBtn.addEventListener("click", () => {
 // sentences to find job events.
 
 // Jobs and Career History are sibling accordion panels, each rendered once
-// when the Occupation drawer opens (see openNavDrawer) -- a hire/quit inside
-// the already-open Jobs panel has no other way to reach Career History's
-// separate container, so without this it would keep showing stale data
-// until the whole drawer is closed and reopened. Only called from hire/quit
-// (both happen while the drawer is open); promotions/layoffs happen during
-// Age Up, which requires the drawer to already be closed.
+// when the Occupation screen opens (see openCategoryScreen) -- a hire/quit
+// inside the already-open Jobs panel has no other way to reach Career
+// History's separate container, so without this it would keep showing stale
+// data until the whole screen is closed and reopened. Only called from
+// hire/quit (both happen while the screen is open); promotions/layoffs
+// happen during Age Up, which requires the screen to already be closed.
 function refreshCareerHistoryPanel() {
-  const panel = navDrawer.list.querySelector('[data-system-id="career_history"]');
+  const panel = categoryScreen.list.querySelector('[data-system-id="career_history"]');
   if (panel) renderCareerHistoryInto(panel);
 }
 
@@ -1273,11 +1287,12 @@ function buildSchoolActionBtn(label, onClick) {
 }
 
 // Remembered so the Clubs/Activities modals (stacked on top of this
-// accordion, not replacing it -- see openNavDrawer) can refresh the "Your
-// Activities" list the moment something changes underneath them, the same
-// "onUpdate" idea openNpcProfile already uses for Friends/Family. `render`
-// itself only ever runs once when the drawer opens, so without this the
-// section would keep showing whatever was joined at that exact moment.
+// accordion, not replacing it -- see openCategoryScreen) can refresh the
+// "Your Activities" list the moment something changes underneath them, the
+// same "onUpdate" idea openNpcProfile already uses for Friends/Family.
+// `render` itself only ever runs once when the screen opens, so without
+// this the section would keep showing whatever was joined at that exact
+// moment.
 let schoolContainerRef = null;
 
 function refreshSchoolIfOpen() {
@@ -1459,16 +1474,13 @@ function doTakeGed(container) {
   showToast(resultText);
 }
 
-// event-modal-overlay and nav-drawer-overlay share the same .modal-overlay
-// stacking (main.css), and event-modal-overlay comes first in the DOM --
-// with both open at once, the drawer would paint (and intercept clicks)
-// on top of the event modal underneath it. Every other action from this
-// School section uses the confirm modal instead, which happens to sit
-// later in the DOM and doesn't have this problem; this is the one place
-// that opens a full event-choice flow from inside the drawer, so it closes
-// the drawer first rather than risking a reorder of shared modal markup.
+// Closes the category screen before the college-choice event modal opens --
+// not a stacking necessity (the event modal is a fixed-position overlay and
+// would paint on top of the screen regardless), just a deliberate UX choice
+// so a big decision like this one lands back on gameplay afterward rather
+// than leaving the player still inside Occupation -> School.
 function doApplyToCollege() {
-  hideNavDrawer();
+  closeCategoryScreen();
   showEventModal(collegeChoiceEvent());
 }
 
@@ -1816,7 +1828,7 @@ function hideCoworkersModal() {
 
 coworkersModal.closeBtn.addEventListener("click", () => {
   hideCoworkersModal();
-  hideNavDrawer();
+  closeCategoryScreen();
 });
 
 function renderPartTimeCoworkersList() {
@@ -1851,7 +1863,7 @@ function hidePartTimeCoworkersModal() {
 
 partTimeCoworkersModal.closeBtn.addEventListener("click", () => {
   hidePartTimeCoworkersModal();
-  hideNavDrawer();
+  closeCategoryScreen();
 });
 
 // ---------- NPC Profile (reused for classmates, coworkers, and the teacher) ----------
@@ -2056,7 +2068,7 @@ function hideFinanceOverview() {
 
 financeModal.closeBtn.addEventListener("click", () => {
   hideFinanceOverview();
-  hideNavDrawer();
+  closeCategoryScreen();
 });
 
 // ---------- Relationships: Friends & Family ----------
