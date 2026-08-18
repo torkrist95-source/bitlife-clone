@@ -861,5 +861,261 @@
         "resultText": "You stayed involved without taking on that much pressure."
       }
     ]
+  },
+  {
+    "id": "big_opportunity_overreach",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.ambitious", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "There's an opening to lead an event that's usually reserved for upperclassmen, and you want it badly.",
+    "choices": [
+      {
+        "label": "Go for it anyway",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "personality.ambitious", "op": ">=", "value": 80 }], "effects": { "happiness": 9, "reputation": 3, "fame": 1 }, "resultText": "You pitched yourself with total confidence, and to everyone's surprise, you got it." },
+          { "weight": 5, "effects": { "happiness": 3, "reputation": 1 }, "resultText": "You didn't get it, but putting yourself out there got you noticed." },
+          { "weight": 3, "effects": { "happiness": -4, "reputation": -2 }, "resultText": "You came on too strong and it showed. A little embarrassing." }
+        ]
+      },
+      {
+        "label": "Wait for something more your speed",
+        "effects": { "happiness": 1 },
+        "resultText": "You let it go, telling yourself the right chance would come."
+      }
+    ]
+  },
+  {
+    "id": "spark_of_an_idea",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.creative", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You get a sudden, fully-formed idea for something you want to make, a story, a song, a project, and you can't stop thinking about it.",
+    "choices": [
+      {
+        "label": "Drop everything and work on it",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "personality.creative", "op": ">=", "value": 80 }], "effects": { "happiness": 9, "reputation": 2 }, "resultText": "It came together better than you imagined, and you actually showed people. They were impressed." },
+          { "weight": 6, "effects": { "happiness": 6 }, "resultText": "You finished it, and even if barely anyone else sees it, you're proud of it." },
+          { "weight": 3, "effects": { "happiness": -2 }, "resultText": "You lost the thread halfway through and never quite got it back." }
+        ]
+      },
+      {
+        "label": "Save it for later",
+        "effects": { "happiness": 1 },
+        "resultText": "You wrote it down for later. Later never quite came."
+      }
+    ]
+  },
+  {
+    "id": "covering_a_classmate",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.generous", "op": ">=", "value": 60 }, { "path": "money", "op": ">=", "value": 10 }],
+    "weight": 6,
+    "text": "You notice a classmate who forgot their lunch money again, quietly avoiding the cafeteria line.",
+    "choices": [
+      {
+        "label": "Cover their lunch",
+        "effects": { "money": -10, "happiness": 5, "reputation": 2 },
+        "resultText": "It wasn't much, but they were clearly grateful, and it stuck with you too."
+      },
+      {
+        "label": "Look the other way",
+        "effects": { "happiness": -1 },
+        "resultText": "You told yourself it wasn't your problem, but it nagged at you a little."
+      }
+    ]
+  },
+  {
+    "id": "staying_up_for_a_friend",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.loyal", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "A friend texts you late, panicking about a group project due tomorrow that they haven't started.",
+    "choices": [
+      {
+        "label": "Stay up and help them finish it",
+        "effects": { "happiness": 5, "health": -3 },
+        "resultText": "You crashed at their place helping until way too late, but you got it done together."
+      },
+      {
+        "label": "Tell them you can't tonight",
+        "effects": { "happiness": -3 },
+        "resultText": "You said no, and felt bad about it all through class the next day."
+      }
+    ]
+  },
+  {
+    "id": "taking_the_credit_teen",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.manipulative", "op": ">=", "value": 60 }],
+    "weight": 5,
+    "text": "A group partner quietly shares their idea for the project with you before class, and you realize you could present it first and let the teacher assume it was yours.",
+    "choices": [
+      {
+        "label": "Take the credit",
+        "outcomes": [
+          { "weight": 5, "effects": { "reputation": 3, "happiness": 2 }, "resultText": "It worked. The teacher praised you in front of the class." },
+          { "weight": 5, "effects": { "reputation": -5, "happiness": -3 }, "resultText": "Your partner figured it out fast, and made sure everyone else did too." }
+        ]
+      },
+      {
+        "label": "Let them present it",
+        "effects": { "reputation": 1, "happiness": 1 },
+        "resultText": "You let them have the moment. It sat right with you."
+      }
+    ]
+  },
+  {
+    "id": "saving_up_for_the_new_thing",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.materialistic", "op": ">=", "value": 60 }, { "path": "money", "op": ">=", "value": 100 }],
+    "weight": 6,
+    "text": "Everyone at school has the new thing you've been saving up for, and it's finally within reach.",
+    "choices": [
+      {
+        "label": "Buy it",
+        "effects": { "money": -100, "happiness": 6, "reputation": 1 },
+        "resultText": "You bought it right away. It feels good to finally have it."
+      },
+      {
+        "label": "Save the money instead",
+        "effects": { "happiness": -2 },
+        "resultText": "You talked yourself out of it, and kept thinking about it anyway."
+      }
+    ]
+  },
+  {
+    "id": "pushing_through_sick",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.health", "op": "<=", "value": 30 }],
+    "weight": 6,
+    "text": "You've felt run down for days, but there's a big test tomorrow you don't want to miss.",
+    "choices": [
+      {
+        "label": "Push through it",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "stats.health", "op": "<=", "value": 15 }], "effects": { "health": -10, "happiness": -4 }, "resultText": "You pushed too hard and ended up worse for it, missing the rest of the week." },
+          { "weight": 6, "effects": { "health": -5, "happiness": -2 }, "resultText": "You dragged yourself through the day. Rough, but you made it." }
+        ]
+      },
+      {
+        "label": "Stay home and rest",
+        "effects": { "health": 8, "happiness": -1 },
+        "resultText": "You stayed in bed and gave your body the break it needed."
+      }
+    ]
+  },
+  {
+    "id": "field_day_energy",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.health", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "Field Day is here, and you feel like you could run circles around everyone.",
+    "choices": [
+      {
+        "label": "Go all out in every event",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "stats.health", "op": ">=", "value": 95 }], "effects": { "happiness": 9, "reputation": 3, "fame": 1 }, "resultText": "You dominated every event. People were still talking about it at lunch." },
+          { "weight": 6, "effects": { "happiness": 5, "reputation": 1 }, "resultText": "You had a great day and felt strong the whole time." }
+        ]
+      },
+      {
+        "label": "Take it easy and just have fun",
+        "effects": { "happiness": 3 },
+        "resultText": "You didn't push it, just enjoyed being outside with everyone."
+      }
+    ]
+  },
+  {
+    "id": "school_famous",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.fame", "op": ">=", "value": 40 }],
+    "weight": 6,
+    "text": "Word about you has spread outside your friend group, people you've never talked to know your name now.",
+    "choices": [
+      {
+        "label": "Lean into it",
+        "effects": { "happiness": 5, "reputation": 1 },
+        "resultText": "It's a strange feeling being recognized by people you don't know, but a good one."
+      },
+      {
+        "label": "Try to keep a low profile",
+        "effects": { "happiness": -1, "reputation": 1 },
+        "resultText": "You kept your head down, though it was hard to avoid the attention completely."
+      }
+    ]
+  },
+  {
+    "id": "gossip_spiral",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.fame", "op": ">=", "value": 55 }],
+    "weight": 5,
+    "text": "A wildly exaggerated rumor about you starts making its way around school, and it's spreading faster than you can keep up with.",
+    "choices": [
+      {
+        "label": "Address it head-on",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 3, "happiness": -2 }, "resultText": "Setting the record straight worked. Most people moved on quickly." },
+          { "weight": 4, "effects": { "reputation": -3, "happiness": -5 }, "resultText": "It only fed the story further. Some of it stuck regardless of what you said." }
+        ]
+      },
+      {
+        "label": "Ignore it and let it blow over",
+        "effects": { "happiness": -3 },
+        "resultText": "You said nothing and just waited it out. It was a rough couple of weeks."
+      }
+    ]
+  },
+  {
+    "id": "asked_to_mentor",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "stats.reputation", "op": ">=", "value": 65 }],
+    "weight": 6,
+    "text": "A teacher asks if you'd be willing to mentor a younger student who's struggling to find their footing.",
+    "choices": [
+      {
+        "label": "Step up",
+        "effects": { "reputation": 4, "happiness": -1 },
+        "resultText": "It was more work than you expected, but you could tell it actually mattered to them."
+      },
+      {
+        "label": "Say you're too busy",
+        "effects": { "reputation": -1 },
+        "resultText": "You passed on it. Not every opportunity is one you have to take."
+      }
+    ]
+  },
+  {
+    "id": "wrongly_blamed_teen",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.reputation", "op": "<=", "value": 20 }],
+    "weight": 6,
+    "text": "You get blamed for something that happened in class, and the teacher seems quick to believe it was you.",
+    "choices": [
+      {
+        "label": "Fight to clear your name",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 5 }, "resultText": "You pushed back and eventually the truth came out." },
+          { "weight": 4, "effects": { "reputation": -3, "happiness": -4 }, "resultText": "Nobody really budged. It's frustrating being disbelieved by default." }
+        ]
+      },
+      {
+        "label": "Let it go",
+        "effects": { "happiness": -3 },
+        "resultText": "You didn't have the energy to fight it this time. It stung, but you moved on."
+      }
+    ]
   }
 ]
