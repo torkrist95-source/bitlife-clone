@@ -10,6 +10,20 @@ const MIN_YEARS_BEFORE_PROMOTION = 2;
 const PROMOTION_CHANCE = 20; // percent, per year once eligible
 const LAYOFF_CHANCE = 3; // percent, per year while employed
 
+// Special Careers (specialCareers.js) use the same yearly-tick shape as
+// Main Job above, but promotion is gated by accumulated stats.fame instead
+// of years-in-role + a flat chance -- climbing is about building a
+// following, not seniority. Still requires at least one full year in the
+// current level (mirrors MIN_YEARS_BEFORE_PROMOTION) so fame gained from an
+// unrelated event on day one can't instantly vault someone to the top.
+const MIN_YEARS_BEFORE_SPECIAL_CAREER_PROMOTION = 1;
+// Being cut/retired early -- the Special Career equivalent of a layoff,
+// higher than LAYOFF_CHANCE since these careers are inherently less stable
+// than a normal job.
+const SPECIAL_CAREER_CUT_CHANCE = 5; // percent, per year while active
+const SPECIAL_CAREER_FAME_GAIN_MIN = 3;
+const SPECIAL_CAREER_FAME_GAIN_MAX = 8;
+
 function applyStatDrift(character) {
   const { age, stats } = character;
   stats.health = clampStat(stats.health + (age > 50 ? randInt(-3, 1) : randInt(-1, 1)));
@@ -55,6 +69,50 @@ function applyJobYear(character, jobsData) {
     const newLevel = jobDef.levels[character.job.levelIndex];
     pushCareerEvent(character, { title: newLevel.title, event: "promoted", salary: newLevel.salary });
     return `You got promoted to ${newLevel.title}!`;
+  }
+
+  return null;
+}
+
+// Pays the year's salary, grows fame (the one thing Main Job never touches),
+// then rolls for being cut or promoted. Same {history line or null} shape
+// as applyJobYear above, so ageUp can treat them identically.
+function applySpecialCareerYear(character, specialCareersData) {
+  if (!character.specialCareer) return null;
+
+  const scDef = specialCareersData?.find((sc) => sc.id === character.specialCareer.id);
+  const level = scDef?.levels[character.specialCareer.levelIndex];
+  if (!scDef || !level) {
+    // Same "no longer resolves against data -- treat as not in this career"
+    // safety net as applyJobYear.
+    character.specialCareer = null;
+    return null;
+  }
+
+  character.money += level.salary;
+  character.specialCareer.yearsInRole += 1;
+  character.stats.fame = clampStat(
+    character.stats.fame + randInt(SPECIAL_CAREER_FAME_GAIN_MIN, SPECIAL_CAREER_FAME_GAIN_MAX) + character.specialCareer.levelIndex * 2
+  );
+
+  if (randInt(0, 99) < SPECIAL_CAREER_CUT_CHANCE) {
+    const title = level.title;
+    character.specialCareer = null;
+    pushCareerEvent(character, { title, event: "laid_off" });
+    return `Your run as a ${scDef.label} came to an end this year.`;
+  }
+
+  const hasNextLevel = character.specialCareer.levelIndex < scDef.levels.length - 1;
+  const nextLevel = hasNextLevel ? scDef.levels[character.specialCareer.levelIndex + 1] : null;
+  if (
+    nextLevel &&
+    character.specialCareer.yearsInRole >= MIN_YEARS_BEFORE_SPECIAL_CAREER_PROMOTION &&
+    character.stats.fame >= nextLevel.fameRequired
+  ) {
+    character.specialCareer.levelIndex += 1;
+    character.specialCareer.yearsInRole = 0;
+    pushCareerEvent(character, { title: nextLevel.title, event: "promoted", salary: nextLevel.salary });
+    return `You've been promoted to ${nextLevel.title}!`;
   }
 
   return null;
@@ -264,7 +322,7 @@ registerDynamicGenerators({
   },
 });
 
-function ageUp(character, jobsData, namePools, countryId, partTimeJobsData) {
+function ageUp(character, jobsData, namePools, countryId, partTimeJobsData, specialCareersData) {
   const previousStage = getLifeStage(character.age);
   character.age += 1;
   // Freelance Gigs cap at a handful of completions per Age Up year
@@ -286,6 +344,9 @@ function ageUp(character, jobsData, namePools, countryId, partTimeJobsData) {
 
   const jobLine = applyJobYear(character, jobsData);
   if (jobLine) pushHistory(character, jobLine);
+
+  const specialCareerLine = applySpecialCareerYear(character, specialCareersData);
+  if (specialCareerLine) pushHistory(character, specialCareerLine);
 
   const partTimeJobLine = applyPartTimeJobYear(character, partTimeJobsData);
   if (partTimeJobLine) pushHistory(character, partTimeJobLine);

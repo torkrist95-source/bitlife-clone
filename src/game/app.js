@@ -37,6 +37,7 @@ import {
   borrowMoney,
 } from "./npc.js";
 import { getEligibleJobs, applyForJob } from "./careers.js";
+import { getEligibleSpecialCareers, applyForSpecialCareer } from "./specialCareers.js";
 import { YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd } from "./freelance.js";
 import { getEligiblePartTimeJobs, applyForPartTimeJob } from "./partTimeJobs.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
@@ -87,6 +88,7 @@ import {
   loadNamePools,
   loadJobs,
   loadPartTimeJobs,
+  loadSpecialCareers,
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,
@@ -112,7 +114,7 @@ const NAV_CATEGORIES = {
   Occupation: [
     { id: "school", label: "School", render: (container) => renderSchoolInto(container) },
     { id: "jobs", label: "Jobs", render: (container) => renderJobsInto(container) },
-    { id: "special_careers", label: "Special Careers", render: renderComingSoon },
+    { id: "special_careers", label: "Special Careers", render: (container) => renderSpecialCareersInto(container) },
     { id: "career_history", label: "Career History", render: (container) => renderCareerHistoryInto(container) },
   ],
   Relationships: [
@@ -154,6 +156,7 @@ let familyStructures = [];
 let namePools = {};
 let jobsData = [];
 let partTimeJobsData = [];
+let specialCareersData = [];
 let ageUpEvents = [];
 let npcUpdates = [];
 let worldUpdates = [];
@@ -770,7 +773,7 @@ function hideEventModal() {
 }
 
 game.ageBtn.addEventListener("click", () => {
-  ageUp(character, jobsData, namePools, character.country, partTimeJobsData);
+  ageUp(character, jobsData, namePools, character.country, partTimeJobsData, specialCareersData);
 
   const happening = rollAgeUpHappening(character, {
     ageUpEvents,
@@ -929,6 +932,14 @@ function renderMainJobSection(container) {
   title.className = "school-section-title";
   title.textContent = "Main Job / Career";
   container.appendChild(title);
+
+  if (character.specialCareer) {
+    const note = document.createElement("p");
+    note.className = "occupation-unemployed-label";
+    note.textContent = "You're pursuing a Special Career right now, see the Special Careers section.";
+    container.appendChild(note);
+    return;
+  }
 
   const level = character.job ? getJobLevel(character.job.jobId, character.job.levelIndex) : null;
   if (character.job && !level) {
@@ -1203,6 +1214,115 @@ freelanceModal.postBtn.addEventListener("click", () => {
   autosave();
   showToast(result.line);
 });
+
+// ---------- Occupation: Special Careers ----------
+//
+// A separate ladder from Main Job (specialCareers.js) -- entry is a
+// discovery/tryout gated by a real skill (plus, for Pro Athlete, the
+// athleticRecruit flag school.js already sets), not a normal application.
+// Promotion climbs on accumulated fame instead of years-in-role, so the
+// current-career view shows fame progress toward the next level as the
+// main thing to watch, the way a normal job's view shows salary.
+
+function renderSpecialCareersInto(container) {
+  container.innerHTML = "";
+
+  if (character.specialCareer) {
+    const scDef = specialCareersData.find((sc) => sc.id === character.specialCareer.id);
+    const level = scDef?.levels[character.specialCareer.levelIndex];
+    if (!scDef || !level) {
+      // Data no longer resolves -- treat as not in this career rather than
+      // crashing on a stale reference (matches Main Job's own safety net).
+      character.specialCareer = null;
+    } else {
+      const title = document.createElement("p");
+      title.className = "occupation-job-title";
+      title.textContent = `${level.title} · ${scDef.label}`;
+      const salary = document.createElement("p");
+      salary.className = "occupation-job-salary";
+      salary.textContent = `${formatMoney(level.salary, character.currencyCode)} / year`;
+      container.appendChild(title);
+      container.appendChild(salary);
+
+      const nextLevel = scDef.levels[character.specialCareer.levelIndex + 1];
+      const fameLine = document.createElement("p");
+      fameLine.className = "occupation-job-salary";
+      fameLine.textContent = nextLevel
+        ? `Fame: ${character.stats.fame}/${nextLevel.fameRequired} to reach ${nextLevel.title}`
+        : `Fame: ${character.stats.fame} · You've reached the top of this career`;
+      container.appendChild(fameLine);
+
+      const actionList = document.createElement("div");
+      actionList.className = "school-action-list";
+      actionList.appendChild(buildSchoolActionBtn("Quit Special Career", () => requestQuitSpecialCareer(container)));
+      container.appendChild(actionList);
+      return;
+    }
+  }
+
+  const eligible = getEligibleSpecialCareers(character, specialCareersData);
+  if (eligible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-empty";
+    empty.textContent = "No special career opportunities right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "occupation-job-list";
+  for (const sc of eligible) {
+    const entryLevel = sc.levels[0];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "occupation-job-btn";
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = `Try Out: ${sc.label}`;
+    const salarySpan = document.createElement("span");
+    salarySpan.className = "occupation-job-btn-salary";
+    salarySpan.textContent = `${formatMoney(entryLevel.salary, character.currencyCode)}/yr`;
+
+    btn.appendChild(titleSpan);
+    btn.appendChild(salarySpan);
+    btn.addEventListener("click", () => doApplyForSpecialCareer(sc, container));
+    list.appendChild(btn);
+  }
+  container.appendChild(list);
+}
+
+function doApplyForSpecialCareer(specialCareer, container) {
+  const { succeeded, resultText } = applyForSpecialCareer(character, specialCareer);
+  renderGame();
+  renderSpecialCareersInto(container);
+  if (succeeded) refreshCareerHistoryPanel();
+  autosave();
+  showToast(succeeded ? `You made it! Now a ${specialCareer.levels[0].title}.` : resultText);
+}
+
+function requestQuitSpecialCareer(container) {
+  const scDef = specialCareersData.find((sc) => sc.id === character.specialCareer?.id);
+  const level = scDef?.levels[character.specialCareer?.levelIndex];
+  if (!level) {
+    character.specialCareer = null;
+    renderSpecialCareersInto(container);
+    return;
+  }
+  showConfirm({
+    title: "Quit this Special Career?",
+    message: `Are you sure you want to walk away from your career as a ${level.title}?`,
+    confirmLabel: "Quit",
+    onConfirm: () => {
+      character.specialCareer = null;
+      pushHistory(character, `You walked away from your career as a ${level.title}.`);
+      pushCareerEvent(character, { title: level.title, event: "quit" });
+      renderSpecialCareersInto(container);
+      refreshCareerHistoryPanel();
+      renderGame();
+      autosave();
+    },
+  });
+}
 
 // ---------- Occupation: Career History ----------
 // Read-only timeline built from character.careerHistory, the structured log
@@ -2590,6 +2710,7 @@ async function init() {
     namePools,
     jobsData,
     partTimeJobsData,
+    specialCareersData,
     ageUpEvents,
     npcUpdates,
     worldUpdates,
@@ -2604,6 +2725,7 @@ async function init() {
     loadNamePools(),
     loadJobs(),
     loadPartTimeJobs(),
+    loadSpecialCareers(),
     loadAgeUpEvents(),
     loadNpcUpdates(),
     loadWorldUpdates(),

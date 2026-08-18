@@ -1,0 +1,14 @@
+[
+  {
+    "id": "pro_athlete",
+    "label": "Professional Athlete",
+    "requires": [{ "path": "flags.athleticRecruit", "op": "truthy" }],
+    "tryoutSkill": "athleticism",
+    "levels": [
+      { "title": "Rookie", "salary": 60000, "fameRequired": 0 },
+      { "title": "Starter", "salary": 250000, "fameRequired": 30 },
+      { "title": "All-Star", "salary": 900000, "fameRequired": 60 },
+      { "title": "Hall of Famer", "salary": 3000000, "fameRequired": 85 }
+    ]
+  }
+]

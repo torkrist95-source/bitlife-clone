@@ -32,6 +32,10 @@ function loadPartTimeJobs() {
   return loadJSON("data/careers/part_time_jobs.json");
 }
 
+function loadSpecialCareers() {
+  return loadJSON("data/careers/special_careers.json");
+}
+
 async function loadAgeUpEvents() {
   const pools = await Promise.all([
     loadJSON("data/events/age_up/infant.json"),
@@ -73,6 +77,7 @@ export {
   loadNamePools,
   loadJobs,
   loadPartTimeJobs,
+  loadSpecialCareers,
   loadAgeUpEvents,
   loadNpcUpdates,
   loadWorldUpdates,

@@ -416,6 +416,9 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     // A fully separate slot from Main Job (partTimeJobs.js) -- a character
     // can hold both at once, so this isn't nested under `job` above.
     partTimeJob: null,
+    // Mutually exclusive with `job` (specialCareers.js) -- Pro Athlete/
+    // Actor/etc. replace Main Job rather than coexisting with it.
+    specialCareer: null,
     // Reset every Age Up (engine.js) -- caps how many Freelance Gigs can be
     // completed in a single year (freelance.js).
     freelanceGigsCompletedThisYear: 0,
@@ -492,9 +495,9 @@ function pushHistory(character, text) {
 // needs to render a clean timeline of just those events, and matching
 // against pushHistory's prose would be fragile (wording changes, false
 // positives) where reading {age, title, event} directly isn't.
-function pushCareerEvent(character, { title, event }) {
+function pushCareerEvent(character, { title, event, salary }) {
   character.careerHistory ??= [];
-  character.careerHistory.push({ age: character.age, title, event });
+  character.careerHistory.push({ age: character.age, title, event, salary });
 }
 
 // Characters can't personally earn money before this age (the earliest

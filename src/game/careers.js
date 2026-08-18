@@ -35,6 +35,9 @@ const EDUCATION_RANK = {
 // a required college major. Absent on jobs that don't need them, so this
 // stays a pure extension rather than a behavior change for those.
 function getEligibleJobs(character, jobsData) {
+  // A Special Career (specialCareers.js) replaces Main Job entirely -- no
+  // applying for a normal job while pursuing one.
+  if (character.specialCareer) return [];
   return jobsData.filter((job) => {
     if (character.age < job.minAge) return false;
     if (job.minSmarts && character.stats.smarts < job.minSmarts) return false;
