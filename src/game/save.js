@@ -370,11 +370,19 @@ function readContainer() {
   return { container: parsed, corrupted: false };
 }
 
-// Returns all saved lives, most recently updated first.
+// Returns all saved lives, most recently updated first. Filters out any
+// record with no character -- every caller (renderHomeScreen's card list,
+// continueLife, the empty-state checks) assumes life.character is there and
+// would throw reading e.g. life.character.age otherwise. A life should never
+// end up in that state via the normal createLife/continueLife flow (both
+// always pass a real character), but guarding here means one corrupted
+// record can't take down the whole "My Lives" screen.
 function listLives() {
   const { container } = readContainer();
   if (!container) return [];
-  return Object.values(container.lives).sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  return Object.values(container.lives)
+    .filter((life) => life && life.character)
+    .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
 }
 
 function getActiveLifeId() {
