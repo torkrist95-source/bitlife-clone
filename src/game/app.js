@@ -266,7 +266,6 @@ const categoryScreen = {
   title: document.getElementById("category-screen-title"),
   list: document.getElementById("category-screen-list"),
   empty: document.getElementById("category-screen-empty"),
-  backBtn: document.getElementById("category-back-btn"),
   closeBtn: document.getElementById("category-close-btn"),
 };
 
@@ -797,16 +796,15 @@ game.navBtns.forEach((btn) => {
 // would over gameplay (this screen isn't part of the .modal-overlay pile,
 // just a plain in-flow `.screen` like game-screen itself, so nothing about
 // modal stacking changes here). One system open at a time, same accordion
-// behavior as before -- Back collapses whichever one is open (there's no
-// deeper "system page" to navigate to, so Back never needs a real history
-// stack); Close always returns straight to gameplay.
+// behavior as before -- tapping an already-open system's header collapses
+// it again (see the header click handler below), so there's no separate
+// Back control; Close always returns straight to gameplay.
 
 function openCategoryScreen(categoryLabel) {
   const systems = NAV_CATEGORIES[categoryLabel] ?? [];
   categoryScreen.title.textContent = categoryLabel;
   categoryScreen.list.innerHTML = "";
   categoryScreen.empty.classList.toggle("hidden", systems.length > 0);
-  categoryScreen.backBtn.style.visibility = "hidden";
 
   for (const system of systems) {
     const item = document.createElement("div");
@@ -850,7 +848,6 @@ function openCategoryScreen(categoryLabel) {
       if (!isExpanded) {
         actionsWrap.classList.remove("hidden");
         arrow.textContent = "▾";
-        categoryScreen.backBtn.style.visibility = "visible";
       }
     });
 
@@ -862,21 +859,19 @@ function openCategoryScreen(categoryLabel) {
   showScreen("category");
 }
 
-// Shared by the Back button and by openCategoryScreen's own accordion
-// toggle (collapsing whichever system was previously open before expanding
-// the one just clicked) -- one place that knows how to fully reset the
-// accordion to its flat, nothing-expanded state.
+// Shared by openCategoryScreen's own accordion toggle (collapsing whichever
+// system was previously open before expanding the one just clicked) -- one
+// place that knows how to fully reset the accordion to its flat,
+// nothing-expanded state.
 function collapseOpenCategorySystem() {
   categoryScreen.list.querySelectorAll(".nav-system-actions").forEach((el) => el.classList.add("hidden"));
   categoryScreen.list.querySelectorAll(".nav-system-arrow").forEach((el) => (el.textContent = "▸"));
-  categoryScreen.backBtn.style.visibility = "hidden";
 }
 
 function closeCategoryScreen() {
   showScreen("game");
 }
 
-categoryScreen.backBtn.addEventListener("click", collapseOpenCategorySystem);
 categoryScreen.closeBtn.addEventListener("click", closeCategoryScreen);
 
 // ---------- Occupation ----------
@@ -1977,7 +1972,7 @@ function renderNpcProfile() {
   const showOccupation = isFamily && "role" in npc;
   npcProfileModal.occupationRow.classList.toggle("hidden", !showOccupation);
   if (showOccupation) {
-    npcProfileModal.occupationValue.textContent = npc.employed ? `Works as ${npc.job}` : "Unemployed";
+    npcProfileModal.occupationValue.textContent = npc.employed ? formatOccupationTitle(npc.job) : "Unemployed";
   }
 
   // Family's closeness already reads correctly through this same field --
@@ -2104,16 +2099,22 @@ function buildPersonCard({ name, meta, action }) {
   return card;
 }
 
-// Friends is one unified list of the whole social circle -- Acquaintance /
-// Friend / Close Friend / Best Friend / Romantic Interest are all shown as
-// the NPC's own relationship level (via buildRelationshipMeta), not split
-// into separate nav sections. No quick-action button on the card itself;
+// Friends is one unified list of everyone actually befriended -- Friend /
+// Close Friend / Best Friend / Romantic Interest are all shown as the NPC's
+// own relationship level (via buildRelationshipMeta), not split into
+// separate nav sections. Plain acquaintances (e.g. classmates never
+// befriended) are deliberately excluded: friendLevel only ever advances
+// through the player explicitly asking (askToBecomeFriends, npc.js), so
+// showing them here would contradict that "friendship is earned, not
+// assumed" rule the whole relationship model is built on. They're still
+// visible via Classmates/Coworkers, which intentionally show the full
+// roster regardless of tier. No quick-action button on the card itself;
 // every interaction (including Hang Out) lives inside the NPC profile so
 // there's exactly one place bonding actions happen.
 function renderFriendsInto(container) {
   ensureSocialCircle(character, namePools, character.country);
   container.innerHTML = "";
-  const npcs = character.socialCircle ?? [];
+  const npcs = (character.socialCircle ?? []).filter((npc) => npc.friendLevel !== "acquaintance");
 
   if (npcs.length === 0) {
     const empty = document.createElement("p");
@@ -2178,6 +2179,14 @@ function familyRoleLabel(npc) {
   return npc.relationshipType === "foster" ? "Foster Sibling" : "Sibling";
 }
 
+// wealth_tiers.json's occupations are stored as "a nurse"/"an architect" for
+// natural sentence construction elsewhere (the birth narrative, employment()
+// helper) -- strip that article and capitalize for the compact card/profile
+// display, which shows the title on its own rather than inside a sentence.
+function formatOccupationTitle(job) {
+  return job.replace(/^an? /i, "").replace(/^\w/, (c) => c.toUpperCase());
+}
+
 function renderFamilyListInto(container) {
   container.innerHTML = "";
   const parents = character.family?.parents ?? [];
@@ -2217,10 +2226,10 @@ function appendFamilyCard(container, member) {
   member.closeness ??= 60;
   const isParent = "role" in member;
   const relationLabel = familyRoleLabel(member);
-  const jobText = isParent ? (member.employed ? `works as ${member.job}` : "unemployed") : null;
+  const jobText = isParent ? (member.employed ? formatOccupationTitle(member.job) : "Unemployed") : null;
   const meta = isParent
-    ? `${relationLabel} · Age ${member.age} · Closeness ${member.closeness} · ${jobText}`
-    : `${relationLabel} · Age ${member.age} · Closeness ${member.closeness}`;
+    ? `${relationLabel} · Age ${member.age} · Closeness (${member.closeness}) · ${jobText}`
+    : `${relationLabel} · Age ${member.age} · Closeness (${member.closeness})`;
 
   const hangoutBtn = document.createElement("button");
   hangoutBtn.type = "button";
