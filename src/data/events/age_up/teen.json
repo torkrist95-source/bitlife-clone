@@ -469,5 +469,308 @@
         "resultText": "You decided a spontaneous road trip wasn't worth the risk and stayed home instead."
       }
     ]
+  },
+  {
+    "id": "procrastinated_project",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.lazy", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You put off a big class project until the night before it's due.",
+    "choices": [
+      {
+        "label": "Throw something together at the last minute",
+        "outcomes": [
+          { "weight": 5, "effects": { "smarts": -1, "happiness": 1 }, "resultText": "You slapped it together and somehow it was just barely good enough." },
+          { "weight": 5, "effects": { "smarts": -3, "happiness": -3 }, "resultText": "It showed. Badly. The grade was rough." }
+        ]
+      },
+      {
+        "label": "Pull an all-nighter to actually do it right",
+        "effects": { "smarts": 3, "health": -3 },
+        "resultText": "You stayed up way too late fixing your own procrastination, but it paid off."
+      }
+    ]
+  },
+  {
+    "id": "teen_romantic_gesture",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.romantic", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You want to do something sweet for your crush, something that actually shows you mean it.",
+    "choices": [
+      {
+        "label": "Go big with a public gesture",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 8, "reputation": 1 }, "resultText": "It went perfectly, straight out of a movie, and the whole school heard about it by lunch." },
+          { "weight": 4, "effects": { "happiness": -4, "reputation": -1 }, "resultText": "It didn't land the way you hoped, and now it's a story people tell at your expense." }
+        ]
+      },
+      {
+        "label": "Keep it private and low-key",
+        "effects": { "happiness": 4 },
+        "resultText": "You kept it just between the two of you, and it meant more that way."
+      }
+    ]
+  },
+  {
+    "id": "hallway_confrontation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.shortTempered", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "Someone says something about you in the hallway, loud enough that you're clearly meant to hear it.",
+    "choices": [
+      {
+        "label": "Confront them right there",
+        "outcomes": [
+          { "weight": 5, "effects": { "reputation": 1, "happiness": 2 }, "resultText": "You shut it down fast and calmly, and people respected how you handled it." },
+          { "weight": 5, "effects": { "reputation": -3, "happiness": -3 }, "flags": { "hasDetention": true }, "resultText": "It turned into a shouting match that got you sent to the principal's office." }
+        ]
+      },
+      {
+        "label": "Walk away and let it go",
+        "effects": { "happiness": -2 },
+        "resultText": "You walked away, even though every part of you wanted to say something."
+      }
+    ]
+  },
+  {
+    "id": "defending_classmate",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.kind", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You see a classmate getting picked on by a group of kids near the lockers.",
+    "choices": [
+      {
+        "label": "Step in and stand up for them",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 2, "happiness": 4 }, "resultText": "You stood your ground, the group backed off, and your classmate never forgot it." },
+          { "weight": 4, "effects": { "reputation": -1, "happiness": -1 }, "resultText": "It didn't go smoothly, and now some of that group has it out for you too." }
+        ]
+      },
+      {
+        "label": "Report it to a teacher instead",
+        "effects": { "reputation": 1 },
+        "resultText": "You told a teacher quietly, and it got handled without you needing to get in the middle of it."
+      }
+    ]
+  },
+  {
+    "id": "big_class_presentation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "personality.introverted", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You're assigned to give a presentation alone in front of the entire class, the exact thing you dread most.",
+    "choices": [
+      {
+        "label": "Push through it",
+        "effects": { "happiness": -3, "smarts": 2, "reputation": 1 },
+        "resultText": "You white-knuckled your way through it. It went better than it felt, but it drained you completely."
+      },
+      {
+        "label": "Ask if you can submit it in writing instead",
+        "effects": { "happiness": 1, "smarts": 1 },
+        "resultText": "Your teacher let you turn it in as a written report instead. A relief, even if it felt like a small defeat."
+      }
+    ]
+  },
+  {
+    "id": "class_president_run",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.extroverted", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "Elections for class president are coming up, and everyone keeps telling you that you should run.",
+    "choices": [
+      {
+        "label": "Go for it",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "personality.extroverted", "op": ">=", "value": 80 }], "effects": { "happiness": 9, "reputation": 4, "fame": 2 }, "resultText": "You won in a landslide. Turns out being impossible to ignore has its perks." },
+          { "weight": 6, "effects": { "happiness": 4, "reputation": 1 }, "resultText": "You didn't win, but running for it got your name and face known around school." }
+        ]
+      },
+      {
+        "label": "Cheer on a friend running instead",
+        "effects": { "happiness": 2 },
+        "resultText": "You threw your energy into helping a friend campaign instead."
+      }
+    ]
+  },
+  {
+    "id": "teen_reckless_stunt",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.reckless", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "Some kids are climbing onto the school roof after hours to film it for social media, and they want you in on it.",
+    "choices": [
+      {
+        "label": "Climb up with them",
+        "outcomes": [
+          { "weight": 4, "effects": { "happiness": 7, "fame": 2, "reputation": 1 }, "resultText": "You made it up, got the shot, and made it back down before anyone noticed. Legendary, as far as your friend group is concerned." },
+          { "weight": 4, "effects": { "happiness": -2, "reputation": -2 }, "flags": { "hasDetention": true }, "resultText": "A janitor spotted you all and called it in. Detention, and a call home." },
+          { "weight": 2, "effects": { "health": -8, "happiness": -4 }, "resultText": "You slipped on the way down. Nothing broken, but it could have been a lot worse." }
+        ]
+      },
+      {
+        "label": "Stay down and film from the ground",
+        "effects": { "happiness": 1 },
+        "resultText": "You stayed on solid ground and just watched, feeling only a little like you'd chickened out."
+      }
+    ]
+  },
+  {
+    "id": "teen_jealousy_spiral",
+    "trigger": "age_up",
+    "conditions": { "minAge": 14, "maxAge": 17 },
+    "requires": [{ "path": "personality.jealous", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You see your crush laughing with someone else at lunch, and it bothers you way more than you want to admit.",
+    "choices": [
+      {
+        "label": "Ask them about it directly",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 2 }, "resultText": "It was nothing, and asking actually made things a little less awkward between you two." },
+          { "weight": 5, "effects": { "happiness": -5 }, "resultText": "It came out more accusatory than you meant, and now things feel tense." }
+        ]
+      },
+      {
+        "label": "Say nothing and overthink it all week",
+        "effects": { "happiness": -3 },
+        "resultText": "You didn't say anything, but you thought about it way more than it probably deserved."
+      }
+    ]
+  },
+  {
+    "id": "blank_on_the_quiz",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.smarts", "op": "<=", "value": 25 }],
+    "weight": 6,
+    "text": "You didn't study, and today's pop quiz is worth a big chunk of your grade.",
+    "choices": [
+      {
+        "label": "Wing it and hope for the best",
+        "outcomes": [
+          { "weight": 6, "effects": { "smarts": -1, "happiness": -2 }, "resultText": "You guessed your way through it. It wasn't pretty." },
+          { "weight": 4, "effects": { "smarts": -2, "happiness": -4 }, "resultText": "You blanked on almost everything. That grade is going to sting." }
+        ]
+      },
+      {
+        "label": "Ask your teacher for a make-up chance",
+        "effects": { "reputation": -1, "happiness": 1 },
+        "resultText": "Your teacher wasn't thrilled, but agreed to let you make it up later."
+      }
+    ]
+  },
+  {
+    "id": "unexpected_top_score",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.smarts", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "You're picked to represent your school at an academic competition.",
+    "choices": [
+      {
+        "label": "Compete",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "stats.smarts", "op": ">=", "value": 95 }], "effects": { "happiness": 8, "reputation": 4, "fame": 1 }, "resultText": "You placed first. The school made a big deal out of it." },
+          { "weight": 6, "effects": { "happiness": 4, "reputation": 2 }, "resultText": "You held your own and represented your school well." }
+        ]
+      },
+      {
+        "label": "Pass on it, too much pressure",
+        "effects": { "happiness": 1 },
+        "resultText": "You let someone else take the spotlight this time."
+      }
+    ]
+  },
+  {
+    "id": "before_the_dance",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.looks", "op": "<=", "value": 25 }],
+    "weight": 6,
+    "text": "There's a big school dance coming up, and you can't stop picking apart everything about how you look.",
+    "choices": [
+      {
+        "label": "Ask a friend to help you get ready",
+        "effects": { "looks": 5, "happiness": 5 },
+        "resultText": "Your friend talked you through it, and you actually felt good walking in."
+      },
+      {
+        "label": "Skip the dance altogether",
+        "effects": { "happiness": -4 },
+        "resultText": "You stayed home instead. Part of you regrets it."
+      }
+    ]
+  },
+  {
+    "id": "yearbook_buzz",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.looks", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "People keep telling you that you're a shoo-in for a yearbook superlative this year.",
+    "choices": [
+      {
+        "label": "Embrace it",
+        "effects": { "happiness": 5, "reputation": 2 },
+        "resultText": "You made the yearbook, and you won't lie, it felt pretty great."
+      },
+      {
+        "label": "Play it down",
+        "effects": { "happiness": 1 },
+        "resultText": "You brushed it off, though people kept bringing it up anyway."
+      }
+    ]
+  },
+  {
+    "id": "teen_rut",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.happiness", "op": "<=", "value": 20 }],
+    "weight": 6,
+    "text": "Lately everything at school feels heavier than it should, and you can't shake it.",
+    "choices": [
+      {
+        "label": "Talk to a friend or family member about it",
+        "effects": { "happiness": 7 },
+        "resultText": "Saying it out loud helped more than you expected."
+      },
+      {
+        "label": "Keep it to yourself",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": -2 }, "resultText": "You pushed through on your own, quietly." },
+          { "weight": 3, "effects": { "happiness": -5, "health": -2 }, "resultText": "It built up more than you realized. It's been a genuinely hard few weeks." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "everything_clicking",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "stats.happiness", "op": ">=", "value": 90 }],
+    "weight": 6,
+    "text": "Everything feels like it's going right lately, friends, grades, all of it.",
+    "choices": [
+      {
+        "label": "Ride the wave and try something new",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": 5, "smarts": 1 }, "resultText": "You put yourself out there and it paid off." },
+          { "weight": 3, "effects": { "happiness": -2 }, "resultText": "It didn't go as planned, but you were in a good enough place to shake it off." }
+        ]
+      },
+      {
+        "label": "Just enjoy it",
+        "effects": { "happiness": 2 },
+        "resultText": "You didn't overthink it, just enjoyed feeling good for a while."
+      }
+    ]
   }
 ]

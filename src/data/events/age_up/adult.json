@@ -842,5 +842,393 @@
         "resultText": "You said no, and felt guilty about it the rest of the night."
       }
     ]
+  },
+  {
+    "id": "productivity_slump",
+    "trigger": "age_up",
+    "conditions": { "minAge": 20, "maxAge": 60 },
+    "requires": [{ "path": "personality.lazy", "op": ">=", "value": 60 }, { "path": "job", "op": "truthy" }],
+    "weight": 6,
+    "text": "You've been putting off an important work deadline for weeks, and it's finally due.",
+    "choices": [
+      {
+        "label": "Scramble to finish it at the last minute",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": -2, "health": -2 }, "resultText": "You pulled it off in a stressed-out blur, and somehow nobody noticed how close it came to disaster." },
+          { "weight": 4, "effects": { "reputation": -4, "happiness": -3 }, "resultText": "It showed. The work was rushed and it didn't go unnoticed." }
+        ]
+      },
+      {
+        "label": "Ask for an extension",
+        "effects": { "reputation": -1, "happiness": 1 },
+        "resultText": "You asked for more time. Not a great look, but at least the work will actually be good."
+      }
+    ]
+  },
+  {
+    "id": "grand_romantic_gesture",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "personality.romantic", "op": ">=", "value": 60 }, { "path": "flags.hasPartner", "op": "truthy" }],
+    "weight": 6,
+    "text": "You get an idea for a big, over-the-top romantic gesture to surprise your partner.",
+    "choices": [
+      {
+        "label": "Go all out",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "personality.romantic", "op": ">=", "value": 80 }], "effects": { "happiness": 12, "money": -300 }, "resultText": "It was perfect, straight out of a movie. Your partner is still talking about it." },
+          { "weight": 6, "effects": { "happiness": 6, "money": -200 }, "resultText": "It went well, even if it wasn't quite as smooth as you pictured it in your head." },
+          { "weight": 2, "effects": { "happiness": -2, "money": -200 }, "resultText": "It came off a little over-the-top and mostly just made things awkward." }
+        ]
+      },
+      {
+        "label": "Keep it simple instead",
+        "effects": { "happiness": 3, "money": -30 },
+        "resultText": "You kept it low-key, and it was still appreciated."
+      }
+    ]
+  },
+  {
+    "id": "road_rage_moment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "personality.shortTempered", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "Someone cuts you off in traffic, and you feel your temper spike instantly.",
+    "choices": [
+      {
+        "label": "Lay on the horn and chase them down",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": -3 }, "resultText": "You blew off some steam yelling out the window. Not your finest moment, but harmless enough." },
+          { "weight": 3, "effects": { "money": -300, "reputation": -2, "happiness": -5 }, "resultText": "It escalated into a shouting match that ended with a police report and a ticket for reckless driving." }
+        ]
+      },
+      {
+        "label": "Take a breath and let it go",
+        "effects": { "happiness": -1 },
+        "resultText": "You gripped the wheel, muttered something under your breath, and let it go."
+      }
+    ]
+  },
+  {
+    "id": "small_kindness",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "personality.kind", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You notice a coworker having a rough week, quietly overwhelmed and trying not to show it.",
+    "choices": [
+      {
+        "label": "Check in and offer to help",
+        "effects": { "happiness": 5, "reputation": 2 },
+        "resultText": "You checked in, and it clearly meant more to them than you expected."
+      },
+      {
+        "label": "Leave them be",
+        "effects": {},
+        "resultText": "You figured it wasn't your place to say anything, and left it alone."
+      }
+    ]
+  },
+  {
+    "id": "mandatory_networking_event",
+    "trigger": "age_up",
+    "conditions": { "minAge": 20, "maxAge": 60 },
+    "requires": [{ "path": "personality.introverted", "op": ">=", "value": 60 }, { "path": "job", "op": "truthy" }],
+    "weight": 6,
+    "text": "Your workplace throws a big mandatory networking mixer, the exact kind of event you dread.",
+    "choices": [
+      {
+        "label": "Push through it and stay the whole time",
+        "effects": { "happiness": -4, "reputation": 2 },
+        "resultText": "You gritted your teeth and stayed until the end. Good for your reputation, exhausting for you."
+      },
+      {
+        "label": "Show your face and leave early",
+        "effects": { "happiness": 1, "reputation": -1 },
+        "resultText": "You made a brief appearance and slipped out the first chance you got. Worth it."
+      }
+    ]
+  },
+  {
+    "id": "spontaneous_gathering",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "personality.extroverted", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You get the sudden urge to throw together a last-minute get-together, just because.",
+    "choices": [
+      {
+        "label": "Invite everyone you know",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "personality.extroverted", "op": ">=", "value": 80 }], "effects": { "happiness": 10, "reputation": 3, "money": -150 }, "resultText": "It turned into one of those nights people still bring up months later." },
+          { "weight": 6, "effects": { "happiness": 6, "money": -100 }, "resultText": "A solid turnout and a genuinely fun night." },
+          { "weight": 2, "effects": { "happiness": -1, "money": -100 }, "resultText": "Barely anyone could make it on such short notice, which stung more than you expected." }
+        ]
+      },
+      {
+        "label": "Keep it to a couple close friends",
+        "effects": { "happiness": 4, "money": -30 },
+        "resultText": "You kept it small, and it was exactly the kind of night you needed."
+      }
+    ]
+  },
+  {
+    "id": "burnout_wakeup_call",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "stats.health", "op": "<=", "value": 30 }],
+    "weight": 6,
+    "text": "You've been pushing yourself too hard for too long, and your body is finally forcing you to slow down.",
+    "choices": [
+      {
+        "label": "Take it seriously and see a doctor",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "stats.health", "op": "<=", "value": 15 }], "effects": { "health": 2, "money": -400 }, "resultText": "The visit turned up more than you expected. Treatment is expensive, but at least now you know what you're dealing with." },
+          { "weight": 6, "effects": { "health": 10, "money": -100 }, "resultText": "The doctor caught it early. A few lifestyle changes and some rest have you feeling steadier already." }
+        ]
+      },
+      {
+        "label": "Tell yourself you'll rest later",
+        "effects": { "health": -8, "happiness": -3 },
+        "resultText": "You kept grinding. Your body did not appreciate it."
+      }
+    ]
+  },
+  {
+    "id": "second_wind",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "stats.health", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "You feel unstoppable lately, energy for days, and a local half-marathon is coming up.",
+    "choices": [
+      {
+        "label": "Sign up and go for it",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "stats.health", "op": ">=", "value": 95 }], "effects": { "happiness": 10, "fame": 2, "reputation": 2, "health": -2 }, "resultText": "You crushed it, one of the best times in your age group. People noticed." },
+          { "weight": 6, "effects": { "happiness": 6, "health": -3 }, "resultText": "You finished strong and felt fantastic doing it." }
+        ]
+      },
+      {
+        "label": "Just enjoy feeling good without the pressure",
+        "effects": { "happiness": 3 },
+        "resultText": "You kept it low-key and just enjoyed feeling like yourself again."
+      }
+    ]
+  },
+  {
+    "id": "the_fog",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.happiness", "op": "<=", "value": 20 }],
+    "weight": 6,
+    "text": "Nothing has felt exciting in weeks. You're going through the motions and it's starting to wear on you.",
+    "choices": [
+      {
+        "label": "Reach out to someone you trust",
+        "effects": { "happiness": 8 },
+        "resultText": "Talking about it helped more than you expected. You don't feel so alone in it."
+      },
+      {
+        "label": "Keep it to yourself",
+        "outcomes": [
+          { "weight": 6, "effects": { "happiness": -2 }, "resultText": "You kept pushing through on your own. It's manageable, barely." },
+          { "weight": 3, "effects": { "happiness": -6, "health": -3 }, "resultText": "Bottling it up caught up with you. It's been a genuinely rough stretch." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "riding_high",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.happiness", "op": ">=", "value": 90 }],
+    "weight": 6,
+    "text": "Life just feels good right now, the kind of stretch where everything seems to be clicking.",
+    "choices": [
+      {
+        "label": "Use the momentum to chase something bold",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 5, "reputation": 2 }, "resultText": "You took a real swing at something you'd been sitting on, and it paid off." },
+          { "weight": 3, "effects": { "happiness": -3, "money": -100 }, "resultText": "It didn't pan out, but you're still glad you tried instead of always wondering." }
+        ]
+      },
+      {
+        "label": "Just savor it",
+        "effects": { "happiness": 2 },
+        "resultText": "You didn't overthink it, just enjoyed feeling good for once."
+      }
+    ]
+  },
+  {
+    "id": "too_good_to_be_true",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.smarts", "op": "<=", "value": 25 }],
+    "weight": 6,
+    "text": "A stranger pitches you an investment opportunity that promises huge returns, fast.",
+    "choices": [
+      {
+        "label": "Go for it",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "stats.smarts", "op": "<=", "value": 15 }], "effects": { "money": -600, "happiness": -6 }, "resultText": "You handed over even more than you meant to before realizing something was very wrong." },
+          { "weight": 7, "effects": { "money": -300, "happiness": -4 }, "resultText": "It was a scam. The money, and the stranger, were long gone by morning." }
+        ]
+      },
+      {
+        "label": "Something feels off, walk away",
+        "effects": { "happiness": 1 },
+        "resultText": "Your gut said no, and for once you listened."
+      }
+    ]
+  },
+  {
+    "id": "sharp_eye",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "stats.smarts", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "You spot a genuine opportunity that everyone else seems to be overlooking.",
+    "choices": [
+      {
+        "label": "Act on it",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "stats.smarts", "op": ">=", "value": 95 }], "effects": { "money": 600, "reputation": 2 }, "resultText": "Your read on it was dead-on. It paid off better than you imagined." },
+          { "weight": 6, "effects": { "money": 250 }, "resultText": "It worked out, and it felt good to trust your own judgment." }
+        ]
+      },
+      {
+        "label": "Play it safe",
+        "effects": { "happiness": 1 },
+        "resultText": "You let the opportunity pass, but you slept fine that night."
+      }
+    ]
+  },
+  {
+    "id": "mirror_trouble",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.looks", "op": "<=", "value": 25 }],
+    "weight": 6,
+    "text": "You've been feeling self-conscious about your appearance lately, more than usual.",
+    "choices": [
+      {
+        "label": "Invest in a makeover",
+        "effects": { "money": -150, "looks": 8, "happiness": 4 },
+        "resultText": "A haircut and a new look did wonders for how you feel about yourself."
+      },
+      {
+        "label": "Remind yourself it doesn't define you",
+        "effects": { "happiness": 2 },
+        "resultText": "You worked on making peace with it instead, and that helped too."
+      }
+    ]
+  },
+  {
+    "id": "turning_heads",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 70 },
+    "requires": [{ "path": "stats.looks", "op": ">=", "value": 85 }],
+    "weight": 6,
+    "text": "You keep catching people doing a double-take lately, and it hasn't gone unnoticed.",
+    "choices": [
+      {
+        "label": "Lean into the attention",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "stats.looks", "op": ">=", "value": 95 }], "effects": { "fame": 5, "happiness": 6 }, "resultText": "A local scout actually stopped you on the street. It felt like something out of a movie." },
+          { "weight": 6, "effects": { "happiness": 4, "reputation": 1 }, "resultText": "It was flattering, and honestly a nice confidence boost." }
+        ]
+      },
+      {
+        "label": "Brush it off",
+        "effects": { "happiness": 1 },
+        "resultText": "You shrugged it off, though it was hard not to notice."
+      }
+    ]
+  },
+  {
+    "id": "recognized_in_public",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.fame", "op": ">=", "value": 45 }],
+    "weight": 6,
+    "text": "Someone recognizes you out in public and asks for a photo.",
+    "choices": [
+      {
+        "label": "Stop and enjoy the moment",
+        "effects": { "happiness": 5, "fame": 2 },
+        "resultText": "You chatted for a minute and took the photo. It's a strange feeling, being recognized, but a good one."
+      },
+      {
+        "label": "Politely decline and keep moving",
+        "effects": { "happiness": -1, "reputation": 1 },
+        "resultText": "You kept your head down. Some days you just want to be left alone."
+      }
+    ]
+  },
+  {
+    "id": "tabloid_rumor",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "stats.fame", "op": ">=", "value": 60 }],
+    "weight": 5,
+    "text": "A tabloid runs a made-up story about you, and it's spreading faster than you can keep up with.",
+    "choices": [
+      {
+        "label": "Address it publicly",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 3, "happiness": -2 }, "resultText": "Setting the record straight worked. Most people moved on quickly." },
+          { "weight": 4, "effects": { "reputation": -3, "happiness": -5 }, "resultText": "It only fed the story further. Some of it stuck regardless of what you said." }
+        ]
+      },
+      {
+        "label": "Ignore it and let it blow over",
+        "effects": { "happiness": -3 },
+        "resultText": "You said nothing and just waited it out. It was a rough couple of weeks."
+      }
+    ]
+  },
+  {
+    "id": "called_on_for_trust",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "stats.reputation", "op": ">=", "value": 70 }],
+    "weight": 6,
+    "text": "People clearly trust you. Someone asks you to vouch for them, or take on a position of real responsibility.",
+    "choices": [
+      {
+        "label": "Step up",
+        "effects": { "reputation": 4, "happiness": -2 },
+        "resultText": "It was a lot of added responsibility, but you handled it, and people noticed."
+      },
+      {
+        "label": "Decline gracefully",
+        "effects": { "reputation": -1 },
+        "resultText": "You passed on it. Not every opportunity is one you have to take."
+      }
+    ]
+  },
+  {
+    "id": "under_a_cloud",
+    "trigger": "age_up",
+    "conditions": { "minAge": 16, "maxAge": 90 },
+    "requires": [{ "path": "stats.reputation", "op": "<=", "value": 20 }],
+    "weight": 6,
+    "text": "You get blamed for something you didn't actually do, and people seem quick to believe it.",
+    "choices": [
+      {
+        "label": "Fight to clear your name",
+        "outcomes": [
+          { "weight": 6, "effects": { "reputation": 5 }, "resultText": "You pushed back hard, and eventually the truth came out." },
+          { "weight": 4, "effects": { "reputation": -3, "happiness": -4 }, "resultText": "Nobody really budged. It's frustrating being disbelieved by default." }
+        ]
+      },
+      {
+        "label": "Let it go",
+        "effects": { "happiness": -3 },
+        "resultText": "You didn't have the energy to fight it this time. It stung, but you moved on."
+      }
+    ]
   }
 ]
