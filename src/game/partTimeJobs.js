@@ -26,6 +26,10 @@ function hasAppliedToPartTimeJobThisYear(character, jobId) {
 // jobApplicationsThisYear-style cap as careers.js's Main Job, so a
 // rejection here can't be spam-clicked into an eventual yes either.
 function getEligiblePartTimeJobs(character, partTimeJobsData) {
+  // Self-guards against double-hiring, matching getEligibleJobs (careers.js)
+  // and getEligibleSpecialCareers (specialCareers.js) rather than relying
+  // solely on the UI layer never calling this while already employed here.
+  if (character.partTimeJob) return [];
   return (partTimeJobsData ?? []).filter(
     (job) => isQualifiedForPartTimeJob(character, job) && !hasAppliedToPartTimeJobThisYear(character, job.id)
   );

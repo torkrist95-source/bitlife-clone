@@ -1,4 +1,4 @@
-import { randInt, clampStat } from "./character.js";
+import { randInt, clampStat, getZodiacSign } from "./character.js";
 import { coworkerAge } from "./npc.js";
 
 const SAVE_KEY = "onemoreyear:save";
@@ -77,6 +77,14 @@ function migrateCharacterFields(character) {
   if (!character.stats) character.stats = {};
   character.stats.fame ??= 0;
   character.stats.reputation ??= 0;
+  // Predates zodiacSign existing -- unlike birthCity/currencyCode (which
+  // lazily resolve via ensureBirthLocation once country data loads), this
+  // never had a self-healing path, so an old save just showed "Unknown"
+  // forever even though birthDate (which it's derived from) was right
+  // there. Self-heals here now instead.
+  if (!character.zodiacSign && character.birthDate) {
+    character.zodiacSign = getZodiacSign(character.birthDate.month, character.birthDate.day);
+  }
   character.flags ??= {};
   character.skills ??= {};
   character.hobbies ??= [];

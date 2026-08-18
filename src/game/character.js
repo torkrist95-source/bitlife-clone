@@ -68,7 +68,12 @@ function pickCity(country) {
 
 // Shared weighted-random selection: picks one item from a list, where each
 // item's `weight` (default 10) is its relative chance of being picked.
+// Empty input has no valid pick -- returns null explicitly rather than
+// falling through to items[items.length - 1] (undefined via an
+// out-of-bounds index on an empty array, which every caller would then
+// need to know to guard against).
 function weightedPick(items) {
+  if (items.length === 0) return null;
   const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 10), 0);
   let roll = Math.random() * totalWeight;
   for (const item of items) {
@@ -693,4 +698,5 @@ export {
   ENROLLED_EDUCATION_STATUSES,
   LIFE_STAGES,
   formatBirthDate,
+  getZodiacSign,
 };

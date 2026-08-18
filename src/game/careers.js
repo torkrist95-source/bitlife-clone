@@ -56,6 +56,13 @@ function hasAppliedToJobThisYear(character, jobId) {
 // engine.js's ageUp) -- without this cap, any nonzero chance eventually
 // succeeds just by spam-clicking Apply, which made the whole roll pointless.
 function getEligibleJobs(character, jobsData) {
+  // Self-guards against double-hiring the same way specialCareers.js's
+  // getEligibleSpecialCareers does, rather than relying entirely on the UI
+  // layer never calling this while already employed -- app.js's
+  // renderMainJobSection happens to already gate on character.job before
+  // it would ever show this list, but this function shouldn't depend on
+  // that being the only caller forever.
+  if (character.job) return [];
   // A Special Career (specialCareers.js) replaces Main Job entirely -- no
   // applying for a normal job while pursuing one.
   if (character.specialCareer) return [];
@@ -72,6 +79,18 @@ function getEligibleJobs(character, jobsData) {
 function rollJobApplication(character, job) {
   const smartsBonus = (character.stats.smarts - 50) / 4;
   const skillBonus = job.minSkill ? Math.floor((character.skills[job.minSkill.skill] ?? 0) / 4) : 0;
+  // Rewards clearing a job's minEducationStatus by more than the minimum --
+  // e.g. a graduated_hs-tier job still gives 0 here to a graduated_college
+  // applicant, since EDUCATION_RANK caps both sides at the same rank (6) for
+  // anyone who's finished college. So for every graduated_college-tier job
+  // (jobs.json's accountant/software_developer/nurse/teacher/engineer/
+  // journalist), eduBonus is always 0 by construction -- isQualifiedForJob
+  // already requires rank 6 to apply at all, and rank 6 is EDUCATION_RANK's
+  // ceiling, so no applicant can ever clear it by more than the minimum.
+  // Balance/design note, not a bug: those jobs still roll on smarts/skill,
+  // just never get this particular bonus. Left as-is rather than reworked,
+  // since redesigning the bonus (e.g. rewarding college GPA/honors instead)
+  // is a scope decision beyond this fix.
   const eduBonus = job.minEducationStatus
     ? Math.min(15, (EDUCATION_RANK[character.education.status] - EDUCATION_RANK[job.minEducationStatus]) * 5)
     : 0;

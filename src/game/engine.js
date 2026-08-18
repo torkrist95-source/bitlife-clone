@@ -292,10 +292,14 @@ registerDynamicGenerators({
     delete caregiver.guardianRelation;
     character.familyStructure = "adopted";
     // Same flags a character born straight into the "adopted" structure
-    // gets (character.js) -- this is that same end state, just reached
-    // partway through life instead of at birth.
-    character.flags.isAdopted = true;
-    character.flags.inFosterCare = false;
+    // gets (character.js's generateFamilyMembers) -- this is that same end
+    // state, just reached partway through life instead of at birth. Those
+    // land on character.family (spread in at character creation), not
+    // character.flags -- written to the same place here so anything that
+    // ever reads one path doesn't silently miss characters who took the
+    // other.
+    character.family.isAdopted = true;
+    character.family.inFosterCare = false;
     caregiver.closeness = clampStat(caregiver.closeness + 15);
 
     let line;

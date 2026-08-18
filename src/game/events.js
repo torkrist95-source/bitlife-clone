@@ -43,10 +43,14 @@ function evalCondition(character, condition) {
       return actual !== condition.value;
     case "includes":
       return Array.isArray(actual) && actual.includes(condition.value);
+    // Array-aware: Boolean([]) is true in JS, which would make a "truthy"
+    // check on a list field (e.g. "hobbies") pass even for an empty list --
+    // almost certainly not what a content author means by "truthy" on a
+    // list, so an array checks its length instead.
     case "truthy":
-      return Boolean(actual);
+      return Array.isArray(actual) ? actual.length > 0 : Boolean(actual);
     case "falsy":
-      return !actual;
+      return Array.isArray(actual) ? actual.length === 0 : !actual;
     default:
       // Unknown/misconfigured op fails closed (hidden), never shown broken.
       return false;
@@ -67,8 +71,12 @@ function getEligibleChoices(character, event) {
 // Picks one outcome from a weighted, requires-gated pool. If nothing
 // qualifies (a content mistake -- every outcome gated too tightly), falls
 // back to the full list so the event still resolves with *something*
-// rather than silently doing nothing.
+// rather than silently doing nothing. An empty `outcomes` array itself
+// (nothing to fall back to at all) returns null -- the caller (applyChoice)
+// is responsible for falling back further, to the choice's own top-level
+// effects, same as it already does when there's no outcomes array at all.
 function rollOutcome(character, outcomes) {
+  if (outcomes.length === 0) return null;
   const eligible = outcomes.filter((outcome) => conditionsPass(character, outcome.requires));
   return weightedPick(eligible.length > 0 ? eligible : outcomes);
 }
@@ -223,7 +231,10 @@ function applyChoice(character, choice, ctx = {}) {
     return { followUpEvent: null };
   }
 
-  const resolved = choice.outcomes ? rollOutcome(character, choice.outcomes) : choice;
+  // Falls back to the choice's own top-level effects/resultText whenever
+  // there's no usable outcomes roll -- no outcomes array at all, or (an
+  // authoring mistake, but one the engine shouldn't crash on) an empty one.
+  const resolved = (choice.outcomes && choice.outcomes.length > 0 ? rollOutcome(character, choice.outcomes) : null) ?? choice;
   applyResolved(character, resolved, choice.label);
   return { followUpEvent: null };
 }
