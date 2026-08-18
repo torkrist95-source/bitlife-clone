@@ -1230,5 +1230,94 @@
         "resultText": "You didn't have the energy to fight it this time. It stung, but you moved on."
       }
     ]
+  },
+  {
+    "id": "moonlighting_project",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "skills.programming", "op": ">=", "value": 20 }],
+    "weight": 6,
+    "text": "A former classmate reaches out. They need someone with real coding chops for a quick freelance project, and they thought of you.",
+    "choices": [
+      {
+        "label": "Take the gig",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.programming", "op": ">=", "value": 35 }], "effects": { "money": 800, "reputation": 2 }, "skills": { "programming": 2 }, "resultText": "You delivered something well beyond what they expected. They're already talking about hiring you for the next one." },
+          { "weight": 6, "effects": { "money": 350 }, "skills": { "programming": 1 }, "resultText": "You knocked it out over a couple of weekends and got paid well for it." }
+        ]
+      },
+      {
+        "label": "Pass, too busy",
+        "effects": { "happiness": 1 },
+        "resultText": "You had too much going on to take it on right now."
+      }
+    ]
+  },
+  {
+    "id": "rec_league_star",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "skills.athleticism", "op": ">=", "value": 20 }],
+    "weight": 6,
+    "text": "You join a competitive rec league, and it quickly becomes clear you're a level above most people out there.",
+    "choices": [
+      {
+        "label": "Lean into it, maybe try out for something bigger",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.athleticism", "op": ">=", "value": 35 }], "effects": { "happiness": 8, "fame": 3, "reputation": 2 }, "skills": { "athleticism": 2 }, "resultText": "A semi-pro team scout actually asked for your info after the game. Not bad for a rec league." },
+          { "weight": 6, "effects": { "happiness": 5, "reputation": 1 }, "skills": { "athleticism": 1 }, "resultText": "You kept dominating the league, and people started to notice." }
+        ]
+      },
+      {
+        "label": "Just enjoy playing for fun",
+        "effects": { "happiness": 3 },
+        "resultText": "You kept it casual and just enjoyed being good at something."
+      }
+    ]
+  },
+  {
+    "id": "open_mic_night",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "skills.music", "op": ">=", "value": 20 }],
+    "weight": 6,
+    "text": "A local venue holds an open mic night, and friends keep pushing you to finally get up and perform.",
+    "choices": [
+      {
+        "label": "Go for it",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "skills.music", "op": ">=", "value": 35 }], "effects": { "happiness": 9, "fame": 3, "reputation": 2 }, "skills": { "music": 2 }, "resultText": "You brought the house down. A few people came up afterward just to ask who you were." },
+          { "weight": 5, "effects": { "happiness": 5 }, "skills": { "music": 1 }, "resultText": "It went well, and it felt great to finally get up there." },
+          { "weight": 2, "effects": { "happiness": -3 }, "resultText": "You blanked halfway through the second verse. Embarrassing, but you finished the set." }
+        ]
+      },
+      {
+        "label": "Stay in the crowd this time",
+        "effects": { "happiness": 1 },
+        "resultText": "You watched from the crowd instead, telling yourself next time."
+      }
+    ]
+  },
+  {
+    "id": "citizen_science_project",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "skills.science", "op": ">=", "value": 15 }],
+    "weight": 6,
+    "text": "A local research group is looking for volunteers with a strong science background, and someone recommended you.",
+    "choices": [
+      {
+        "label": "Get involved",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.science", "op": ">=", "value": 30 }], "effects": { "smarts": 3, "reputation": 3 }, "skills": { "science": 3 }, "resultText": "Your contributions ended up in the published results. Genuinely satisfying work." },
+          { "weight": 6, "effects": { "smarts": 1, "reputation": 1 }, "skills": { "science": 2 }, "resultText": "It was a solid way to spend some evenings, and you learned a lot." }
+        ]
+      },
+      {
+        "label": "Politely decline",
+        "effects": { "happiness": 1 },
+        "resultText": "You didn't have the bandwidth for it right now."
+      }
+    ]
   }
 ]

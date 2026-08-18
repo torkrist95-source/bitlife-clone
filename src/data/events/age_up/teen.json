@@ -772,5 +772,94 @@
         "resultText": "You didn't overthink it, just enjoyed feeling good for a while."
       }
     ]
+  },
+  {
+    "id": "coding_opportunity",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "skills.programming", "op": ">=", "value": 15 }],
+    "weight": 6,
+    "text": "A friend asks if you can help build a small app for their family's business, they heard you're pretty good with code.",
+    "choices": [
+      {
+        "label": "Take it on",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.programming", "op": ">=", "value": 25 }], "effects": { "money": 150, "reputation": 2 }, "skills": { "programming": 3 }, "resultText": "You built something genuinely useful, and it showed. Word got around school." },
+          { "weight": 6, "effects": { "money": 60 }, "skills": { "programming": 2 }, "resultText": "You put it together and they were happy with it." }
+        ]
+      },
+      {
+        "label": "Pass, not interested",
+        "effects": { "happiness": 1 },
+        "resultText": "You let someone else take it on."
+      }
+    ]
+  },
+  {
+    "id": "athletic_standout",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "skills.athleticism", "op": ">=", "value": 15 }],
+    "weight": 6,
+    "text": "Your coach pulls you aside after practice and says you've got real potential, there's a regional invitational coming up.",
+    "choices": [
+      {
+        "label": "Compete",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.athleticism", "op": ">=", "value": 30 }], "effects": { "happiness": 8, "reputation": 3, "fame": 2 }, "skills": { "athleticism": 3 }, "resultText": "You had the game of your life. People were still talking about it days later." },
+          { "weight": 6, "effects": { "happiness": 4, "reputation": 1 }, "skills": { "athleticism": 2 }, "resultText": "You held your own and it felt good to be tested at a higher level." }
+        ]
+      },
+      {
+        "label": "Stick to the regular season",
+        "effects": { "happiness": 1 },
+        "resultText": "You decided not to add the extra pressure this year."
+      }
+    ]
+  },
+  {
+    "id": "quiz_bowl_captain",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "skills.academics", "op": ">=", "value": 15 }],
+    "weight": 6,
+    "text": "Your academic team coach asks if you'd be willing to captain the team for the district finals.",
+    "choices": [
+      {
+        "label": "Accept the role",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "skills.academics", "op": ">=", "value": 30 }], "effects": { "happiness": 7, "reputation": 4, "smarts": 2 }, "skills": { "academics": 3 }, "resultText": "You led the team to finals, and it was clear you'd earned the role." },
+          { "weight": 6, "effects": { "happiness": 3, "reputation": 1 }, "skills": { "academics": 2 }, "resultText": "It was a lot of added pressure, but you managed it well." }
+        ]
+      },
+      {
+        "label": "Let someone else lead",
+        "effects": { "happiness": 1 },
+        "resultText": "You stayed on the team, just not in charge of it."
+      }
+    ]
+  },
+  {
+    "id": "spotlight_moment",
+    "trigger": "age_up",
+    "conditions": { "minAge": 13, "maxAge": 17 },
+    "requires": [{ "path": "skills.acting", "op": ">=", "value": 15 }],
+    "weight": 6,
+    "text": "The drama teacher offers you the lead role in this year's school play.",
+    "choices": [
+      {
+        "label": "Take the lead role",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "skills.acting", "op": ">=", "value": 30 }], "effects": { "happiness": 9, "reputation": 3, "fame": 2 }, "skills": { "acting": 3 }, "resultText": "Opening night was electric. You nailed it, and everyone knew it." },
+          { "weight": 5, "effects": { "happiness": 4, "reputation": 1 }, "skills": { "acting": 2 }, "resultText": "You got through it, nerves and all, and were proud of yourself for trying." },
+          { "weight": 2, "effects": { "happiness": -3 }, "resultText": "You froze halfway through opening night. Rough, but you finished the run anyway." }
+        ]
+      },
+      {
+        "label": "Stick to a smaller part",
+        "effects": { "happiness": 1 },
+        "resultText": "You stayed involved without taking on that much pressure."
+      }
+    ]
   }
 ]
