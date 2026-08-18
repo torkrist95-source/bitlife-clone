@@ -332,6 +332,10 @@ function ageUp(character, jobsData, namePools, countryId, partTimeJobsData, spec
   // Same reasoning -- each active hobby's Practice count caps per year
   // (hobbies.js).
   character.hobbyPracticeCounts = {};
+  // Same reasoning again -- a rejected job/part-time job application can't
+  // be re-attempted until next year (careers.js/partTimeJobs.js).
+  character.jobApplicationsThisYear = [];
+  character.partTimeJobApplicationsThisYear = [];
   applyStatDrift(character);
   const currentStage = getLifeStage(character.age);
 

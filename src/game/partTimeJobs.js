@@ -1,4 +1,4 @@
-import { randInt, pushHistory, MIN_EARNING_AGE } from "./character.js";
+import { randInt, clampStat, pushHistory, MIN_EARNING_AGE } from "./character.js";
 import { ensurePartTimeCoworkers, endPartTimeCoworkerRelationships } from "./npc.js";
 
 // ---------- Part-Time Jobs ----------
@@ -14,22 +14,51 @@ import { ensurePartTimeCoworkers, endPartTimeCoworkerRelationships } from "./npc
 const WEEKS_PER_YEAR = 52;
 const PART_TIME_LAYOFF_CHANCE = 4; // percent, per year while employed
 
-function getEligiblePartTimeJobs(character, partTimeJobsData) {
-  if (character.age < MIN_EARNING_AGE) return [];
-  return (partTimeJobsData ?? []).filter((job) => character.age >= job.minAge);
+function isQualifiedForPartTimeJob(character, job) {
+  return character.age >= MIN_EARNING_AGE && character.age >= job.minAge;
 }
 
-// Always succeeds -- no rejection roll, matching Freelance Gigs/One-Time
-// Jobs' "casual, no interview" tone rather than Main Job's competitive
-// applyForJob.
+function hasAppliedToPartTimeJobThisYear(character, jobId) {
+  return (character.partTimeJobApplicationsThisYear ?? []).includes(jobId);
+}
+
+// Qualified AND not already attempted this year -- same
+// jobApplicationsThisYear-style cap as careers.js's Main Job, so a
+// rejection here can't be spam-clicked into an eventual yes either.
+function getEligiblePartTimeJobs(character, partTimeJobsData) {
+  return (partTimeJobsData ?? []).filter(
+    (job) => isQualifiedForPartTimeJob(character, job) && !hasAppliedToPartTimeJobThisYear(character, job.id)
+  );
+}
+
+// A real roll now, unlike before -- still noticeably easier than Main Job's
+// rollJobApplication (higher floor/base/ceiling, smarts is the only
+// factor), matching these jobs' "casual, no interview" tone while no
+// longer being a guaranteed hire.
+function rollPartTimeJobApplication(character, job) {
+  const smartsBonus = (character.stats.smarts - 50) / 5;
+  const chance = Math.max(50, Math.min(95, 65 + smartsBonus));
+  return randInt(0, 99) < chance;
+}
+
 function applyForPartTimeJob(character, job, namePools, countryId) {
+  character.partTimeJobApplicationsThisYear = character.partTimeJobApplicationsThisYear ?? [];
+  character.partTimeJobApplicationsThisYear.push(job.id);
+
+  if (!rollPartTimeJobApplication(character, job)) {
+    character.stats.happiness = clampStat(character.stats.happiness - 1);
+    const line = `You applied to be a ${job.title}, but they went with someone else.`;
+    pushHistory(character, line);
+    return { succeeded: false, resultText: line };
+  }
+
   const hourlyWage = randInt(job.wageMin, job.wageMax);
   const weeklyHours = randInt(job.hoursMin, job.hoursMax);
   character.partTimeJob = { jobId: job.id, hourlyWage, weeklyHours, yearsInRole: 0 };
   const line = `You got a part-time job as a ${job.title}.`;
   pushHistory(character, line);
   ensurePartTimeCoworkers(character, namePools, countryId);
-  return { resultText: line };
+  return { succeeded: true, resultText: line };
 }
 
 // Pays the year's income, then rolls for a layoff -- the same yearly-tick
@@ -62,4 +91,11 @@ function applyPartTimeJobYear(character, partTimeJobsData) {
   return null;
 }
 
-export { getEligiblePartTimeJobs, applyForPartTimeJob, applyPartTimeJobYear };
+export {
+  getEligiblePartTimeJobs,
+  isQualifiedForPartTimeJob,
+  hasAppliedToPartTimeJobThisYear,
+  rollPartTimeJobApplication,
+  applyForPartTimeJob,
+  applyPartTimeJobYear,
+};

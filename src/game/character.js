@@ -422,6 +422,10 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     // Reset every Age Up (engine.js) -- caps how many Freelance Gigs can be
     // completed in a single year (freelance.js).
     freelanceGigsCompletedThisYear: 0,
+    // Same reasoning -- a rejected application to a given job/part-time job
+    // can't be re-attempted until next year (careers.js/partTimeJobs.js).
+    jobApplicationsThisYear: [],
+    partTimeJobApplicationsThisYear: [],
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,

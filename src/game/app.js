@@ -36,10 +36,10 @@ import {
   askFamilyForHelp,
   borrowMoney,
 } from "./npc.js";
-import { getEligibleJobs, applyForJob } from "./careers.js";
+import { getEligibleJobs, isQualifiedForJob, applyForJob } from "./careers.js";
 import { getEligibleSpecialCareers, applyForSpecialCareer } from "./specialCareers.js";
 import { YEARLY_FREELANCE_GIG_CAP, isFreelanceCapReached, getEligibleFreelanceServices, postFreelanceAd } from "./freelance.js";
-import { getEligiblePartTimeJobs, applyForPartTimeJob } from "./partTimeJobs.js";
+import { getEligiblePartTimeJobs, isQualifiedForPartTimeJob, applyForPartTimeJob } from "./partTimeJobs.js";
 import { generatePersonality, getDominantTraits, ensurePersonality } from "./personality.js";
 import { GENDER_IDENTITIES, ATTRACTION_OPTIONS, resolveAttractedTo, attractionIdFor } from "./identity.js";
 import {
@@ -895,6 +895,11 @@ categoryScreen.closeBtn.addEventListener("click", closeCategoryScreen);
 
 // ---------- Occupation ----------
 
+// Which job listing (if any) is currently showing its detail/Apply view
+// instead of the plain list -- module-level since renderJobsInto rebuilds
+// the whole Jobs section fresh on every action (see renderMainJobSection).
+let selectedJobIdForApply = null;
+
 function getJobLevel(jobId, levelIndex) {
   const jobDef = jobsData.find((j) => j.id === jobId);
   return jobDef ? jobDef.levels[levelIndex] : null;
@@ -951,6 +956,7 @@ function renderMainJobSection(container) {
   }
 
   if (character.job && level) {
+    selectedJobIdForApply = null;
     const jobTitle = document.createElement("p");
     jobTitle.className = "occupation-job-title";
     jobTitle.textContent = level.title;
@@ -968,10 +974,32 @@ function renderMainJobSection(container) {
   }
 
   const eligible = getEligibleJobs(character, jobsData);
+
+  if (selectedJobIdForApply) {
+    const selectedJob = jobsData.find((j) => j.id === selectedJobIdForApply && eligible.some((e) => e.id === j.id));
+    if (selectedJob) {
+      renderJobDetailInto(container, selectedJob);
+      return;
+    }
+    // No longer eligible/selectable (e.g. already applied this year via
+    // another path) -- fall back to the list instead of a stale detail view.
+    selectedJobIdForApply = null;
+  }
+
   if (eligible.length === 0) {
+    // Distinguishes "not qualified for anything" from "qualified, but
+    // already used this year's one shot at every job" -- otherwise the
+    // yearly application cap below would look identical to having no
+    // prospects at all.
+    const anyQualified = jobsData.some((job) => isQualifiedForJob(character, job));
     const empty = document.createElement("p");
     empty.className = "occupation-empty";
-    empty.textContent = character.age < 16 ? "You're not old enough to work yet." : "No jobs available to you right now.";
+    empty.textContent =
+      character.age < 16
+        ? "You're not old enough to work yet."
+        : anyQualified
+          ? "You've already applied to every job you qualify for this year. Check back after your next birthday."
+          : "No jobs available to you right now.";
     container.appendChild(empty);
     return;
   }
@@ -992,13 +1020,68 @@ function renderMainJobSection(container) {
 
     btn.appendChild(titleSpan);
     btn.appendChild(salarySpan);
-    btn.addEventListener("click", () => doApplyForJob(job, container));
+    btn.addEventListener("click", () => {
+      selectedJobIdForApply = job.id;
+      renderJobsInto(container);
+    });
     jobList.appendChild(btn);
   }
   container.appendChild(jobList);
 }
 
+// Requirement lines shown in the job detail view -- only the ones a given
+// job actually declares, same "absent fields don't render" idea as the
+// eligibility checks in careers.js reading them.
+function buildJobRequirementLines(job) {
+  const lines = [`Minimum age: ${job.minAge}`];
+  if (job.minSmarts) lines.push(`Smarts: ${job.minSmarts}+`);
+  if (job.minEducationStatus) lines.push(`Education: ${getStatusLabel(job.minEducationStatus)}`);
+  if (job.minSkill) lines.push(`${formatSkillLabel(job.minSkill.skill)}: ${job.minSkill.value}+`);
+  if (job.requiredMajors) lines.push(`Major: ${job.requiredMajors.map(getMajorLabel).join(" or ")}`);
+  return lines;
+}
+
+// The view-before-you-commit step -- browsing a listing no longer applies
+// on its own click; Apply is its own explicit action, same "confirm before
+// the irreversible step" shape as Quit's confirm dialog, just inline
+// instead of a modal since this is a decision with real information to
+// weigh (the requirements) rather than a yes/no.
+function renderJobDetailInto(container, job) {
+  const entryLevel = job.levels[0];
+  const jobTitle = document.createElement("p");
+  jobTitle.className = "occupation-job-title";
+  jobTitle.textContent = entryLevel.title;
+  const jobSalary = document.createElement("p");
+  jobSalary.className = "occupation-job-salary";
+  jobSalary.textContent = `${formatMoney(entryLevel.salary, character.currencyCode)} / year`;
+  container.appendChild(jobTitle);
+  container.appendChild(jobSalary);
+
+  const reqTitle = document.createElement("p");
+  reqTitle.className = "school-section-title";
+  reqTitle.textContent = "Requirements";
+  container.appendChild(reqTitle);
+  for (const line of buildJobRequirementLines(job)) {
+    const reqLine = document.createElement("p");
+    reqLine.className = "occupation-job-salary";
+    reqLine.textContent = line;
+    container.appendChild(reqLine);
+  }
+
+  const actionList = document.createElement("div");
+  actionList.className = "school-action-list";
+  actionList.appendChild(buildSchoolActionBtn("Apply", () => doApplyForJob(job, container)));
+  actionList.appendChild(
+    buildSchoolActionBtn("Back", () => {
+      selectedJobIdForApply = null;
+      renderJobsInto(container);
+    })
+  );
+  container.appendChild(actionList);
+}
+
 function doApplyForJob(job, container) {
+  selectedJobIdForApply = null;
   const { succeeded, resultText } = applyForJob(character, job, namePools, character.country);
   renderGame();
   renderJobsInto(container);
@@ -1073,9 +1156,15 @@ function renderPartTimeJobSection(container) {
 
   const eligible = getEligiblePartTimeJobs(character, partTimeJobsData);
   if (eligible.length === 0) {
+    const anyQualified = (partTimeJobsData ?? []).some((job) => isQualifiedForPartTimeJob(character, job));
     const empty = document.createElement("p");
     empty.className = "occupation-empty";
-    empty.textContent = character.age < MIN_EARNING_AGE ? "You're not old enough to work yet." : "No part-time jobs available to you right now.";
+    empty.textContent =
+      character.age < MIN_EARNING_AGE
+        ? "You're not old enough to work yet."
+        : anyQualified
+          ? "You've already applied to every part-time job you qualify for this year. Check back after your next birthday."
+          : "No part-time jobs available to you right now.";
     container.appendChild(empty);
     return;
   }
@@ -1102,11 +1191,11 @@ function renderPartTimeJobSection(container) {
 }
 
 function doApplyForPartTimeJob(job, container) {
-  const { resultText } = applyForPartTimeJob(character, job, namePools, character.country);
+  const { succeeded, resultText } = applyForPartTimeJob(character, job, namePools, character.country);
   renderGame();
   renderJobsInto(container);
   autosave();
-  showToast(resultText);
+  showToast(succeeded ? `Hired as ${job.title}!` : resultText);
 }
 
 function requestQuitPartTimeJob(container) {

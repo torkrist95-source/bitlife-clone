@@ -33,19 +33,33 @@ const EDUCATION_RANK = {
 // Hard gates only -- age and smarts, plus optional ones a job can declare:
 // education status, a specific skill, and (for the graduated_college tier)
 // a required college major. Absent on jobs that don't need them, so this
-// stays a pure extension rather than a behavior change for those.
+// stays a pure extension rather than a behavior change for those. Separated
+// from getEligibleJobs below so app.js can tell "not qualified at all"
+// apart from "qualified but already applied this year" for its empty-state
+// messaging, without duplicating this requirement logic.
+function isQualifiedForJob(character, job) {
+  if (character.age < job.minAge) return false;
+  if (job.minSmarts && character.stats.smarts < job.minSmarts) return false;
+  if (job.minEducationStatus && EDUCATION_RANK[character.education.status] < EDUCATION_RANK[job.minEducationStatus]) return false;
+  if (job.minSkill && (character.skills[job.minSkill.skill] ?? 0) < job.minSkill.value) return false;
+  if (job.requiredMajors && !job.requiredMajors.includes(character.education.major)) return false;
+  return true;
+}
+
+function hasAppliedToJobThisYear(character, jobId) {
+  return (character.jobApplicationsThisYear ?? []).includes(jobId);
+}
+
+// Everything the player can actually apply to right now -- qualified AND
+// not already attempted this year. A rejection isn't infinitely
+// re-attemptable in the same year (jobApplicationsThisYear, reset in
+// engine.js's ageUp) -- without this cap, any nonzero chance eventually
+// succeeds just by spam-clicking Apply, which made the whole roll pointless.
 function getEligibleJobs(character, jobsData) {
   // A Special Career (specialCareers.js) replaces Main Job entirely -- no
   // applying for a normal job while pursuing one.
   if (character.specialCareer) return [];
-  return jobsData.filter((job) => {
-    if (character.age < job.minAge) return false;
-    if (job.minSmarts && character.stats.smarts < job.minSmarts) return false;
-    if (job.minEducationStatus && EDUCATION_RANK[character.education.status] < EDUCATION_RANK[job.minEducationStatus]) return false;
-    if (job.minSkill && (character.skills[job.minSkill.skill] ?? 0) < job.minSkill.value) return false;
-    if (job.requiredMajors && !job.requiredMajors.includes(character.education.major)) return false;
-    return true;
-  });
+  return jobsData.filter((job) => isQualifiedForJob(character, job) && !hasAppliedToJobThisYear(character, job.id));
 }
 
 // The actual "meeting requirements isn't a guarantee" roll -- same
@@ -71,6 +85,8 @@ function rollJobApplication(character, job) {
 // attemptExtracurricular already uses, so app.js's UI wiring is identical.
 function applyForJob(character, job, namePools, countryId) {
   const level = job.levels[0];
+  character.jobApplicationsThisYear = character.jobApplicationsThisYear ?? [];
+  character.jobApplicationsThisYear.push(job.id);
 
   if (!rollJobApplication(character, job)) {
     character.stats.happiness = clampStat(character.stats.happiness - 2);
@@ -87,4 +103,4 @@ function applyForJob(character, job, namePools, countryId) {
   return { succeeded: true, resultText: line };
 }
 
-export { getEligibleJobs, rollJobApplication, applyForJob };
+export { getEligibleJobs, isQualifiedForJob, hasAppliedToJobThisYear, rollJobApplication, applyForJob };
