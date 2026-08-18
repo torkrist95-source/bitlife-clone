@@ -1,5 +1,5 @@
 import { randInt, clampStat, weightedPick, ENROLLED_EDUCATION_STATUSES } from "./character.js";
-import { createSocialNpc, coworkerAge, partTimeCoworkerAge } from "./npc.js";
+import { createSocialNpc, coworkerAge, partTimeCoworkerAge, recomputeHasPartner } from "./npc.js";
 
 // ---------- Acquaintance-tier roster churn ----------
 // Shared by classmates (school.js) and coworkers (engine.js) -- the exact
@@ -158,10 +158,16 @@ function developRomanceCheckIn(character, npc) {
 }
 
 function developMovedAway(character, npc, roster) {
+  const wasPartner = npc.romanceStatus === "partner";
   roster.splice(roster.indexOf(npc), 1);
   // Losing someone you were actually close to should sting a little --
   // scaled by how close the relationship was, not a flat penalty.
   character.stats.happiness = clampStat(character.stats.happiness - Math.floor(npc.closeness / 20));
+  // Same "recompute right after anything that could change it" rule
+  // breakUp (npc.js) follows -- without this, flags.hasPartner stays true
+  // for the rest of the session (until the next save reload, which
+  // recomputes it independently) even though the partner is gone.
+  if (wasPartner) recomputeHasPartner(character);
   return `${npc.name} moved away this year.`;
 }
 

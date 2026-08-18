@@ -753,5 +753,6 @@ export {
   thankTeacher,
   askFamilyForHelp,
   borrowMoney,
+  recomputeHasPartner,
   GIFT_COST,
 };

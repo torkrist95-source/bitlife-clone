@@ -48,6 +48,12 @@ function getEligibleFreelanceServices(character) {
 // just the prose line, so a caller can render them as a structured result
 // card (app.js) instead of only the single sentence also pushed to history.
 function postFreelanceAd(character, service, rate, namePools, countryId) {
+  // Defense in depth, same as hobbies.js's practiceHobby -- app.js disables
+  // the Post an Ad button once the cap is hit, but this guards against the
+  // cap being reached mid-modal-session (or any future caller) rather than
+  // trusting the UI alone to enforce it.
+  if (isFreelanceCapReached(character)) return null;
+
   const clampedRate = Math.max(service.minRate, Math.min(service.maxRate, Math.round(rate)));
   const hours = randInt(service.hoursMin, service.hoursMax);
   const earnings = Math.round(hours * clampedRate);

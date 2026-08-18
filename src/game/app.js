@@ -1096,6 +1096,8 @@ function requestQuitJob(container) {
     if (character.job) endCoworkerRelationships(character);
     character.job = null;
     renderJobsInto(container);
+    renderGame();
+    autosave();
     return;
   }
   showConfirm({
@@ -1204,6 +1206,8 @@ function requestQuitPartTimeJob(container) {
     if (character.partTimeJob) endPartTimeCoworkerRelationships(character);
     character.partTimeJob = null;
     renderJobsInto(container);
+    renderGame();
+    autosave();
     return;
   }
   showConfirm({
@@ -1272,6 +1276,7 @@ function openFreelanceModal(service, container) {
   setCardIcon(freelanceModal.resultIcon, null);
   freelanceModal.resultText.textContent = "";
   renderStatRows(freelanceModal.resultStats, null);
+  freelanceModal.postBtn.disabled = false;
   freelanceModal.overlay.classList.remove("hidden");
 }
 
@@ -1282,11 +1287,22 @@ function hideFreelanceModal() {
 freelanceModal.closeBtn.addEventListener("click", hideFreelanceModal);
 
 freelanceModal.postBtn.addEventListener("click", () => {
-  if (!currentFreelanceService) return;
+  if (!currentFreelanceService || freelanceModal.postBtn.disabled) return;
   const rate = Number(freelanceModal.rateInput.value);
   if (!Number.isFinite(rate) || rate <= 0) return;
 
+  // The button gets disabled the moment this posts (below), so a second
+  // click on the same open modal can't register -- posting again requires
+  // closing back out to the list, which re-checks the yearly cap. postAd
+  // itself also self-checks the cap (defense in depth), so this null
+  // shouldn't normally happen, but don't apply a payout if it does.
   const result = postFreelanceAd(character, currentFreelanceService, rate, namePools, character.country);
+  if (!result) {
+    freelanceModal.postBtn.disabled = true;
+    showToast(`You've booked the max of ${YEARLY_FREELANCE_GIG_CAP} freelance gigs this year.`);
+    return;
+  }
+
   setCardIcon(freelanceModal.resultIcon, "💼");
   freelanceModal.resultText.textContent = `${result.clientName} ${currentFreelanceService.hiredPhrase}.`;
   renderStatRows(freelanceModal.resultStats, [
@@ -1295,6 +1311,7 @@ freelanceModal.postBtn.addEventListener("click", () => {
     { label: "Earnings", value: result.earningsFormatted },
   ]);
   freelanceModal.resultWrap.classList.remove("hidden");
+  freelanceModal.postBtn.disabled = true;
 
   if (freelanceJobsContainerRef && freelanceJobsContainerRef.isConnected) {
     renderJobsInto(freelanceJobsContainerRef);
@@ -1395,6 +1412,8 @@ function requestQuitSpecialCareer(container) {
   if (!level) {
     character.specialCareer = null;
     renderSpecialCareersInto(container);
+    renderGame();
+    autosave();
     return;
   }
   showConfirm({
@@ -2480,9 +2499,14 @@ function renderFriendsInto(container) {
 // branch on it) -- same interactions either way.
 function renderPartnerInto(container) {
   container.innerHTML = "";
+  // Same three lists npc.js's own findPartner (single source of truth for
+  // "who is my partner") checks -- partTimeCoworkers was missing here, so a
+  // partner met through a part-time job was invisible on this screen the
+  // whole time that job lasted.
   const partners = [
     ...(character.socialCircle ?? []).map((npc) => ({ npc, kind: "friend" })),
     ...(character.coworkers ?? []).map((npc) => ({ npc, kind: "coworker" })),
+    ...(character.partTimeCoworkers ?? []).map((npc) => ({ npc, kind: "coworker" })),
   ].filter(({ npc }) => npc.romanceStatus === "partner");
 
   if (partners.length === 0) {

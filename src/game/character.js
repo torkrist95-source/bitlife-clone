@@ -450,6 +450,15 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     // Reset every Age Up (engine.js) -- caps how many times each active
     // hobby can be practiced in a single year (hobbies.js).
     hobbyPracticeCounts: {},
+    // save.js's migrateCharacterFields does a one-time re-roll of every
+    // social-circle/coworker NPC's age for OLD saves predating the yearly
+    // aging tick, guarded by this flag so it only ever fires once. A
+    // brand-new character's roster is correctly aged from the moment it's
+    // created (ensureSocialCircle/ensureCoworkers) and kept in sync every
+    // year since (npcLife.js), so it must start pre-marked done -- leaving
+    // this unset here made that one-time reroll fire on every character's
+    // first reload too, corrupting ages that were never wrong.
+    socialCircleAgesFixed: true,
     socialCircle: [],
     coworkers: [],
     partTimeCoworkers: [],

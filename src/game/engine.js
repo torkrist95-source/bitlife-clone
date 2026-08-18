@@ -246,6 +246,12 @@ function applyParentBirthYear(character, namePools, countryId) {
 
 function applyFamilyYear(character, jobsData, namePools, countryId) {
   let lines = [];
+  // Snapshot the siblings who already existed BEFORE this year's birth
+  // check -- applyParentBirthYear pushes a newborn at age 0 directly onto
+  // character.family.siblings, and the aging loop below must not catch
+  // that same newborn in its own first year (a sibling born this year
+  // should end it at age 0, not 1).
+  const existingSiblings = [...(character.family?.siblings ?? [])];
   // A new sibling is the most significant family event that can happen in a
   // year -- checked, and pushed, first so `slice(0, MAX_FAMILY_LINES_PER_YEAR)`
   // below can never silently drop it in favor of a routine parent job change
@@ -256,7 +262,7 @@ function applyFamilyYear(character, jobsData, namePools, countryId) {
     const line = applyParentYear(parent, jobsData);
     if (line) lines.push(line);
   }
-  for (const sibling of character.family?.siblings ?? []) {
+  for (const sibling of existingSiblings) {
     const line = applySiblingYear(sibling);
     if (line) lines.push(line);
   }

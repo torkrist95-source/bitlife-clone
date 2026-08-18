@@ -1053,6 +1053,12 @@ body {
   color: #fff;
 }
 
+.nav-action-btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
 .occupation-job-title {
   margin: 0 0 4px;
   font-size: 20px;
