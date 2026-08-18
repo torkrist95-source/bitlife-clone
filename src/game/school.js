@@ -1,6 +1,7 @@
 import { randInt, clampStat, weightedPick, generateRandomName, applyMoneyDelta, formatMoney, pushHistory } from "./character.js";
 import { createSocialNpc, registerDynamicGenerators, askForHelp, ensureSocialCircle } from "./npc.js";
 import { conditionsPass } from "./events.js";
+import { getTrait } from "./personality.js";
 
 // ---------- Grade/status mapping ----------
 // A single, simple age->grade formula (K at 5, grade 1 at 6, ... grade 12
@@ -195,13 +196,19 @@ function dropOutOfHighSchool(character) {
 
 const GED_PASS_BASE_CHANCE = 45;
 
+// Capped at one attempt per year (gedAttemptsThisYear, reset in engine.js's
+// ageUp) -- same "infinite retries make any chance meaningless" fix already
+// applied to job applications.
 function canAttemptGed(character) {
-  return character.education.status === "hs_dropout";
+  return character.education.status === "hs_dropout" && (character.gedAttemptsThisYear ?? 0) < 1;
 }
 
 function attemptGed(character) {
+  character.gedAttemptsThisYear = (character.gedAttemptsThisYear ?? 0) + 1;
+
   const smarts = character.stats.smarts ?? 50;
-  const chance = Math.max(20, Math.min(90, GED_PASS_BASE_CHANCE + (smarts - 50) / 2));
+  const ambitiousBonus = (getTrait(character, "ambitious") - 50) / 5;
+  const chance = Math.max(20, Math.min(90, GED_PASS_BASE_CHANCE + (smarts - 50) / 2 + ambitiousBonus));
 
   if (randInt(0, 99) < chance) {
     character.education.status = "ged";
@@ -213,7 +220,7 @@ function attemptGed(character) {
   }
 
   character.stats.happiness = clampStat(character.stats.happiness - 2);
-  const line = "You didn't pass the GED this time, but you can study and try again.";
+  const line = "You didn't pass the GED this time, but you can study and try again next year.";
   pushHistory(character, line);
   return { succeeded: false, resultText: line };
 }
@@ -322,11 +329,27 @@ function participateInClub(character, club) {
 // Varsity) -- unlike clubs above, only one at a time.
 const MAX_EXTRACURRICULARS = 1;
 
+// A failed tryout can't be re-attempted on the same activity until next
+// year (extracurricularTryoutsThisYear, reset in engine.js's ageUp) -- same
+// "infinite retries make any chance meaningless" fix already applied to job
+// applications. Doesn't affect non-tryout activities (school_band,
+// academic_team's tryout:false sibling would just always succeed anyway,
+// so there's nothing to cap there) or trying a *different* activity this
+// same year.
+function hasAttemptedExtracurricularTryoutThisYear(character, activityId) {
+  return (character.extracurricularTryoutsThisYear ?? []).includes(activityId);
+}
+
 function getAvailableExtracurriculars(character, activitiesData) {
   const joined = new Set(character.education.extracurriculars ?? []);
   if (joined.size >= MAX_EXTRACURRICULARS) return [];
   return activitiesData.filter(
-    (a) => character.age >= a.minAge && character.age <= a.maxAge && !joined.has(a.id) && conditionsPass(character, a.requires)
+    (a) =>
+      character.age >= a.minAge &&
+      character.age <= a.maxAge &&
+      !joined.has(a.id) &&
+      conditionsPass(character, a.requires) &&
+      !(a.tryout && hasAttemptedExtracurricularTryoutThisYear(character, a.id))
   );
 }
 
@@ -364,9 +387,13 @@ function attemptExtracurricular(character, activity) {
     return { succeeded: true, resultText: line };
   }
 
+  character.extracurricularTryoutsThisYear = character.extracurricularTryoutsThisYear ?? [];
+  character.extracurricularTryoutsThisYear.push(activity.id);
+
   const relevantStat = character.stats[activity.statCheck] ?? 50;
   const skillBonus = activity.skillCheck ? (character.skills[activity.skillCheck] ?? 0) / 5 : 0;
-  const chance = Math.max(10, Math.min(90, 35 + (relevantStat - 50) / 2 + skillBonus));
+  const ambitiousBonus = (getTrait(character, "ambitious") - 50) / 5;
+  const chance = Math.max(10, Math.min(90, 35 + (relevantStat - 50) / 2 + skillBonus + ambitiousBonus));
 
   if (randInt(0, 99) < chance) {
     character.education.extracurriculars.push(activity.id);
@@ -492,17 +519,29 @@ function participateInExtracurricular(character, activity) {
 
 const VARSITY_MIN_SEASONS = 1;
 
+// A failed Varsity tryout can't be re-attempted on the same activity until
+// next year (varsityTryoutsThisYear, reset in engine.js's ageUp) -- same
+// yearly cap already applied to the base tryout above.
+function hasAttemptedVarsityTryoutThisYear(character, activityId) {
+  return (character.varsityTryoutsThisYear ?? []).includes(activityId);
+}
+
 function getVarsityEligibility(character, activity) {
   if (activity.category !== "sport" || !activity.varsityEligible) return false;
   const progress = character.education.activityProgress?.[activity.id];
   if (!progress || progress.varsity) return false;
+  if (hasAttemptedVarsityTryoutThisYear(character, activity.id)) return false;
   return character.age - progress.joinedAge >= VARSITY_MIN_SEASONS;
 }
 
 function attemptVarsityTryout(character, activity) {
+  character.varsityTryoutsThisYear = character.varsityTryoutsThisYear ?? [];
+  character.varsityTryoutsThisYear.push(activity.id);
+
   const relevantStat = character.stats[activity.statCheck] ?? 50;
   const athleticism = character.skills.athleticism ?? 0;
-  const chance = Math.max(10, Math.min(70, 20 + (relevantStat - 50) / 2 + athleticism / 4));
+  const ambitiousBonus = (getTrait(character, "ambitious") - 50) / 5;
+  const chance = Math.max(10, Math.min(70, 20 + (relevantStat - 50) / 2 + athleticism / 4 + ambitiousBonus));
 
   if (randInt(0, 99) < chance) {
     character.education.activityProgress[activity.id].varsity = true;

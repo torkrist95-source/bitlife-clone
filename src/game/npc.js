@@ -1,4 +1,5 @@
 import { generateRandomName, randInt, clampStat, weightedPick, applyMoneyDelta, formatMoney, pushHistory, MIN_DATING_AGE } from "./character.js";
+import { getTrait } from "./personality.js";
 
 const SOCIAL_CIRCLE_MIN_AGE = 6;
 const SOCIAL_CIRCLE_MIN_SIZE = 3;
@@ -351,14 +352,26 @@ function giveGift(character, npc) {
   return line;
 }
 
+// Only one ask per NPC per year (friendAsksThisYear, reset in engine.js's
+// ageUp) -- without this, a rejection could just be spam-clicked on the
+// same person until it eventually landed, the same "any chance approaches
+// 100% given infinite retries" problem already fixed for job applications.
+function hasAskedToBecomeFriendsThisYear(character, npcId) {
+  return (character.friendAsksThisYear ?? []).includes(npcId);
+}
+
 // The one explicitly earned promotion: Acquaintance -> Friend requires
 // asking, and can be turned down. Odds lean on closeness (how much rapport
-// has already been built via Talk/Get to Know) and the NPC's own mood --
-// the closest existing stand-in for "personality" without inventing a new
-// one. Never auto-retries; the player can ask again later, same as any
-// other retryable interaction in this game.
+// has already been built via Talk/Get to Know), the NPC's own mood, and
+// now the character's own Extroverted trait -- someone naturally outgoing
+// has an easier time turning an acquaintance into a friend. Capped at one
+// attempt per NPC per year; the player can ask again next year.
 function askToBecomeFriends(character, npc) {
-  const chance = Math.max(20, Math.min(85, 25 + npc.closeness / 2 + (npc.stats.happiness - 50) / 5));
+  character.friendAsksThisYear = character.friendAsksThisYear ?? [];
+  character.friendAsksThisYear.push(npc.id);
+
+  const extrovertedBonus = (getTrait(character, "extroverted") - 50) / 5;
+  const chance = Math.max(20, Math.min(85, 25 + npc.closeness / 2 + (npc.stats.happiness - 50) / 5 + extrovertedBonus));
 
   if (randInt(0, 99) < chance) {
     npc.friendLevel = "friend";
@@ -368,6 +381,10 @@ function askToBecomeFriends(character, npc) {
     return line;
   }
 
+  // Previously free to fail -- a small sting now, gentler than a tryout's
+  // (-3) since asking a friend is lower-stakes than trying out for
+  // something, but no longer literally costless.
+  character.stats.happiness = clampStat(character.stats.happiness - 1);
   const declineLines = [
     `${npc.name} said they'd rather just stay acquaintances for now.`,
     `${npc.name} politely declined. You two remain acquaintances.`,
@@ -745,6 +762,7 @@ export {
   confide,
   giveGift,
   askToBecomeFriends,
+  hasAskedToBecomeFriendsThisYear,
   developRomance,
   askOut,
   breakUp,

@@ -28,6 +28,7 @@ import {
   confide,
   giveGift,
   askToBecomeFriends,
+  hasAskedToBecomeFriendsThisYear,
   developRomance,
   askOut,
   breakUp,
@@ -2262,7 +2263,12 @@ function getNpcInteractions(npc, kind) {
 
   if (npc.friendLevel === "acquaintance") {
     interactions.push({ label: "Get to Know", run: () => getToKnow(character, npc) });
-    interactions.push({ label: "Ask to Become Friends", run: () => askToBecomeFriends(character, npc) });
+    // Hidden once already asked this year (friendAsksThisYear) rather than
+    // left clickable with no effect -- same "the option disappears once
+    // capped" pattern as a fully-booked job listing.
+    if (!hasAskedToBecomeFriendsThisYear(character, npc.id)) {
+      interactions.push({ label: "Ask to Become Friends", run: () => askToBecomeFriends(character, npc) });
+    }
     return interactions;
   }
 

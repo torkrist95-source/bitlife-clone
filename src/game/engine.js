@@ -342,6 +342,12 @@ function ageUp(character, jobsData, namePools, countryId, partTimeJobsData, spec
   // be re-attempted until next year (careers.js/partTimeJobs.js).
   character.jobApplicationsThisYear = [];
   character.partTimeJobApplicationsThisYear = [];
+  // Same reasoning again -- a rejected friend-ask/tryout/GED attempt can't
+  // be re-attempted until next year (npc.js/school.js).
+  character.friendAsksThisYear = [];
+  character.extracurricularTryoutsThisYear = [];
+  character.varsityTryoutsThisYear = [];
+  character.gedAttemptsThisYear = 0;
   applyStatDrift(character);
   const currentStage = getLifeStage(character.age);
 

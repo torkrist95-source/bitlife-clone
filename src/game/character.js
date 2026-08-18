@@ -426,6 +426,14 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     // can't be re-attempted until next year (careers.js/partTimeJobs.js).
     jobApplicationsThisYear: [],
     partTimeJobApplicationsThisYear: [],
+    // Same reasoning again -- a rejected "Ask to Become Friends" can't be
+    // re-attempted on the same NPC until next year (npc.js), and a failed
+    // extracurricular/varsity tryout or GED attempt can't be re-attempted
+    // until next year either (school.js).
+    friendAsksThisYear: [],
+    extracurricularTryoutsThisYear: [],
+    varsityTryoutsThisYear: [],
+    gedAttemptsThisYear: 0,
     family: {
       wealthTier: tier.id,
       wealthTierLabel: tier.name,
