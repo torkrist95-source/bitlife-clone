@@ -69,6 +69,7 @@ import {
   canReturnToCollege,
   returnToCollege,
 } from "./school.js";
+import { HOBBIES, MAX_ACTIVE_HOBBIES, getAvailableHobbies, chooseHobby, dropHobby, practiceHobby } from "./hobbies.js";
 import {
   loadCountries,
   loadWealthTiers,
@@ -111,8 +112,8 @@ const NAV_CATEGORIES = {
     { id: "partner", label: "Partner", render: (container) => renderPartnerInto(container) },
   ],
   Activities: [
-    { id: "hobbies", label: "Hobbies", render: renderComingSoon },
-    { id: "skills", label: "Skills", render: renderComingSoon },
+    { id: "hobbies", label: "Hobbies", render: (container) => renderHobbiesInto(container) },
+    { id: "skills", label: "Skills", render: (container) => renderSkillsInto(container) },
     { id: "exercise", label: "Exercise", render: renderComingSoon },
     { id: "travel", label: "Travel/Vacation", render: renderComingSoon },
     { id: "dating", label: "Go on a Date", render: renderComingSoon },
@@ -846,6 +847,12 @@ function openCategoryScreen(categoryLabel) {
       // Accordion: only one system open at a time within this screen.
       collapseOpenCategorySystem();
       if (!isExpanded) {
+        // Re-render on every expand, not just the first -- a render-only
+        // system (e.g. Skills) has no actions of its own to trigger its own
+        // refresh, so without this it'd keep showing whatever was true the
+        // moment the category screen opened, even after a sibling system's
+        // action (e.g. practicing a Hobby) changed the data it displays.
+        if (system.render) system.render(actionsWrap);
         actionsWrap.classList.remove("hidden");
         arrow.textContent = "▾";
       }
@@ -1632,6 +1639,119 @@ function hideClubsModal() {
 }
 
 clubsModal.closeBtn.addEventListener("click", hideClubsModal);
+
+// ---------- Activities: Hobbies & Skills ----------
+//
+// Player-driven, available at any age/life-stage (unlike Clubs, not tied to
+// school enrollment) -- rendered directly into the accordion's expanded
+// area, same "no separate click-through modal" pattern as Friends/Family.
+
+function formatSkillLabel(key) {
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function renderHobbiesInto(container) {
+  container.innerHTML = "";
+
+  const activeIds = character.activeHobbies ?? [];
+  const active = HOBBIES.filter((hobby) => activeIds.includes(hobby.id));
+  const available = getAvailableHobbies(character);
+
+  if (active.length === 0 && available.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "Not old enough to pick up a hobby yet.";
+    container.appendChild(empty);
+    return;
+  }
+
+  if (active.length > 0) {
+    const activeTitle = document.createElement("p");
+    activeTitle.className = "school-section-title";
+    activeTitle.textContent = `Your Hobbies (${active.length}/${MAX_ACTIVE_HOBBIES})`;
+    container.appendChild(activeTitle);
+
+    for (const hobby of active) {
+      const meta = hobby.skill ? `Builds ${formatSkillLabel(hobby.skill)}` : "For fun";
+      container.appendChild(
+        buildPersonCard({
+          name: hobby.label,
+          meta,
+          action: buildActionsGroup([
+            {
+              label: "Practice",
+              onAction: () => {
+                const line = practiceHobby(character, hobby);
+                renderHobbiesInto(container);
+                renderGame();
+                autosave();
+                showToast(line);
+              },
+            },
+            {
+              label: "Drop",
+              onAction: () => {
+                const line = dropHobby(character, hobby.id, HOBBIES);
+                renderHobbiesInto(container);
+                renderGame();
+                autosave();
+                showToast(line);
+              },
+            },
+          ]),
+        })
+      );
+    }
+  }
+
+  if (available.length > 0) {
+    const availableTitle = document.createElement("p");
+    availableTitle.className = "school-section-title";
+    availableTitle.textContent = "Pick Up a New Hobby";
+    container.appendChild(availableTitle);
+
+    for (const hobby of available) {
+      const meta = hobby.skill ? `Builds ${formatSkillLabel(hobby.skill)}` : "For fun";
+      container.appendChild(
+        buildActionCard({
+          name: hobby.label,
+          meta,
+          actionLabel: "Choose",
+          onAction: () => {
+            const line = chooseHobby(character, hobby);
+            renderHobbiesInto(container);
+            renderGame();
+            autosave();
+            showToast(line);
+          },
+        })
+      );
+    }
+  } else if (active.length >= MAX_ACTIVE_HOBBIES) {
+    const capNote = document.createElement("p");
+    capNote.className = "occupation-empty";
+    capNote.textContent = `You're pursuing the maximum of ${MAX_ACTIVE_HOBBIES} hobbies. Drop one to pick up another.`;
+    container.appendChild(capNote);
+  }
+}
+
+function renderSkillsInto(container) {
+  container.innerHTML = "";
+  const entries = Object.entries(character.skills ?? {}).filter(([, value]) => value > 0);
+
+  if (entries.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "occupation-unemployed-label";
+    empty.textContent = "You haven't developed any skills yet. Pick up a hobby or join a school club to start building one.";
+    container.appendChild(empty);
+    return;
+  }
+
+  entries.sort((a, b) => b[1] - a[1]);
+  for (const [skill, value] of entries) {
+    container.appendChild(buildPersonCard({ name: formatSkillLabel(skill), meta: `${value}/100` }));
+  }
+}
 
 // ---------- Extracurriculars & tryouts ----------
 

@@ -7,7 +7,7 @@ import {
   ENROLLED_EDUCATION_STATUSES,
 } from "./character.js";
 import { ensureSocialCircle, getKnownNpcs, resolveDynamicChoice } from "./npc.js";
-import { applyNpcLifeYear, NPC_HOBBY_POOL } from "./npcLife.js";
+import { applyNpcLifeYear } from "./npcLife.js";
 
 // ---------- Condition engine ----------
 // A `requires` array on an event, choice, or outcome is a list of
@@ -336,23 +336,6 @@ function pickWorldUpdateLine(character, worldUpdates, countryName, celebrities) 
   return fillTemplate(entry.template, { country: countryName ?? "your country" });
 }
 
-// A spontaneous personal hobby, independent of anything club/extracurricular
-// membership already grants -- reuses npcLife.js's own hobby pool rather
-// than maintaining a second list, since the concept ("picked up a new
-// hobby") is identical for the player and for NPCs. Age-gated the same way
-// NPCs implicitly are (npc.js's SOCIAL_CIRCLE_MIN_AGE): a toddler shouldn't
-// be able to roll "You became interested in skateboarding."
-const MIN_HOBBY_INTEREST_AGE = 5;
-
-function pickHobbyInterestLine(character, hobbyPool) {
-  if (character.age < MIN_HOBBY_INTEREST_AGE) return null;
-  const available = hobbyPool.filter((h) => !character.hobbies.includes(h));
-  if (available.length === 0) return null;
-  const hobby = available[randInt(0, available.length - 1)];
-  character.hobbies.push(hobby);
-  return `You became interested in ${hobby}.`;
-}
-
 const SCHOOL_ACTIVITY_FLAVOR_TEMPLATES = [
   "You had a great year with {label}.",
   "{label} was one of the highlights of your year.",
@@ -414,8 +397,9 @@ const WORLD_FLAVOR_CHANCE_PER_SLOT = 25; // percent, per independent slot
 // aren't worth multiple slots) -- each is its own single independent roll.
 // (Odd Jobs' own automatic roll used to live here -- retired in favor of the
 // player-driven Freelance Gigs and One-Time Jobs systems in careers.js/
-// freelance.js, so there's no automatic-background-income roll anymore.)
-const HOBBY_INTEREST_CHANCE = 10; // percent, independent roll
+// freelance.js, so there's no automatic-background-income roll anymore. The
+// old automatic hobby-interest roll was retired the same way, in favor of
+// the player-driven choose/practice system in hobbies.js.)
 const SCHOOL_ACTIVITY_FLAVOR_CHANCE = 20; // percent, independent roll
 const INTERACTIVE_EVENT_CHANCE = 40; // percent, independent roll
 
@@ -452,10 +436,6 @@ function rollAgeUpHappening(character, pools) {
       const line = pickWorldUpdateLine(character, worldUpdates, countryName, celebrities);
       if (line) lines.push(line);
     }
-  }
-  if (randInt(0, 99) < HOBBY_INTEREST_CHANCE) {
-    const line = pickHobbyInterestLine(character, NPC_HOBBY_POOL);
-    if (line) lines.push(line);
   }
   if (randInt(0, 99) < SCHOOL_ACTIVITY_FLAVOR_CHANCE) {
     const line = pickSchoolActivityFlavorLine(character, clubsData, extracurricularsData);

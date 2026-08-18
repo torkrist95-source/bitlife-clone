@@ -80,6 +80,7 @@ function migrateCharacterFields(character) {
   character.flags ??= {};
   character.skills ??= {};
   character.hobbies ??= [];
+  character.activeHobbies ??= [];
   character.socialCircle ??= [];
   // Safest possible default -- doesn't retroactively invalidate any
   // romantic relationship an existing save already has, regardless of the
