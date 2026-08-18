@@ -439,6 +439,10 @@ function createCharacter({ name, country, gender, attractedTo, wealthTiers, birt
     flags: {},
     skills: {},
     hobbies: [],
+    activeHobbies: [],
+    // Reset every Age Up (engine.js) -- caps how many times each active
+    // hobby can be practiced in a single year (hobbies.js).
+    hobbyPracticeCounts: {},
     socialCircle: [],
     coworkers: [],
     partTimeCoworkers: [],

@@ -271,6 +271,9 @@ function ageUp(character, jobsData, namePools, countryId, partTimeJobsData) {
   // (freelance.js) -- reset here since Age Up is the only thing that ever
   // advances "the year" in this game.
   character.freelanceGigsCompletedThisYear = 0;
+  // Same reasoning -- each active hobby's Practice count caps per year
+  // (hobbies.js).
+  character.hobbyPracticeCounts = {};
   applyStatDrift(character);
   const currentStage = getLifeStage(character.age);
 

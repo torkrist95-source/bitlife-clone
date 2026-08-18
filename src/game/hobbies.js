@@ -40,6 +40,18 @@ const HOBBIES = [
 
 const MAX_ACTIVE_HOBBIES = 3;
 const MIN_HOBBY_AGE = 5;
+// Caps how many times a single hobby can be practiced per Age Up year --
+// reset in engine.js's ageUp, same "yearly counter, zeroed on the only thing
+// that ever advances the year" shape as freelance.js's
+// freelanceGigsCompletedThisYear. Per-hobby (keyed by hobby id) rather than
+// one shared counter, since practicing Chess shouldn't eat into Guitar's
+// budget for the same year.
+const MAX_PRACTICES_PER_YEAR = 3;
+
+function practicesRemaining(character, hobbyId) {
+  const used = character.hobbyPracticeCounts?.[hobbyId] ?? 0;
+  return Math.max(0, MAX_PRACTICES_PER_YEAR - used);
+}
 
 function getAvailableHobbies(character) {
   if (character.age < MIN_HOBBY_AGE) return [];
@@ -75,8 +87,18 @@ function dropHobby(character, hobbyId, hobbiesData) {
 // Repeatable, unlike chooseHobby above -- always succeeds (no roll, matching
 // participateInClub's tone), a small skill bump for hobbies with a mapped
 // skill, plus a modest happiness gain and an occasional bonding moment
-// either way, so a flavor-only hobby is still worth practicing.
+// either way, so a flavor-only hobby is still worth practicing. Callers
+// should check practicesRemaining first (the UI hides/disables Practice
+// once it hits 0); this still enforces the cap itself rather than trusting
+// the caller, same defensive shape as every other capped action in this
+// codebase (e.g. freelance.js's isFreelanceCapReached).
 function practiceHobby(character, hobby) {
+  if (practicesRemaining(character, hobby.id) <= 0) {
+    return `You've practiced ${hobby.label} as much as you can for now this year.`;
+  }
+  character.hobbyPracticeCounts = character.hobbyPracticeCounts ?? {};
+  character.hobbyPracticeCounts[hobby.id] = (character.hobbyPracticeCounts[hobby.id] ?? 0) + 1;
+
   if (hobby.skill) {
     character.skills[hobby.skill] = clampStat((character.skills[hobby.skill] ?? 0) + randInt(1, 3));
   }
@@ -94,4 +116,14 @@ function practiceHobby(character, hobby) {
   return resultText;
 }
 
-export { HOBBIES, MAX_ACTIVE_HOBBIES, MIN_HOBBY_AGE, getAvailableHobbies, chooseHobby, dropHobby, practiceHobby };
+export {
+  HOBBIES,
+  MAX_ACTIVE_HOBBIES,
+  MIN_HOBBY_AGE,
+  MAX_PRACTICES_PER_YEAR,
+  practicesRemaining,
+  getAvailableHobbies,
+  chooseHobby,
+  dropHobby,
+  practiceHobby,
+};

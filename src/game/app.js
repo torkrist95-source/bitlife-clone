@@ -69,7 +69,16 @@ import {
   canReturnToCollege,
   returnToCollege,
 } from "./school.js";
-import { HOBBIES, MAX_ACTIVE_HOBBIES, getAvailableHobbies, chooseHobby, dropHobby, practiceHobby } from "./hobbies.js";
+import {
+  HOBBIES,
+  MAX_ACTIVE_HOBBIES,
+  MAX_PRACTICES_PER_YEAR,
+  practicesRemaining,
+  getAvailableHobbies,
+  chooseHobby,
+  dropHobby,
+  practiceHobby,
+} from "./hobbies.js";
 import {
   loadCountries,
   loadWealthTiers,
@@ -1672,35 +1681,36 @@ function renderHobbiesInto(container) {
     container.appendChild(activeTitle);
 
     for (const hobby of active) {
-      const meta = hobby.skill ? `Builds ${formatSkillLabel(hobby.skill)}` : "For fun";
-      container.appendChild(
-        buildPersonCard({
-          name: hobby.label,
-          meta,
-          action: buildActionsGroup([
-            {
-              label: "Practice",
-              onAction: () => {
-                const line = practiceHobby(character, hobby);
-                renderHobbiesInto(container);
-                renderGame();
-                autosave();
-                showToast(line);
-              },
-            },
-            {
-              label: "Drop",
-              onAction: () => {
-                const line = dropHobby(character, hobby.id, HOBBIES);
-                renderHobbiesInto(container);
-                renderGame();
-                autosave();
-                showToast(line);
-              },
-            },
-          ]),
-        })
-      );
+      const remaining = practicesRemaining(character, hobby.id);
+      const skillPart = hobby.skill ? `Builds ${formatSkillLabel(hobby.skill)}` : "For fun";
+      const practicePart = remaining > 0 ? `${remaining}/${MAX_PRACTICES_PER_YEAR} practices left this year` : "Practiced enough this year";
+      const meta = `${skillPart} · ${practicePart}`;
+
+      const actions = [];
+      if (remaining > 0) {
+        actions.push({
+          label: "Practice",
+          onAction: () => {
+            const line = practiceHobby(character, hobby);
+            renderHobbiesInto(container);
+            renderGame();
+            autosave();
+            showToast(line);
+          },
+        });
+      }
+      actions.push({
+        label: "Drop",
+        onAction: () => {
+          const line = dropHobby(character, hobby.id, HOBBIES);
+          renderHobbiesInto(container);
+          renderGame();
+          autosave();
+          showToast(line);
+        },
+      });
+
+      container.appendChild(buildPersonCard({ name: hobby.label, meta, action: buildActionsGroup(actions) }));
     }
   }
 
