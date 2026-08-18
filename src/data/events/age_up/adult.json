@@ -669,5 +669,178 @@
         "resultText": "You leaned all the way into it, turning the fall into a whole performance. The crowd ate it up."
       }
     ]
+  },
+  {
+    "id": "extreme_dare",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 55 },
+    "requires": [{ "path": "personality.reckless", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "A friend dares you to go cliff jumping at the spot everyone talks about but nobody actually does.",
+    "choices": [
+      {
+        "label": "Jump",
+        "outcomes": [
+          { "weight": 5, "requires": [{ "path": "personality.reckless", "op": ">=", "value": 80 }], "effects": { "happiness": 10, "fame": 2, "reputation": 2 }, "resultText": "You nailed it without a second thought, and the video of it is already making the rounds." },
+          { "weight": 6, "effects": { "happiness": 8, "health": -2 }, "resultText": "You did it. Terrifying, exhilarating, and you're already thinking about doing it again." },
+          { "weight": 3, "effects": { "health": -12, "happiness": -3, "money": -400 }, "resultText": "You landed wrong. A trip to urgent care and a very awkward story to tell." }
+        ]
+      },
+      {
+        "label": "Back out",
+        "effects": { "happiness": -2 },
+        "resultText": "You watched from the rocks instead, telling yourself it was the smart move."
+      }
+    ]
+  },
+  {
+    "id": "ambitious_overreach",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 60 },
+    "requires": [{ "path": "personality.ambitious", "op": ">=", "value": 60 }, { "path": "job", "op": "truthy" }],
+    "weight": 6,
+    "text": "A much bigger role opens up at your company -- well above what you'd normally be considered ready for.",
+    "choices": [
+      {
+        "label": "Go for it anyway",
+        "outcomes": [
+          { "weight": 4, "requires": [{ "path": "personality.ambitious", "op": ">=", "value": 80 }], "effects": { "happiness": 10, "fame": 3, "reputation": 3 }, "resultText": "You made your case with total conviction, and somehow it worked. You're in over your head, and thrilled about it." },
+          { "weight": 5, "effects": { "happiness": 4, "reputation": 1 }, "resultText": "You didn't get it, but putting yourself forward got you noticed for next time." },
+          { "weight": 4, "effects": { "happiness": -4, "reputation": -2 }, "resultText": "You overplayed your hand in the interview, and it was obvious to everyone in the room." }
+        ]
+      },
+      {
+        "label": "Wait for a role you're actually ready for",
+        "effects": { "happiness": 1 },
+        "resultText": "You let it go, telling yourself the right opportunity would come."
+      }
+    ]
+  },
+  {
+    "id": "stranger_in_need",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 90 },
+    "requires": [{ "path": "personality.generous", "op": ">=", "value": 60 }, { "path": "money", "op": ">=", "value": 50 }],
+    "weight": 6,
+    "text": "You pass someone on the street clearly having a rough day, holding a sign asking for help.",
+    "choices": [
+      {
+        "label": "Stop and help however you can",
+        "effects": { "money": -50, "happiness": 6, "reputation": 2 },
+        "resultText": "You stopped, talked with them for a while, and left what you could. It stuck with you the rest of the day."
+      },
+      {
+        "label": "Keep walking",
+        "effects": { "happiness": -1 },
+        "resultText": "You kept walking, and couldn't quite shake the feeling for a while after."
+      }
+    ]
+  },
+  {
+    "id": "jealous_suspicion",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "personality.jealous", "op": ">=", "value": 60 }, { "path": "flags.hasPartner", "op": "truthy" }],
+    "weight": 6,
+    "text": "You see a text notification on your partner's phone from someone you don't recognize, and it's eating at you.",
+    "choices": [
+      {
+        "label": "Confront them about it",
+        "outcomes": [
+          { "weight": 5, "effects": { "happiness": 2 }, "resultText": "It turned out to be nothing, but the conversation cleared the air anyway." },
+          { "weight": 5, "effects": { "happiness": -6 }, "resultText": "It turned into a real fight, and neither of you said anything you can take back yet." }
+        ]
+      },
+      {
+        "label": "Say nothing and stew on it",
+        "effects": { "happiness": -4 },
+        "resultText": "You didn't say anything, but it sat with you for days."
+      }
+    ]
+  },
+  {
+    "id": "creative_spark",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 60 },
+    "requires": [{ "path": "personality.creative", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "You wake up with a fully-formed idea for something you actually want to make -- a story, a song, a piece of art, you're not even sure yet.",
+    "choices": [
+      {
+        "label": "Clear your schedule and chase it",
+        "outcomes": [
+          { "weight": 3, "requires": [{ "path": "personality.creative", "op": ">=", "value": 80 }], "effects": { "happiness": 10, "fame": 3, "money": 300 }, "resultText": "It came together better than you imagined, and people actually noticed. You sold a few copies almost by accident." },
+          { "weight": 6, "effects": { "happiness": 7 }, "resultText": "You finished it, and even if no one else ever sees it, you're proud of it." },
+          { "weight": 3, "effects": { "happiness": -2 }, "resultText": "You lost the thread halfway through and never quite got it back." }
+        ]
+      },
+      {
+        "label": "Jot it down for later and get back to your routine",
+        "effects": { "happiness": 1 },
+        "resultText": "You wrote it down for later. Later never quite came."
+      }
+    ]
+  },
+  {
+    "id": "luxury_temptation",
+    "trigger": "age_up",
+    "conditions": { "minAge": 20, "maxAge": 65 },
+    "requires": [{ "path": "personality.materialistic", "op": ">=", "value": 60 }, { "path": "money", "op": ">=", "value": 800 }],
+    "weight": 6,
+    "text": "A limited release of something you've wanted for ages goes on sale, and it's not cheap.",
+    "choices": [
+      {
+        "label": "Buy it",
+        "effects": { "money": -800, "happiness": 7, "looks": 2 },
+        "resultText": "You bought it without much hesitation. It looks great, and you don't regret it. Yet."
+      },
+      {
+        "label": "Talk yourself out of it",
+        "effects": { "happiness": -2 },
+        "resultText": "You talked yourself out of it, and spent the rest of the week thinking about it anyway."
+      }
+    ]
+  },
+  {
+    "id": "credit_grab",
+    "trigger": "age_up",
+    "conditions": { "minAge": 22, "maxAge": 60 },
+    "requires": [{ "path": "personality.manipulative", "op": ">=", "value": 60 }, { "path": "job", "op": "truthy" }],
+    "weight": 5,
+    "text": "A coworker casually mentions their idea to you before the big meeting -- and you realize you could bring it up first and let everyone assume it's yours.",
+    "choices": [
+      {
+        "label": "Take the credit",
+        "outcomes": [
+          { "weight": 5, "effects": { "reputation": 4, "fame": 1, "happiness": 3 }, "resultText": "It worked. You got the credit, the praise, and the promotion buzz that came with it." },
+          { "weight": 5, "effects": { "reputation": -6, "happiness": -3 }, "resultText": "Your coworker figured it out fast, and made sure everyone else did too." }
+        ]
+      },
+      {
+        "label": "Give them the credit",
+        "effects": { "reputation": 1, "happiness": 1 },
+        "resultText": "You let them have the moment. Not the flashy choice, but it sat right with you."
+      }
+    ]
+  },
+  {
+    "id": "loyal_favor",
+    "trigger": "age_up",
+    "conditions": { "minAge": 18, "maxAge": 70 },
+    "requires": [{ "path": "personality.loyal", "op": ">=", "value": 60 }],
+    "weight": 6,
+    "text": "An old friend calls in a favor at the worst possible time -- they need help moving, tonight, no one else to ask.",
+    "choices": [
+      {
+        "label": "Drop everything and go",
+        "effects": { "happiness": 5, "health": -2 },
+        "resultText": "You showed up exhausted and stayed until midnight, and they won't forget it."
+      },
+      {
+        "label": "Tell them you can't make it this time",
+        "effects": { "happiness": -3 },
+        "resultText": "You said no, and felt guilty about it the rest of the night."
+      }
+    ]
   }
 ]
